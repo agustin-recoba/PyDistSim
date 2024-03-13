@@ -52,7 +52,7 @@ def get_rms(truePos, estimated, align=False, scale=False, norm=False):
     rms = sqrt(suma / node_count)
     if norm:
         sc = truePos.subclusters[0]
-        truePos.subclusters[0] = {n: p for n, p in sc.items()
+        truePos.subclusters[0] = {n: p for n, p in list(sc.items())
                                   if n in estimated.subclusters[0]}
         rms = rms/get_pos_norm(truePos)
     return rms
@@ -72,7 +72,7 @@ def construct_G(pos, edges, u, sensor):
     mu(pos) = arctan((pos_y_j - pos_y_i)/(pos_x_j - pos_x_i) - alpha_i)
 
     """
-    nodes = pos.keys()
+    nodes = list(pos.keys())
     neighbors = {n: [] for n in nodes}
     for n1, n2 in edges:
         neighbors[n1].append(n2)
@@ -203,8 +203,8 @@ def get_aoa_gdop_rel(estimated):
     estimated = Positions.create(estimated)
     assert len(estimated.subclusters)==1
     pos = estimated.subclusters[0]
-    nodes = pos.keys()
-    edges = [e for e in pos.keys()[0].network.edges()
+    nodes = list(pos.keys())
+    edges = [e for e in list(pos.keys())[0].network.edges()
              if e[0] in nodes and e[1] in nodes]
     G = construct_G(pos, edges, 3, 'AoASensor')
     J = dot(G.T, G)
@@ -309,8 +309,8 @@ def show_localized(net, estimated, scale=False, align=True,\
         #net.show(positions=estimated_sc, show_labels=show_labels)
         fig = net.get_fig(positions=estimated_sc, show_labels=show_labels)
         ax = fig.gca()
-        minpos = min(estimated_sc.values(), axis=0)
-        maxpos = max(estimated_sc.values(), axis=0)
+        minpos = min(list(estimated_sc.values()), axis=0)
+        maxpos = max(list(estimated_sc.values()), axis=0)
         minpos -= (maxpos-minpos)*0.1
         maxpos += (maxpos-minpos)*0.1
 
@@ -323,7 +323,7 @@ def show_localized(net, estimated, scale=False, align=True,\
             ax.set_title('Localized positions')
             ax.set_title('Localization error display')
             edge_pos = asarray([(net.pos[n], estimated_sc[n])
-                                for n in estimated_sc.keys()])
+                                for n in list(estimated_sc.keys())])
             errorCollection = LineCollection(edge_pos, colors='r',
                                              transOffset=ax.transData)
             errorCollection.set_zorder(1)  # errors go behind nodes

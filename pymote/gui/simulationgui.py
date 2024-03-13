@@ -2,21 +2,28 @@ from pymote import *  # @UnusedWildImport
 import sys
 import os  # @Reimport
 import numpy
-from PySide.QtGui import QMainWindow, QMenu, QCursor, QFileDialog, QMessageBox
-from PySide.QtCore import SIGNAL, QRect, QSize, QEvent
+from PySide6.QtGui import QCursor
+from PySide6.QtWidgets import QMainWindow, QMenu, QFileDialog, QMessageBox
+from PySide6.QtCore import SIGNAL, QRect, QSize, QEvent
 from matplotlib.figure import Figure
 from matplotlib.patches import Circle
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg \
+
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg \
                                             as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg \
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT \
                                             as NavigationToolbar
 from networkx.drawing.nx_pylab import draw_networkx_edges
 from datetime import datetime
 from matplotlib.collections import PatchCollection, LineCollection
 import networkx as nx
 from pymote.algorithm import NodeAlgorithm
-from simulationui import Ui_SimulationWindow
-from dictionarytreemodel import DictionaryTreeModel
+try:
+    from .simulationui import Ui_SimulationWindow
+    from .dictionarytreemodel import DictionaryTreeModel
+except ImportError:
+    from simulationui import Ui_SimulationWindow
+    from dictionarytreemodel import DictionaryTreeModel
+    
 from pymote.utils.localization.helpers import align_clusters, get_rms
 from pymote.utils.memory.positions import Positions
 from copy import deepcopy
@@ -36,9 +43,9 @@ class SimulationGui(QMainWindow):
         self.ui.nodeInspector.addAction(self.ui.actionCopyInspectorData)
         self.ui.nodeInspector.addAction(self.ui.actionShowLocalizedSubclusters)
         # callbacks
-        self.ui.actionCopyInspectorData.activated\
+        self.ui.actionCopyInspectorData.triggered\
             .connect(self.on_actionCopyInspectorData_triggered)
-        self.ui.actionShowLocalizedSubclusters.activated\
+        self.ui.actionShowLocalizedSubclusters.triggered\
             .connect(self.on_actionShowLocalizedSubclusters_triggered)
 
         self.dpi = 72
@@ -78,13 +85,13 @@ class SimulationGui(QMainWindow):
         self.connect(self.ui.locKey, SIGNAL('textEdited(QString)'),
                      self.redraw)
         # callbacks
-        self.ui.actionOpenNetwork.activated\
+        self.ui.actionOpenNetwork.triggered\
             .connect(self.on_actionOpenNetwork_triggered)
-        self.ui.actionSaveNetwork.activated\
+        self.ui.actionSaveNetwork.triggered\
             .connect(self.on_actionSaveNetwork_triggered)
-        self.ui.actionRun.activated.connect(self.on_actionRun_triggered)
-        self.ui.actionStep.activated.connect(self.on_actionStep_triggered)
-        self.ui.actionReset.activated.connect(self.on_actionReset_triggered)
+        self.ui.actionRun.triggered.connect(self.on_actionRun_triggered)
+        self.ui.actionStep.triggered.connect(self.on_actionStep_triggered)
+        self.ui.actionReset.triggered.connect(self.on_actionReset_triggered)
 
         self.canvas.mpl_connect('pick_event', self.on_pick)
 
@@ -103,7 +110,7 @@ class SimulationGui(QMainWindow):
 
     def update_log(self, text):
         """ Add item to list widget """
-        print "Add: " + text
+        print("Add: " + text)
         self.ui.logListWidget.insertItem(0, text)
         # self.ui.logListWidget.sortItems()
 
@@ -148,7 +155,7 @@ class SimulationGui(QMainWindow):
     def draw_nodes(self, net=None, node_colors={}, node_radius={}):
         if not net:
             net = self.net
-        if type(node_colors) == str:
+        if isinstance(node_colors, str):
             node_colors = {node: node_colors for node in net.nodes()}
         nodeCircles = []
         for n in net.nodes():
@@ -176,7 +183,7 @@ class SimulationGui(QMainWindow):
                     if drawLegend:
                         proxy = []
                         labels = []
-                        for status, color in color_map.items():
+                        for status, color in list(color_map.items()):
                             proxy.append(Circle((0, 0), radius=8.0,
                                                 color=color, ec='k',
                                                 lw=1.0, ls='solid'))
@@ -187,7 +194,7 @@ class SimulationGui(QMainWindow):
                                         title='Statuses for %s:'
                                                 % algorithm.name)
                 for n in net.nodes():
-                    if n.status == '' or not n.status in color_map.keys():
+                    if n.status == '' or n.status not in list(color_map.keys()):
                         node_colors[n] = 'r'
                     else:
                         node_colors[n] = color_map[n.status]
@@ -216,7 +223,7 @@ class SimulationGui(QMainWindow):
             for msg in node.outbox:
                 # broadcast
                 if msg.destination is None:
-                    for neighbor in net.adj[node].keys():
+                    for neighbor in list(net.adj[node].keys()):
                         nbr_msg = msg.copy()
                         nbr_msg.destination = neighbor
                         c = MessageCircle(nbr_msg, net, 'out', 3.0, lw=0,
@@ -253,7 +260,7 @@ class SimulationGui(QMainWindow):
         try:
             self.node_collection.set_visible(self.ui.showNodes.isChecked())
             self.edge_collection.set_visible(self.ui.showEdges.isChecked())
-            for label in self.label_collection.values():
+            for label in list(self.label_collection.values()):
                 label.set_visible(self.ui.showLabels.isChecked())
             self.tree_collection.set_visible(self.ui.treeGroupBox.isChecked())
             self.ini_error_collection.set_visible(self.ui.propagationError\
@@ -265,7 +272,7 @@ class SimulationGui(QMainWindow):
             self.message_collection.set_visible(self.ui.showMessages\
                                                     .isChecked())
         except AttributeError:
-            print 'Refresh visibility warning'
+            print('Refresh visibility warning')
         self.canvas.draw()
 
     def draw_tree(self, treeKey, net=None):
@@ -329,16 +336,16 @@ class SimulationGui(QMainWindow):
 
     def on_actionRun_triggered(self):
         self.ui.logListWidget.clear()
-        print 'running ...',
+        print('running ...', end=' ')
         self.sim.stepping = True
         self.sim.run_all()
 
     def on_actionStep_triggered(self):
-        print 'next step ...',
+        print('next step ...', end=' ')
         self.sim.run(self.ui.stepSize.value())
 
     def on_actionReset_triggered(self):
-        print 'reset ...',
+        print('reset ...', end=' ')
         self.sim.reset()
         self.redraw()
 
@@ -364,7 +371,7 @@ class SimulationGui(QMainWindow):
             # rotate, translate and optionally scale
             # w.r.t. original positions (pos)
             align_clusters(Positions.create(self.net.pos), estimated, True)
-            net = self.net.subnetwork(estimatedsub.keys(), pos=estimatedsub)
+            net = self.net.subnetwork(list(estimatedsub.keys()), pos=estimatedsub)
 
             self.draw_network(net=net, drawMessages=False)
 
@@ -392,7 +399,7 @@ class SimulationGui(QMainWindow):
         if fname:
             try:
                 write_pickle(self.net, fname)
-            except Exception, e:
+            except Exception as e:
                 QMessageBox.critical(
                     self, "Error saving file", str(e),
                     QMessageBox.Ok, QMessageBox.NoButton)
@@ -411,11 +418,11 @@ class SimulationGui(QMainWindow):
             self, "Choose a file to open", start, filters, selectedFilter)[0]
         if fname:
             try:
-                print "open" + fname
+                print("open" + fname)
                 net = read_pickle(fname)
                 self.init_sim(net)
-            except Exception, e:
-                print "Error opening file %s" % str(e),
+            except Exception as e:
+                print("Error opening file %s" % str(e), end=' ')
                 QMessageBox.critical(
                     self, "Error opening file", str(e),
                     QMessageBox.Ok, QMessageBox.NoButton)

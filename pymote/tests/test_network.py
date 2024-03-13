@@ -18,7 +18,7 @@ class TestNetworkCreation(unittest.TestCase):
     def test_nodes(self):
         """Make sure the nodes are added."""
         self.assertTrue(isinstance(self.node1, Node))
-        self.assertEqual(len(self.net.node), 3)
+        self.assertEqual(len(self.net.nodes()), 3)
         if (isinstance(self.net.environment, Environment2D)):
             self.assertEqual(self.net.environment.im.shape,
                              settings.ENVIRONMENT2D_SHAPE,

@@ -7,7 +7,7 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PySide import QtCore, QtGui
+from PySide6 import QtCore, QtGui
 
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
@@ -342,4 +342,4 @@ class Ui_SimulationWindow(object):
         self.actionShowLocalizedSubclusters.setText(QtGui.QApplication.translate("SimulationWindow", "Show localized subclusters", None, QtGui.QApplication.UnicodeUTF8))
         self.actionShowLocalizedSubclusters.setToolTip(QtGui.QApplication.translate("SimulationWindow", "Show localized subclusters based on memory field that has positions and subclusters items.", None, QtGui.QApplication.UnicodeUTF8))
 
-import icons_rc
+from . import icons_rc

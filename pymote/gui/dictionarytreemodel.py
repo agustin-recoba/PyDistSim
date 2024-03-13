@@ -3,7 +3,7 @@ This module provides model for QTreeView widget that is created out of
 dictionary data.
 """
 
-from PySide.QtCore import QAbstractItemModel, QModelIndex, Qt
+from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt
 
 
 class DictionaryTreeModel(QAbstractItemModel):
@@ -15,7 +15,7 @@ class DictionaryTreeModel(QAbstractItemModel):
         self.setupModelData()
 
     def setupModelData(self):
-        items = self.dic.items()
+        items = list(self.dic.items())
         items.sort()
         for item in items:
             newparent = TreeItem(item, self.rootItem)
@@ -93,7 +93,7 @@ class TreeItem(object):
         self.childItems = []
         if isinstance(value, dict):
             self.itemData = key
-            items = value.items()
+            items = list(value.items())
             items.sort()
             for item in items:
                 self.appendChild(TreeItem(item, self))

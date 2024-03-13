@@ -2,7 +2,7 @@ from pymote.logger import logger
 from pymote.sensor import CompositeSensor
 from pymote.conf import settings
 import logging
-import collections
+from collections.abc import Iterable
 
 
 class Node(object):
@@ -43,7 +43,7 @@ class Node(object):
 
         """
         message.source = self
-        if not isinstance(message.destination, collections.Iterable):
+        if not isinstance(message.destination, Iterable):
             message.destination = [message.destination]
         for destination in message.destination:
             logger.debug('Node %d sent message %s.' %
@@ -111,7 +111,7 @@ class Node(object):
 
     def get_log(self):
         """ Special field in memory used to log messages from algorithms. """
-        if not 'log' in self.memory:
+        if 'log' not in self.memory:
             self.memory['log'] = []
         return self.memory['log']
 
@@ -122,7 +122,7 @@ class Node(object):
                    'algorithm': str(self.network.get_current_algorithm()),
                    'algorithmState': self.network.algorithmState,
                    }
-        if not 'log' in self.memory:
+        if 'log' not in self.memory:
             self.memory['log'] = [(level, message, context)]
         else:
             self.memory['log'].append((level, message, context))

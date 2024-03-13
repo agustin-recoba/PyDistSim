@@ -1,6 +1,6 @@
-from PySide.QtGui import QApplication, QDialog, QVBoxLayout, QTreeView, \
+from PySide6.QtGui import QApplication, QDialog, QVBoxLayout, QTreeView, \
                          QLabel, QFrame, QHBoxLayout, QPushButton
-from PySide.QtCore import QAbstractItemModel, QModelIndex, QObject, SIGNAL, \
+from PySide6.QtCore import QAbstractItemModel, QModelIndex, QObject, SIGNAL, \
                           Qt, QVariant  # @UnresolvedImport
 
 HORIZONTAL_HEADERS = ("Surname", "Given Name")
@@ -43,7 +43,7 @@ class TreeItem(object):
         return 2
 
     def data(self, column):
-        if self.person == None:
+        if self.person is None:
             if column == 0:
                 return QVariant(self.header)
             if column == 1:
@@ -155,7 +155,7 @@ class treeModel(QAbstractItemModel):
             else:
                 sex = "FEMALES"
 
-            if not sex in self.parents:
+            if sex not in self.parents:
                 newparent = TreeItem(None, sex, self.rootItem)
                 self.rootItem.appendChild(newparent)
 
@@ -184,7 +184,7 @@ class treeModel(QAbstractItemModel):
                         return result
 
         retarg = searchNode(self.parents[0])
-        print retarg
+        print(retarg)
         return retarg
 
     def find_GivenName(self, fname):
@@ -193,7 +193,7 @@ class treeModel(QAbstractItemModel):
             if person.fname == fname:
                 app = person
                 break
-        if app != None:
+        if app is not None:
             index = self.searchModel(app)
             return (True, index)
         return (False, None)
@@ -204,7 +204,7 @@ if __name__ == "__main__":
         '''
         when a row is clicked... show the name
         '''
-        print tv.model().data(index, Qt.UserRole)
+        print(tv.model().data(index, Qt.UserRole))
 
     def but_clicked():
         '''
@@ -212,7 +212,7 @@ if __name__ == "__main__":
         find the person with this name, and set the treeviews current item
         '''
         name = dialog.sender().text()
-        print "BUTTON CLICKED:", name
+        print("BUTTON CLICKED:", name)
         result, index = model.find_GivenName(name)
         if result:
             if index:

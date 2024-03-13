@@ -1,4 +1,4 @@
-from PySide.QtCore import QThread, SIGNAL
+from PySide6.QtCore import QThread, SIGNAL
 import logging
 from pymote.network import Network
 from pymote.algorithm import NetworkAlgorithm
@@ -14,7 +14,7 @@ class Simulation(QThread):
         self._network = network
         self.stepsLeft = 0
         self.logger = logging.getLogger('pymote.simulation')
-        self.logger.level = logLevel or logging.DEBUG
+        self.logger.setLevel(logLevel or logging.DEBUG)
         self.logger.debug('Simulation %s created successfully.' %
                           (hex(id(self))))
         QThread.__init__(self)

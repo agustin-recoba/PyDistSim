@@ -6,9 +6,9 @@ from setuptools import setup, find_packages
 if 'install' in sys.argv or 'develop' in sys.argv:
     import shutil
     try:
-        import IPython
-        ipythondir = IPython.utils.path.get_ipython_dir()  # @UndefinedVariable
-    except ImportError, AttributeError:  # @ReservedAssignment
+        from IPython.paths import get_ipython_dir 
+        ipythondir = get_ipython_dir() 
+    except ImportError as AttributeError:  # @ReservedAssignment
         print("Pymote IPython configuration not installed. Install latest "
               "IPython and then copy the conf/ipython/profile_pymote/"
               "ipython_config.py manually to IPython config dir.")
@@ -18,8 +18,8 @@ if 'install' in sys.argv or 'develop' in sys.argv:
             os.makedirs(ipythondir)
         if not os.path.exists(profiledir):
             os.makedirs(profiledir)
-        print ("copying ipython_config.py and ipython_notebook_config.py "
-               "to "+profiledir)
+        print(("copying ipython_config.py and ipython_notebook_config.py "
+               "to "+profiledir))
         shutil.copy(os.path.join('pymote', 'conf', 'ipython',
                                  'ipython_config.py'), profiledir)
         shutil.copy(os.path.join('pymote', 'conf', 'ipython',
@@ -49,11 +49,11 @@ setup(
     install_requires=[
         'networkx',
         'numpy',
-        'scipy<=0.12',
+        'scipy',
         'pypng',
         'ipython',
-        'matplotlib==1.2',
-        'PySide',
+        'matplotlib',
+        'pyside6',
     ],
     long_description=open(os.path.join(os.path.dirname(__file__),
                                        'README.rst')).read(),

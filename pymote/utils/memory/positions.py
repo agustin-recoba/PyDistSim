@@ -1,5 +1,6 @@
 from copy import copy
 from pymote.utils.memory import MemoryStructure
+from functools import reduce
 
 
 class Positions(MemoryStructure):
@@ -21,7 +22,7 @@ class Positions(MemoryStructure):
             self.subclusters = []
             for subcluster in ini_subclusters:
                 new_subcluster = {}
-                for n, p in subcluster.items():
+                for n, p in list(subcluster.items()):
                     new_subcluster.update({n: copy(p)})
                 self.subclusters.append(new_subcluster)
         self.old_style_positions = {}
@@ -49,7 +50,7 @@ class Positions(MemoryStructure):
         """ Returns list of subclusters without positions. """
         cl = []
         for c in self.subclusters:
-            cl.append(c.keys())
+            cl.append(list(c.keys()))
         return cl
 
     def set_pos_copy(self, positions):
@@ -58,7 +59,7 @@ class Positions(MemoryStructure):
         self.subclusters = []
         for subcluster in positions.subclusters:
             new_subcluster = {}
-            for n, p in subcluster.items():
+            for n, p in list(subcluster.items()):
                 new_subcluster.update({n: copy(p)})
             self.subclusters.append(new_subcluster)
 
@@ -91,18 +92,18 @@ class Positions(MemoryStructure):
     # Backward compatibility - usage raises exception
     # -----------------------------------------------
     def __getitem__(self, key):
-        if key is 'positions':
+        if key == 'positions':
             key = 'old_style_positions'
-            raise(Exception('Old style positions usage, please refactor code'))
-        if key is 'subclusters':
+            raise Exception
+        if key == 'subclusters':
             key = 'old_style_subclusters'
-            raise(Exception('Old style positions usage, please refactor code'))
+            raise Exception
         if isinstance(key, int):
             return self.subclusters[key]
         return self.__getattribute__(key)
 
     def has_key(self, key):
-        raise(Exception('Old style positions usage, please refactor code'))
+        raise Exception
         try:
             self.__getitem__(key)
         except AttributeError:
@@ -110,10 +111,10 @@ class Positions(MemoryStructure):
         return True
 
     def keys(self):
-        raise (Exception('Old style positions usage, please refactor code'))
+        raise Exception
         return ['positions', 'subclusters']
 
     def items(self):
-        raise (Exception('Old style positions usage, please refactor code'))
+        raise Exception
         return [('positions', self.old_style_positions),
                 ('subclusters', self.old_style_subclusters)]

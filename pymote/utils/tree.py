@@ -78,7 +78,7 @@ def get_path(n1, n2, treeKey):
 
 def check_tree_key(net, treeKey):
     for node in net.nodes():
-        if not treeKey in node.memory:
+        if treeKey not in node.memory:
             raise MissingTreeKey(treeKey)
 
 

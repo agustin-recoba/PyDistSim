@@ -10,10 +10,11 @@ class ChannelType(object):
         """Return instance of default ChannelType."""
         for cls in self.__subclasses__():
             if (cls.__name__ == settings.CHANNEL_TYPE):
-                return object.__new__(cls, environment)
+                return super().__new__(cls)
+    
         # if self is not ChannelType class (as in pickle.load_newobj) return
         # instance of self
-        return object.__new__(self, environment, **kwargs)
+        return object.__new__(self)
 
     def in_comm_range(self, network, node1, node2):
         raise NotImplementedError

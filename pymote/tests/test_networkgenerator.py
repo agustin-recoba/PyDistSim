@@ -22,13 +22,13 @@ class TestNetworkGeneration(unittest.TestCase):
         sensors = (NeighborsSensor,)
         self.in_out = [
                   # default N_COUNT and COMM_RANGE and ENVIRONMENT should be compatible
-                  ({"n_count": None, "n_min": 0, "n_max": Inf, "connected": True, "environment": None, "degree": None, "comm_range": None}, {'count': range(100,1001)}),  
+                  ({"n_count": None, "n_min": 0, "n_max": Inf, "connected": True, "environment": None, "degree": None, "comm_range": None}, {'count': list(range(100,1001))}),  
                   # regular default params
-                  ({"n_count": 100, "n_min": 0, "n_max": Inf,  "connected": True, "environment": env,  "degree": None, "comm_range": 100},  {'count': range(100,1001)}),
+                  ({"n_count": 100, "n_min": 0, "n_max": Inf,  "connected": True, "environment": env,  "degree": None, "comm_range": 100},  {'count': list(range(100,1001))}),
                   
                   ############## connected True degree False
                   # increase node number
-                  ({"n_count": 10, "n_min": 0, "n_max": Inf, "connected": True, "environment": env, "degree": None, "comm_range": 100},  {'count': range(11,301)}),
+                  ({"n_count": 10, "n_min": 0, "n_max": Inf, "connected": True, "environment": env, "degree": None, "comm_range": 100},  {'count': list(range(11,301))}),
                   # increase commRange
                   ({"n_count": 10, "n_min": 0, "n_max": 10,  "connected": True, "environment": env, "degree": None, "comm_range": None}, {'count': 10}),
                   # decrease commRange
@@ -36,7 +36,7 @@ class TestNetworkGeneration(unittest.TestCase):
                   
                   ############## connected True degree True
                   # increase node number
-                  ({"n_count": 10, "n_min": 0, "n_max": 200, "connected": True, "environment": env, "degree": 11, "comm_range": 100},  {'count': range(10,201)}),
+                  ({"n_count": 10, "n_min": 0, "n_max": 200, "connected": True, "environment": env, "degree": 11, "comm_range": 100},  {'count': list(range(10,201))}),
                   # increase commRange
                   ({"n_count": 10, "n_min": 0, "n_max": 10,  "connected": True, "environment": env, "degree": 9,  "comm_range": None}, {'count': 10}),
                   # low degree with connected, alternating directions problem
@@ -44,12 +44,12 @@ class TestNetworkGeneration(unittest.TestCase):
                   
                   ############## connected False degree True
                   # increase node number
-                  ({"n_count": 10, "n_min": 0, "n_max": 200, "connected": False, "environment": env, "degree": 8,  "comm_range": 100},   {'count': range(10,201)}),
+                  ({"n_count": 10, "n_min": 0, "n_max": 200, "connected": False, "environment": env, "degree": 8,  "comm_range": 100},   {'count': list(range(10,201))}),
                   # increase commRange
-                  ({"n_count": 10, "n_min": 0, "n_max": 200, "connected": False, "environment": env, "degree": 11, "comm_range": None},  {'count': range(10,201)}),
+                  ({"n_count": 10, "n_min": 0, "n_max": 200, "connected": False, "environment": env, "degree": 11, "comm_range": None},  {'count': list(range(10,201))}),
 
                   # low degree 
-                  ({"n_count": 10, "n_min": 0, "n_max": 100, "connected": False, "environment": env, "degree": 3,  "comm_range": 100},    {'count': range(10,101)}),
+                  ({"n_count": 10, "n_min": 0, "n_max": 100, "connected": False, "environment": env, "degree": 3,  "comm_range": 100},    {'count': list(range(10,101))}),
                   # degree too high for node number
                   ({"n_count": 10, "n_min": 0, "n_max": 10,  "connected": False, "environment": env, "degree": 10,   "comm_range": None}, NetworkGeneratorException),
                   ({"n_count": 11, "n_min": 0, "n_max": 10,  "connected": False, "environment": env, "degree": None, "comm_range": None}, NetworkGeneratorException),

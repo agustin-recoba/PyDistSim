@@ -18,6 +18,7 @@ import re
 from pymote.conf import global_settings
 from warnings import warn
 from pymote.logger import logger
+import importlib
 
 ENVIRONMENT_VARIABLE = "PYMOTE_SETTINGS_MODULE"
 
@@ -107,11 +108,11 @@ class LazySettings(object):
         values from (its argument must support attribute access (__getattr__)).
 
         """
-        if self._wrapped != None:
+        if self._wrapped is not None:
             raise RuntimeError('Settings already configured or accessed no'
                                ' further configuration allowed.')
         holder = UserSettingsHolder(default_settings)
-        for name, value in options.items():
+        for name, value in list(options.items()):
             setattr(holder, name, value)
         self._wrapped = holder
 
@@ -145,7 +146,7 @@ class Settings(object):
         if (self.SETTINGS_MODULE):
             try:
                 mod = import_module(self.SETTINGS_MODULE)
-            except ImportError, e:
+            except ImportError as e:
                 raise ImportError("Could not import settings '%s' (Is it on "
                                   "sys.path? Does it have syntax errors?): %s"\
                                    % (self.SETTINGS_MODULE, e))
@@ -174,7 +175,7 @@ class UserSettingsHolder(object):
         return getattr(self.default_settings, name)
 
     def __dir__(self):
-        return self.__dict__.keys() + dir(self.default_settings)
+        return list(self.__dict__.keys()) + dir(self.default_settings)
 
     # For Python < 2.6:
     __members__ = property(lambda self: self.__dir__())
@@ -187,7 +188,7 @@ def _resolve_name(name, package, level):
     if not hasattr(package, 'rindex'):
         raise ValueError("'package' not set to a string")
     dot = len(package)
-    for x in xrange(level, 1, -1):  # @UnusedVariable
+    for x in range(level, 1, -1):  # @UnusedVariable
         try:
             dot = package.rindex('.', 0, dot)
         except ValueError:
@@ -224,5 +225,5 @@ def import_module(name, package=None):
     except KeyError:
         pass
     else:
-        module = reload(module)
+        module = importlib.reload(module)
     return sys.modules[name]

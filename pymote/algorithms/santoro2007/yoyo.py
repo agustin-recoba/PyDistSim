@@ -202,7 +202,7 @@ class YoYo(NodeAlgorithm):
 
             # If responses received for all sent ids handle them
             num_of_responses = sum(
-                [len(sources) for sources in responses.values()]
+                [len(sources) for sources in list(responses.values())]
             )
 
             if num_of_responses >= node.memory[self.SENT_IDS_KEY]:
@@ -236,7 +236,7 @@ class YoYo(NodeAlgorithm):
             ids = node.memory[self.RECEIVED_IDS_KEY]
 
             # If ids received from all inNeighbors handle them
-            num_of_ids = sum([len(sources) for sources in ids.values()])
+            num_of_ids = sum([len(sources) for sources in list(ids.values())])
 
             if num_of_ids >= len(node.memory[self.inNeighborsKey]):
                 node.memory[self.RECEIVED_RESPONSES_KEY] = {}
@@ -260,7 +260,7 @@ class YoYo(NodeAlgorithm):
 
             # If responses received for all sent ids handle them
             num_of_responses = sum(
-                [len(sources) for sources in responses.values()]
+                [len(sources) for sources in list(responses.values())]
             )
 
             if num_of_responses >= node.memory[self.SENT_IDS_KEY]:
@@ -304,7 +304,7 @@ class YoYo(NodeAlgorithm):
         ids = node.memory[self.RECEIVED_IDS_KEY]
 
         # If ids received from all inNeighbors handle them
-        num_of_ids = sum([len(sources) for sources in ids.values()])
+        num_of_ids = sum([len(sources) for sources in list(ids.values())])
 
         if num_of_ids >= len(node.memory[self.inNeighborsKey]):
             no_response_nodes, prune_nodes = self.send_responses(node)

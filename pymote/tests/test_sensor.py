@@ -26,8 +26,8 @@ class TestSensor(unittest.TestCase):
         node.compositeSensor = (NeighborsSensor, 'AoASensor', dist_sensor)
         self.assertTrue(len(node.compositeSensor.sensors) == 3)
         readings = node.compositeSensor.read()
-        self.assertTrue('Neighbors' in readings.keys() and
-                        'AoA' in readings.keys() and
-                        'Dist' in readings.keys())
+        self.assertTrue('Neighbors' in list(readings.keys()) and
+                        'AoA' in list(readings.keys()) and
+                        'Dist' in list(readings.keys()))
 
         #TODO: check normal distribution

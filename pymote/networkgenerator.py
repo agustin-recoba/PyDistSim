@@ -204,8 +204,7 @@ def generate_mesh_positions(env, n):
     d = sqrt(h*w/n)
 
     def get_mesh_pos(d, dx, dy, w, h):
-        return map(lambda (xi, yi): (xi*d+dx, yi*d+dy),
-                   product(range(int(round(w/d))), range(int(round(h/d)))))
+        return [(xi_yi[0]*d+dx, xi_yi[1]*d+dy) for xi_yi in product(list(range(int(round(w/d)))), list(range(int(round(h/d)))))]
     n_mesh = 0
     direction = []
     while True:

@@ -33,15 +33,15 @@ class TestSantoro2007(unittest.TestCase):
 
             min_id = min(sim.network.nodes(), key=lambda node: node.id).id
             for node in sim.network.nodes():
-                if node.id == min_id:
-                    # Check if the node with the smallest ID is the LEADER
-                    assert node.status == 'LEADER', \
-                        '%s: Node %d has status %s, not LEADER' % \
-                        (name, node.id, node.status)
-                else:
+                if node.id != min_id:
                     # Check if every other node is PRUNED
                     assert node.status == 'PRUNED', \
                         '%s: Node %d has status %s, not PRUNED' % \
+                        (name, node.id, node.status)
+                else:
+                    # Check if the node with the smallest ID is the LEADER
+                    assert node.status == 'LEADER', \
+                        '%s: Node %d has status %s, not LEADER' % \
                         (name, node.id, node.status)
 
         for i in range(N_ITERS):

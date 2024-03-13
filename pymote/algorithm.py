@@ -21,20 +21,20 @@ class AlgorithmMeta(type):
             dps.update(base_dps)
         rps.extend(dct.get('required_params', []))
         dps.update(dct.get('default_params', {}))
-        all_params = rps + dps.keys()
+        all_params = rps + list(dps.keys())
 
         assert len(rps)==len(set(rps)), \
             'Some required params %s defined in multiple classes.' % str(rps)
         assert len(all_params)==len(set(all_params)), \
             'Required params %s and default params %s should be unique.' % \
-            (str(rps), str(dps.keys()))
+            (str(rps), str(list(dps.keys())))
 
         dct['required_params'] = tuple(rps)
         dct['default_params'] = dps
         return super(AlgorithmMeta, cls).__new__(cls, clsname, bases, dct)
 
 
-class Algorithm(object):
+class Algorithm(object, metaclass=AlgorithmMeta):
     """
     Abstract base class for all algorithms.
 
@@ -75,7 +75,6 @@ class Algorithm(object):
             subclasses
 
     """
-    __metaclass__ = AlgorithmMeta
 
     required_params = ()
     default_params = {}
@@ -86,15 +85,15 @@ class Algorithm(object):
         logger.debug('Instance of %s class has been initialized.' % self.name)
 
         for required_param in self.required_params:
-            if required_param not in kwargs.keys():
+            if required_param not in list(kwargs.keys()):
                 raise PymoteAlgorithmException('Missing required param.')
 
         # set default params
-        for dp, val in self.default_params.items():
+        for dp, val in list(self.default_params.items()):
             self.__setattr__(dp, val)
 
         # override default params
-        for kw, arg in kwargs.items():
+        for kw, arg in list(kwargs.items()):
             self.__setattr__(kw, arg)
 
 
@@ -134,7 +133,7 @@ class NodeAlgorithm(Algorithm):
         """ Executes one step of the algorithm for given node."""
         message = node.receive()
         if message:
-            if (message.destination == None or message.destination == node):
+            if (message.destination is None or message.destination == node):
                 # when destination is None it is broadcast message
                 return self._process_message(node, message)
             elif (message.nexthop == node.id):
