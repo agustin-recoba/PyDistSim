@@ -10,7 +10,7 @@ class DictionaryTreeModel(QAbstractItemModel):
     def __init__(self, parent=None, dic={}):
         super(DictionaryTreeModel, self).__init__(parent)
         self.dic = dic
-        self.rootItem = TreeItem(('tree', 'root'), None)
+        self.rootItem = TreeItem(("tree", "root"), None)
         self.parents = {0: self.rootItem}
         self.setupModelData()
 
@@ -85,6 +85,7 @@ class TreeItem(object):
     a python object used to return row/column data, and keep note of
     it's parents and/or children
     """
+
     def __init__(self, dicItem, parentItem):
         key, value = dicItem
         self.itemDataKey = key
@@ -105,7 +106,7 @@ class TreeItem(object):
         #    for item in items:
         #        self.appendChild(TreeItem(item,self))
         else:
-            self.itemData = ': '.join([key.__str__(), value.__str__()])
+            self.itemData = ": ".join([key.__str__(), value.__str__()])
 
     def appendChild(self, item):
         self.childItems.append(item)
@@ -130,11 +131,11 @@ class TreeItem(object):
             return self.parentItem.childItems.index(self)
         return 0
 
-    def toString(self, indentation=''):
+    def toString(self, indentation=""):
         """
         Return string that represents all data in this item and all children.
         """
         s = self.itemData
         for child in self.childItems:
-            s += '\n' + indentation + child.toString(indentation + '    ')
+            s += "\n" + indentation + child.toString(indentation + "    ")
         return s

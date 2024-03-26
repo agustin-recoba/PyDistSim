@@ -11,6 +11,7 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
+
 class Ui_SimulationWindow(object):
     def setupUi(self, SimulationWindow):
         SimulationWindow.setObjectName("SimulationWindow")
@@ -24,13 +25,19 @@ class Ui_SimulationWindow(object):
         icon = QIcon()
         icon.addPixmap(QPixmap(":/icons/pymote.png"), QIcon.Normal, QIcon.Off)
         SimulationWindow.setWindowIcon(icon)
-        SimulationWindow.setDockOptions(QMainWindow.AllowTabbedDocks|QMainWindow.AnimatedDocks|QMainWindow.VerticalTabs)
+        SimulationWindow.setDockOptions(
+            QMainWindow.AllowTabbedDocks
+            | QMainWindow.AnimatedDocks
+            | QMainWindow.VerticalTabs
+        )
         self.centralwidget = QWidget(SimulationWindow)
         self.centralwidget.setEnabled(True)
         sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.centralwidget.sizePolicy().hasHeightForWidth()
+        )
         self.centralwidget.setSizePolicy(sizePolicy)
         self.centralwidget.setObjectName("centralwidget")
         self.horizontalLayout = QHBoxLayout(self.centralwidget)
@@ -100,7 +107,9 @@ class Ui_SimulationWindow(object):
         sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.redrawNetworkButton.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.redrawNetworkButton.sizePolicy().hasHeightForWidth()
+        )
         self.redrawNetworkButton.setSizePolicy(sizePolicy)
         self.redrawNetworkButton.setObjectName("redrawNetworkButton")
         self.verticalLayout_6.addWidget(self.redrawNetworkButton)
@@ -146,7 +155,9 @@ class Ui_SimulationWindow(object):
         sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.networkDisplayWidget.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.networkDisplayWidget.sizePolicy().hasHeightForWidth()
+        )
         self.networkDisplayWidget.setSizePolicy(sizePolicy)
         self.networkDisplayWidget.setMinimumSize(QSize(650, 0))
         self.networkDisplayWidget.setObjectName("networkDisplayWidget")
@@ -168,14 +179,18 @@ class Ui_SimulationWindow(object):
         SimulationWindow.setMenuBar(self.menubar)
         self.dockWidget = QDockWidget(SimulationWindow)
         self.dockWidget.setMinimumSize(QSize(87, 109))
-        self.dockWidget.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
+        self.dockWidget.setFeatures(
+            QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable
+        )
         self.dockWidget.setAllowedAreas(Qt.RightDockWidgetArea)
         self.dockWidget.setObjectName("dockWidget")
         self.dockWidgetContents = QWidget()
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.dockWidgetContents.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.dockWidgetContents.sizePolicy().hasHeightForWidth()
+        )
         self.dockWidgetContents.setSizePolicy(sizePolicy)
         self.dockWidgetContents.setObjectName("dockWidgetContents")
         self.horizontalLayout_3 = QHBoxLayout(self.dockWidgetContents)
@@ -194,23 +209,31 @@ class Ui_SimulationWindow(object):
         SimulationWindow.addDockWidget(Qt.DockWidgetArea(2), self.dockWidget)
         self.dockWidget_2 = QDockWidget(SimulationWindow)
         self.dockWidget_2.setMinimumSize(QSize(105, 377))
-        self.dockWidget_2.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
+        self.dockWidget_2.setFeatures(
+            QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable
+        )
         self.dockWidget_2.setAllowedAreas(Qt.RightDockWidgetArea)
         self.dockWidget_2.setObjectName("dockWidget_2")
         self.dockWidgetContents_2 = QWidget()
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.dockWidgetContents_2.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.dockWidgetContents_2.sizePolicy().hasHeightForWidth()
+        )
         self.dockWidgetContents_2.setSizePolicy(sizePolicy)
         self.dockWidgetContents_2.setObjectName("dockWidgetContents_2")
         self.horizontalLayout_4 = QHBoxLayout(self.dockWidgetContents_2)
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.nodeInspector = QTreeView(self.dockWidgetContents_2)
-        sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        sizePolicy = QSizePolicy(
+            QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding
+        )
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.nodeInspector.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.nodeInspector.sizePolicy().hasHeightForWidth()
+        )
         self.nodeInspector.setSizePolicy(sizePolicy)
         self.nodeInspector.setMinimumSize(QSize(87, 337))
         self.nodeInspector.setContextMenuPolicy(Qt.ActionsContextMenu)
@@ -226,14 +249,18 @@ class Ui_SimulationWindow(object):
         SimulationWindow.addDockWidget(Qt.DockWidgetArea(2), self.dockWidget_2)
         self.dockWidget_3 = QDockWidget(SimulationWindow)
         self.dockWidget_3.setMinimumSize(QSize(87, 109))
-        self.dockWidget_3.setFeatures(QDockWidget.DockWidgetFloatable|QDockWidget.DockWidgetMovable)
+        self.dockWidget_3.setFeatures(
+            QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable
+        )
         self.dockWidget_3.setAllowedAreas(Qt.RightDockWidgetArea)
         self.dockWidget_3.setObjectName("dockWidget_3")
         self.dockWidgetContents_3 = QWidget()
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.dockWidgetContents_3.sizePolicy().hasHeightForWidth())
+        sizePolicy.setHeightForWidth(
+            self.dockWidgetContents_3.sizePolicy().hasHeightForWidth()
+        )
         self.dockWidgetContents_3.setSizePolicy(sizePolicy)
         self.dockWidgetContents_3.setObjectName("dockWidgetContents_3")
         self.horizontalLayout_5 = QHBoxLayout(self.dockWidgetContents_3)
@@ -277,7 +304,9 @@ class Ui_SimulationWindow(object):
         self.actionOpenNetwork.setIcon(icon5)
         self.actionOpenNetwork.setObjectName("actionOpenNetwork")
         self.actionShowLocalizedSubclusters = QAction(SimulationWindow)
-        self.actionShowLocalizedSubclusters.setObjectName("actionShowLocalizedSubclusters")
+        self.actionShowLocalizedSubclusters.setObjectName(
+            "actionShowLocalizedSubclusters"
+        )
         self.toolBar.addAction(self.actionOpenNetwork)
         self.toolBar.addAction(self.actionSaveNetwork)
         self.toolBar.addSeparator()
@@ -297,51 +326,154 @@ class Ui_SimulationWindow(object):
         SimulationWindow.setTabOrder(self.stepSize, self.treeKey)
 
     def retranslateUi(self, SimulationWindow):
-        SimulationWindow.setWindowTitle(QApplication.translate("SimulationWindow", "Pymote Simulation", None))
-        self.controlGroupBox.setTitle(QApplication.translate("SimulationWindow", "Control", None))
-        self.label_2.setText(QApplication.translate("SimulationWindow", "Step size:", None))
-        self.stepSize.setSpecialValueText(QApplication.translate("SimulationWindow", "All", None))
-        self.viewGroupBox.setTitle(QApplication.translate("SimulationWindow", "View", None))
-        self.networkViewGroup.setTitle(QApplication.translate("SimulationWindow", "Network", None))
-        self.showNodes.setText(QApplication.translate("SimulationWindow", "Nodes", None))
-        self.showEdges.setText(QApplication.translate("SimulationWindow", "Edges", None))
-        self.showMessages.setText(QApplication.translate("SimulationWindow", "Messages", None))
-        self.showLabels.setText(QApplication.translate("SimulationWindow", "Labels", None))
-        self.redrawNetworkButton.setText(QApplication.translate("SimulationWindow", "Redraw", None))
-        self.treeGroupBox.setToolTip(QApplication.translate("SimulationWindow", "Enter memory key that has parent and child items.", None))
-        self.treeGroupBox.setTitle(QApplication.translate("SimulationWindow", "Tree", None))
-        self.treeKey.setText(QApplication.translate("SimulationWindow", "treeNeighbors", None))
+        SimulationWindow.setWindowTitle(
+            QApplication.translate("SimulationWindow", "Pymote Simulation", None)
+        )
+        self.controlGroupBox.setTitle(
+            QApplication.translate("SimulationWindow", "Control", None)
+        )
+        self.label_2.setText(
+            QApplication.translate("SimulationWindow", "Step size:", None)
+        )
+        self.stepSize.setSpecialValueText(
+            QApplication.translate("SimulationWindow", "All", None)
+        )
+        self.viewGroupBox.setTitle(
+            QApplication.translate("SimulationWindow", "View", None)
+        )
+        self.networkViewGroup.setTitle(
+            QApplication.translate("SimulationWindow", "Network", None)
+        )
+        self.showNodes.setText(
+            QApplication.translate("SimulationWindow", "Nodes", None)
+        )
+        self.showEdges.setText(
+            QApplication.translate("SimulationWindow", "Edges", None)
+        )
+        self.showMessages.setText(
+            QApplication.translate("SimulationWindow", "Messages", None)
+        )
+        self.showLabels.setText(
+            QApplication.translate("SimulationWindow", "Labels", None)
+        )
+        self.redrawNetworkButton.setText(
+            QApplication.translate("SimulationWindow", "Redraw", None)
+        )
+        self.treeGroupBox.setToolTip(
+            QApplication.translate(
+                "SimulationWindow",
+                "Enter memory key that has parent and child items.",
+                None,
+            )
+        )
+        self.treeGroupBox.setTitle(
+            QApplication.translate("SimulationWindow", "Tree", None)
+        )
+        self.treeKey.setText(
+            QApplication.translate("SimulationWindow", "treeNeighbors", None)
+        )
         self.label.setText(QApplication.translate("SimulationWindow", "Key:", None))
-        self.propagationError.setToolTip(QApplication.translate("SimulationWindow", "Enter memory key that has stitch location data.", None))
-        self.propagationError.setTitle(QApplication.translate("SimulationWindow", "Propagation error", None))
-        self.locKey.setText(QApplication.translate("SimulationWindow", "convergecastLoc", None))
+        self.propagationError.setToolTip(
+            QApplication.translate(
+                "SimulationWindow",
+                "Enter memory key that has stitch location data.",
+                None,
+            )
+        )
+        self.propagationError.setTitle(
+            QApplication.translate("SimulationWindow", "Propagation error", None)
+        )
+        self.locKey.setText(
+            QApplication.translate("SimulationWindow", "convergecastLoc", None)
+        )
         self.label2.setText(QApplication.translate("SimulationWindow", "LocKey:", None))
-        self.toolBar.setWindowTitle(QApplication.translate("SimulationWindow", "toolBar", None))
+        self.toolBar.setWindowTitle(
+            QApplication.translate("SimulationWindow", "toolBar", None)
+        )
         self.menuFile.setTitle(QApplication.translate("SimulationWindow", "File", None))
-        self.menuSimulation.setTitle(QApplication.translate("SimulationWindow", "Simulation", None))
-        self.dockWidget.setWindowTitle(QApplication.translate("SimulationWindow", "Network inspector", None))
-        self.dockWidget_2.setWindowTitle(QApplication.translate("SimulationWindow", "Node inspector", None))
-        self.dockWidget_3.setWindowTitle(QApplication.translate("SimulationWindow", "Log", None))
+        self.menuSimulation.setTitle(
+            QApplication.translate("SimulationWindow", "Simulation", None)
+        )
+        self.dockWidget.setWindowTitle(
+            QApplication.translate("SimulationWindow", "Network inspector", None)
+        )
+        self.dockWidget_2.setWindowTitle(
+            QApplication.translate("SimulationWindow", "Node inspector", None)
+        )
+        self.dockWidget_3.setWindowTitle(
+            QApplication.translate("SimulationWindow", "Log", None)
+        )
         self.actionRun.setText(QApplication.translate("SimulationWindow", "Run", None))
-        self.actionRun.setToolTip(QApplication.translate("SimulationWindow", "Run simulation from beginning", None))
-        self.actionRun.setShortcut(QApplication.translate("SimulationWindow", "Ctrl+R", None))
-        self.actionStep.setText(QApplication.translate("SimulationWindow", "Step", None))
-        self.actionStep.setToolTip(QApplication.translate("SimulationWindow", "Run next step", None))
-        self.actionStep.setShortcut(QApplication.translate("SimulationWindow", "Ctrl+Space", None))
-        self.actionReset.setText(QApplication.translate("SimulationWindow", "Reset", None))
-        self.actionReset.setToolTip(QApplication.translate("SimulationWindow", "Reset simulation", None))
-        self.actionReset.setShortcut(QApplication.translate("SimulationWindow", "Ctrl+W", None))
-        self.actionCopyInspectorData.setText(QApplication.translate("SimulationWindow", "Copy", None))
-        self.actionCopyInspectorData.setShortcut(QApplication.translate("SimulationWindow", "Ctrl+C", None))
-        self.actionSaveNetwork.setText(QApplication.translate("SimulationWindow", "Save", None))
-        self.actionSaveNetwork.setToolTip(QApplication.translate("SimulationWindow", "Save network in npickle format", None))
-        self.actionSaveNetwork.setShortcut(QApplication.translate("SimulationWindow", "Ctrl+S", None))
-        self.actionOpenNetwork.setText(QApplication.translate("SimulationWindow", "Open", None))
-        self.actionOpenNetwork.setToolTip(QApplication.translate("SimulationWindow", "Open network from npickle", None))
-        self.actionOpenNetwork.setShortcut(QApplication.translate("SimulationWindow", "Ctrl+O", None))
-        self.actionShowLocalizedSubclusters.setText(QApplication.translate("SimulationWindow", "Show localized subclusters", None))
-        self.actionShowLocalizedSubclusters.setToolTip(QApplication.translate("SimulationWindow", "Show localized subclusters based on memory field that has positions and subclusters items.", None))
-        self.actionShowLocalizedSubclusters.setShortcut(QApplication.translate("SimulationWindow", "Ctrl+L", None))
+        self.actionRun.setToolTip(
+            QApplication.translate(
+                "SimulationWindow", "Run simulation from beginning", None
+            )
+        )
+        self.actionRun.setShortcut(
+            QApplication.translate("SimulationWindow", "Ctrl+R", None)
+        )
+        self.actionStep.setText(
+            QApplication.translate("SimulationWindow", "Step", None)
+        )
+        self.actionStep.setToolTip(
+            QApplication.translate("SimulationWindow", "Run next step", None)
+        )
+        self.actionStep.setShortcut(
+            QApplication.translate("SimulationWindow", "Ctrl+Space", None)
+        )
+        self.actionReset.setText(
+            QApplication.translate("SimulationWindow", "Reset", None)
+        )
+        self.actionReset.setToolTip(
+            QApplication.translate("SimulationWindow", "Reset simulation", None)
+        )
+        self.actionReset.setShortcut(
+            QApplication.translate("SimulationWindow", "Ctrl+W", None)
+        )
+        self.actionCopyInspectorData.setText(
+            QApplication.translate("SimulationWindow", "Copy", None)
+        )
+        self.actionCopyInspectorData.setShortcut(
+            QApplication.translate("SimulationWindow", "Ctrl+C", None)
+        )
+        self.actionSaveNetwork.setText(
+            QApplication.translate("SimulationWindow", "Save", None)
+        )
+        self.actionSaveNetwork.setToolTip(
+            QApplication.translate(
+                "SimulationWindow", "Save network in npickle format", None
+            )
+        )
+        self.actionSaveNetwork.setShortcut(
+            QApplication.translate("SimulationWindow", "Ctrl+S", None)
+        )
+        self.actionOpenNetwork.setText(
+            QApplication.translate("SimulationWindow", "Open", None)
+        )
+        self.actionOpenNetwork.setToolTip(
+            QApplication.translate(
+                "SimulationWindow", "Open network from npickle", None
+            )
+        )
+        self.actionOpenNetwork.setShortcut(
+            QApplication.translate("SimulationWindow", "Ctrl+O", None)
+        )
+        self.actionShowLocalizedSubclusters.setText(
+            QApplication.translate(
+                "SimulationWindow", "Show localized subclusters", None
+            )
+        )
+        self.actionShowLocalizedSubclusters.setToolTip(
+            QApplication.translate(
+                "SimulationWindow",
+                "Show localized subclusters based on memory field that has positions and subclusters items.",
+                None,
+            )
+        )
+        self.actionShowLocalizedSubclusters.setShortcut(
+            QApplication.translate("SimulationWindow", "Ctrl+L", None)
+        )
+
 
 try:
     from . import icons_rc

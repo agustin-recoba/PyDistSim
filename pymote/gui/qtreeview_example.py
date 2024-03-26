@@ -1,15 +1,30 @@
-from PySide6.QtGui import QApplication, QDialog, QVBoxLayout, QTreeView, \
-                         QLabel, QFrame, QHBoxLayout, QPushButton
-from PySide6.QtCore import QAbstractItemModel, QModelIndex, QObject, SIGNAL, \
-                          Qt, QVariant  # @UnresolvedImport
+from PySide6.QtGui import (
+    QApplication,
+    QDialog,
+    QVBoxLayout,
+    QTreeView,
+    QLabel,
+    QFrame,
+    QHBoxLayout,
+    QPushButton,
+)
+from PySide6.QtCore import (
+    QAbstractItemModel,
+    QModelIndex,
+    QObject,
+    SIGNAL,
+    Qt,
+    QVariant,
+)  # @UnresolvedImport
 
 HORIZONTAL_HEADERS = ("Surname", "Given Name")
 
 
 class person_class(object):
-    '''
+    """
     a trivial custom data object
-    '''
+    """
+
     def __init__(self, sname, fname, isMale):
         self.sname = sname
         self.fname = fname
@@ -24,6 +39,7 @@ class TreeItem(object):
     a python object used to return row/column data, and keep note of
     it's parents and/or children
     """
+
     def __init__(self, person, header, parentItem):
         self.person = person
         self.parentItem = parentItem
@@ -65,14 +81,18 @@ class TreeItem(object):
 
 
 class treeModel(QAbstractItemModel):
-    '''
+    """
     a model to display a few names, ordered by sex
-    '''
+    """
+
     def __init__(self, parent=None):
         super(treeModel, self).__init__(parent)
         self.people = []
-        for fname, sname, isMale in (("John", "Brown", 1),
-        ("Fred", "Bloggs", 1), ("Sue", "Smith", 0)):
+        for fname, sname, isMale in (
+            ("John", "Brown", 1),
+            ("Fred", "Bloggs", 1),
+            ("Sue", "Smith", 0),
+        ):
             person = person_class(sname, fname, isMale)
             self.people.append(person)
 
@@ -100,8 +120,7 @@ class treeModel(QAbstractItemModel):
         return QVariant()
 
     def headerData(self, column, orientation, role):
-        if (orientation == Qt.Horizontal and
-        role == Qt.DisplayRole):
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             try:
                 return QVariant(HORIZONTAL_HEADERS[column])
             except IndexError:
@@ -169,10 +188,11 @@ class treeModel(QAbstractItemModel):
         """
         get the modelIndex for a given appointment
         """
+
         def searchNode(node):
-            '''
+            """
             a function called recursively, looking at all nodes beneath node
-            '''
+            """
             for child in node.childItems:
                 if person == child.person:
                     index = self.createIndex(child.row(), 0, child)
@@ -198,19 +218,20 @@ class treeModel(QAbstractItemModel):
             return (True, index)
         return (False, None)
 
+
 if __name__ == "__main__":
 
     def row_clicked(index):
-        '''
+        """
         when a row is clicked... show the name
-        '''
+        """
         print(tv.model().data(index, Qt.UserRole))
 
     def but_clicked():
-        '''
+        """
         when a name button is clicked, I iterate over the model,
         find the person with this name, and set the treeviews current item
-        '''
+        """
         name = dialog.sender().text()
         print("BUTTON CLICKED:", name)
         result, index = model.find_GivenName(name)
@@ -252,8 +273,7 @@ if __name__ == "__main__":
     layout.addWidget(but)
     QObject.connect(but, SIGNAL("clicked()"), tv.clearSelection)
 
-    QObject.connect(tv, SIGNAL("clicked (QModelIndex)"),
-        row_clicked)
+    QObject.connect(tv, SIGNAL("clicked (QModelIndex)"), row_clicked)
 
     dialog.exec_()
 

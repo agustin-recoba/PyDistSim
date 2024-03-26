@@ -7,17 +7,17 @@ class DVHop(FloodingUpdate):
     Data is {landmark: [x,y,hop_count], ...}
     """
 
-    required_params = ('truePositionKey', 'hopsizeKey')
+    required_params = ("truePositionKey", "hopsizeKey")
 
     def initiator_condition(self, node):
-        node.memory[self.truePositionKey] = node.compositeSensor.read().\
-                                            get('TruePos', None)
+        node.memory[self.truePositionKey] = node.compositeSensor.read().get(
+            "TruePos", None
+        )
         # true if node is one of the landmarks
         return node.memory[self.truePositionKey] is not None
 
     def initiator_data(self, node):
-        return {node:
-                concatenate((node.memory[self.truePositionKey][:2], [1]))}
+        return {node: concatenate((node.memory[self.truePositionKey][:2], [1]))}
 
     def handle_flood_message(self, node, message):
         if self.dataKey not in node.memory:
@@ -29,8 +29,10 @@ class DVHop(FloodingUpdate):
                 continue
             # update only if this is first received data from landmark or new
             # hopcount is smaller than previous minimum
-            if landmark not in node.memory[self.dataKey] or \
-                   landmark_data[2] < node.memory[self.dataKey][landmark][2]:
+            if (
+                landmark not in node.memory[self.dataKey]
+                or landmark_data[2] < node.memory[self.dataKey][landmark][2]
+            ):
                 node.memory[self.dataKey][landmark] = array(landmark_data)
                 # increase hopcount
                 landmark_data[2] += 1
@@ -49,11 +51,14 @@ class DVHop(FloodingUpdate):
         except KeyError:
             pass
         else:
-            def dist(x, y): 
+
+            def dist(x, y):
                 return sqrt(dot(x - y, x - y))
-            
+
             if landmarks_count > 0:
-                node.memory[self.hopsizeKey] = \
-                    sum([dist(lp[:2], pos)
-                         for lp in list(node.memory[self.dataKey].values())]) / \
-                    sum([lp[2] for lp in list(node.memory[self.dataKey].values())])
+                node.memory[self.hopsizeKey] = sum(
+                    [
+                        dist(lp[:2], pos)
+                        for lp in list(node.memory[self.dataKey].values())
+                    ]
+                ) / sum([lp[2] for lp in list(node.memory[self.dataKey].values())])

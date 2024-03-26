@@ -11,15 +11,18 @@ class TestNiculescu2003(unittest.TestCase):
     def setUp(self):
         net_gen = NetworkGenerator(100)
         self.net = net_gen.generate_random_network()
-        self.net.algorithms = ((DVHop, {'truePositionKey': 'tp',
-                                  'hopsizeKey': 'hs',
-                                  'dataKey': 'I'
-                                  }),
-                          (Trilaterate, {'truePositionKey': 'tp',
-                                        'hopsizeKey': 'hs',
-                                        'positionKey': 'pos',
-                                        'dataKey': 'I'}),
-                          )
+        self.net.algorithms = (
+            (DVHop, {"truePositionKey": "tp", "hopsizeKey": "hs", "dataKey": "I"}),
+            (
+                Trilaterate,
+                {
+                    "truePositionKey": "tp",
+                    "hopsizeKey": "hs",
+                    "positionKey": "pos",
+                    "dataKey": "I",
+                },
+            ),
+        )
         for node in self.net.nodes()[:10]:
             node.compositeSensor = (TruePosSensor,)
 
@@ -28,5 +31,6 @@ class TestNiculescu2003(unittest.TestCase):
         sim = Simulation(self.net)
         sim.run()
         for node in self.net.nodes():
-            self.assertTrue(len(node.memory.get('pos', [None, None])) == 2\
-                            or 'tp' in node.memory)
+            self.assertTrue(
+                len(node.memory.get("pos", [None, None])) == 2 or "tp" in node.memory
+            )

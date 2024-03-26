@@ -10,8 +10,7 @@ class Node(object):
     cid = 1
 
     def __init__(self, network=None, commRange=None, sensors=None, **kwargs):
-        self._compositeSensor = CompositeSensor(self, sensors or
-                                                settings.SENSORS)
+        self._compositeSensor = CompositeSensor(self, sensors or settings.SENSORS)
         self.network = network
         self._commRange = commRange or settings.COMM_RANGE
         self.id = self.__class__.cid
@@ -29,7 +28,7 @@ class Node(object):
     def reset(self):
         self.outbox = []
         self._inbox = []
-        self.status = ''
+        self.status = ""
         self.memory = {}
 
     def send(self, message):
@@ -46,8 +45,7 @@ class Node(object):
         if not isinstance(message.destination, Iterable):
             message.destination = [message.destination]
         for destination in message.destination:
-            logger.debug('Node %d sent message %s.' %
-                         (self.id, message.__repr__()))
+            logger.debug("Node %d sent message %s." % (self.id, message.__repr__()))
             m = message.copy()
             m.destination = destination
             self.outbox.insert(0, m)
@@ -67,8 +65,7 @@ class Node(object):
         """
         if self._inbox and not self._inboxDelay:
             message = self._inbox.pop()
-            logger.debug('Node %d received message %s' %
-                         (self.id, message.__repr__()))
+            logger.debug("Node %d received message %s" % (self.id, message.__repr__()))
         else:
             message = None
         self._inboxDelay = False
@@ -110,46 +107,65 @@ class Node(object):
             self.network.recalculate_edges([self])
 
     def get_log(self):
-        """ Special field in memory used to log messages from algorithms. """
-        if 'log' not in self.memory:
-            self.memory['log'] = []
-        return self.memory['log']
+        """Special field in memory used to log messages from algorithms."""
+        if "log" not in self.memory:
+            self.memory["log"] = []
+        return self.memory["log"]
 
     def log(self, message, level=logging.WARNING):
-        """ Insert a log message in node memory. """
+        """Insert a log message in node memory."""
         assert isinstance(message, str)
         context = {
-                   'algorithm': str(self.network.get_current_algorithm()),
-                   'algorithmState': self.network.algorithmState,
-                   }
-        if 'log' not in self.memory:
-            self.memory['log'] = [(level, message, context)]
+            "algorithm": str(self.network.get_current_algorithm()),
+            "algorithmState": self.network.algorithmState,
+        }
+        if "log" not in self.memory:
+            self.memory["log"] = [(level, message, context)]
         else:
-            self.memory['log'].append((level, message, context))
+            self.memory["log"].append((level, message, context))
 
     def get_dic(self):
-        return {'1. info': {'id': self.id,
-                    'status': self.status,
-                    'position': self.network.pos[self],
-                    'orientation': self.network.ori[self]},
-                '2. communication': {'range': self.commRange,
-                                     'inbox': self.box_as_dic('inbox'),
-                                     'outbox': self.box_as_dic('outbox')},
-                '3. memory': self.memory,
-                '4. sensors': {sensor.name(): '%s(%.3f)' %
-                                (sensor.probabilityFunction.name,
-                                 sensor.probabilityFunction.scale)
-                                 if hasattr(sensor, 'probabilityFunction') and
-                                    sensor.probabilityFunction is not None
-                                 else ('', 0)
-                              for sensor in self.compositeSensor.sensors}}
+        return {
+            "1. info": {
+                "id": self.id,
+                "status": self.status,
+                "position": self.network.pos[self],
+                "orientation": self.network.ori[self],
+            },
+            "2. communication": {
+                "range": self.commRange,
+                "inbox": self.box_as_dic("inbox"),
+                "outbox": self.box_as_dic("outbox"),
+            },
+            "3. memory": self.memory,
+            "4. sensors": {
+                sensor.name(): (
+                    "%s(%.3f)"
+                    % (
+                        sensor.probabilityFunction.name,
+                        sensor.probabilityFunction.scale,
+                    )
+                    if hasattr(sensor, "probabilityFunction")
+                    and sensor.probabilityFunction is not None
+                    else ("", 0)
+                )
+                for sensor in self.compositeSensor.sensors
+            },
+        }
 
     def box_as_dic(self, box):
         messagebox = self.__getattribute__(box)
         dic = {}
         for i, message in enumerate(messagebox):
-            dic.update({'%d. Message' % (i + 1,): {'1 header': message.header,
-                                          '2 source': message.source,
-                                          '3 destination': message.destination,
-                                          '4 data': message.data}})
+            dic.update(
+                {
+                    "%d. Message"
+                    % (i + 1,): {
+                        "1 header": message.header,
+                        "2 source": message.source,
+                        "3 destination": message.destination,
+                        "4 data": message.data,
+                    }
+                }
+            )
         return dic

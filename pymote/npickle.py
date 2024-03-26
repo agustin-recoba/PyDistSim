@@ -1,4 +1,4 @@
-__all__ = ['read_pickle', 'write_pickle']
+__all__ = ["read_pickle", "write_pickle"]
 
 from pymote.logger import logger
 import pickle as pickle
@@ -7,12 +7,13 @@ import sys
 import os
 
 
-def _get_fh(path, mode='r'):
+def _get_fh(path, mode="r"):
     """Return a file handle for given path and attempt to uncompress/compress
     files ending in '.gz'"""
 
-    if path.endswith('.gz'):
+    if path.endswith(".gz"):
         import gzip
+
         fh = gzip.open(path, mode=mode)
     else:
         fh = open(path, mode=mode)
@@ -28,12 +29,13 @@ def write_pickle(obj, path, makedir=True):
     try:
         os.makedirs(os.path.split(path)[0])
     except OSError as e:
-        if e.errno!=errno.EEXIST and e.filename!='':
+        if e.errno != errno.EEXIST and e.filename != "":
             raise
-    fh = _get_fh(str(path), mode='wb')
+    fh = _get_fh(str(path), mode="wb")
     pickle.dump(obj, fh, pickle.HIGHEST_PROTOCOL)
     fh.close()
-    logger.info('instance of %s saved in %s' % (str(obj.__class__), path))
+    logger.info("instance of %s saved in %s" % (str(obj.__class__), path))
+
 
 write_npickle = write_pickle
 
@@ -44,15 +46,16 @@ def read_pickle(path, not_found_raises=True):
     an exception if file is missing.
     """
     try:
-        fh = _get_fh(str(path), 'rb')
+        fh = _get_fh(str(path), "rb")
         obj = pickle.load(fh)
-        logger.info('instance of %s loaded: %s' % (str(obj.__class__), path))
+        logger.info("instance of %s loaded: %s" % (str(obj.__class__), path))
         return obj
     except IOError as e:
         # if error is some other than errno.ENOENT ='file not found raise
-        if not_found_raises or e.errno!=errno.ENOENT:
+        if not_found_raises or e.errno != errno.ENOENT:
             raise
         return None
+
 
 read_npickle = read_pickle
 
@@ -62,8 +65,8 @@ read_npickle = read_pickle
 # this is solution for pickling instance methods found at
 # http://stackoverflow.com/a/1816969/1247955
 def _pickle_method(method):
-    #print 'pickling',
-    #print method
+    # print 'pickling',
+    # print method
     func_name = method.__func__.__name__
     obj = method.__self__
     cls = method.__self__.__class__
@@ -80,6 +83,8 @@ def _unpickle_method(func_name, obj, cls):
             break
     return func.__get__(obj, cls)
 
+
 import copyreg
 import types
+
 copyreg.pickle(types.MethodType, _pickle_method, _unpickle_method)

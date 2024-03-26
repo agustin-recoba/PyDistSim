@@ -10,8 +10,9 @@ def pymote_equal_objects(obj1, obj2):
     types = (str, tuple, int, int, bool, float, frozenset, bytes, complex)
     for key, value in list(obj1.__dict__.items()):
         other_value = getattr(obj2, key, None)
-        if (isinstance(value, types) and value!=other_value) or \
-            value.__class__!=other_value.__class__:
+        if (
+            isinstance(value, types) and value != other_value
+        ) or value.__class__ != other_value.__class__:
             attr_values = False
             break
     return classes and attr_names and attr_values
