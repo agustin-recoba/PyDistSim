@@ -22,6 +22,6 @@ class Mock(object):
         else:
             return Mock()
 
-MOCK_MODULES = ['networkx','png','PySide6','PySide6.QtCore','PySide6.QtGui']
+MOCK_MODULES = ['networkx','png','PySide6','PySide6.QtCore','PySide6.QtGui', 'scipy', 'scipy.stats']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()
