@@ -1,6 +1,51 @@
-from pymote.message import Message
+from enum import StrEnum
+from pymote.message import Message, MetaHeader as MessageMetaHeader
 from pymote.logger import logger
+from pymote.node import Node
 from inspect import getmembers
+
+MSG_META_HEADER_MAP = {
+    MessageMetaHeader.NORMAL_MESSAGE: "receiving",
+    MessageMetaHeader.INITALIZATION_MESSAGE: "spontaneously",
+    MessageMetaHeader.ALARM_MESSAGE: "alarm",
+}
+
+
+class StatusValues(StrEnum):
+    def __call__(self, func):
+        assert func.__name__ in [
+            *MSG_META_HEADER_MAP.values(),
+            "default",
+        ], f"Invalid function name '{func.__name__}'."
+
+        setattr(self, func.__name__, func)
+        setattr(getattr(self, func.__name__), "implemented", True)
+        return func
+
+    def default(self, *args, **kwargs):
+        raise NotImplementedError(
+            f"Rection 'default' not implemented for state '{self.value}'."
+        )
+    setattr(default, "implemented", False)
+
+    def receiving(self, *args, **kwargs):
+        raise NotImplementedError(
+            f"Rection 'receiving' not implemented for state '{self.value}'."
+        )
+    setattr(receiving, "implemented", False)
+
+
+    def spontaneously(self, *args, **kwargs):
+        raise NotImplementedError(
+            f"Rection 'spontaneously' not implemented for state '{self.value}'."
+        )
+    setattr(spontaneously, "implemented", False)
+
+    def alarm(self, *args, **kwargs):
+        raise NotImplementedError(
+            f"Rection 'alarm' not implemented for state '{self.value}'."
+        )
+    setattr(alarm, "implemented", False)
 
 
 class AlgorithmMeta(type):
@@ -121,21 +166,23 @@ class NodeAlgorithm(Algorithm):
 
     """
 
-    INI = "initialize"
-    STATUS = {}
+    INI = MessageMetaHeader.INITALIZATION_MESSAGE
+
+    class Status(StatusValues):
+        IDLE = "IDLE"
 
     def initializer(self):
         """Pass INI message to certain nodes in network based on type."""
         node = self.network.nodes()[0]
         self.network.outbox.insert(
-            0, Message(header=NodeAlgorithm.INI, destination=node)
+            0, Message(meta_header=NodeAlgorithm.INI, destination=node)
         )
         for node in self.network.nodes():
-            node.status = "IDLE"
+            node.status = self.Status.IDLE
 
-    def step(self, node):
+    def step(self, node:Node):
         """Executes one step of the algorithm for given node."""
-        message = node.receive()
+        message: Message = node.receive()
         if message:
             if message.destination is None or message.destination == node:
                 # when destination is None it is broadcast message
@@ -143,7 +190,7 @@ class NodeAlgorithm(Algorithm):
             elif message.nexthop == node.id:
                 self._forward_message(node, message)
 
-    def _forward_message(self, node, message):
+    def _forward_message(self, node:Node, message: Message):
         try:
             message.nexthop = node.memory["routing"][message.destination]
         except KeyError:
@@ -151,12 +198,18 @@ class NodeAlgorithm(Algorithm):
         else:
             node.send(message)
 
-    def _process_message(self, node, message):
-        return self.__class__.STATUS.get(node.status, self.statuserr)(
-            self, node, message
-        )
+    def _process_message(self, node:Node, message: Message):
+        status = getattr(self.Status, node.status.value)
+        print(message)
+        method_name = MSG_META_HEADER_MAP.get(message.meta_header, "default")
+        method = getattr(status, method_name)
+        
+        if method.implemented:
+            return method(self, node, message)
+        else:
+            return status.default(self, node, message)
 
-    def statuserr(self, node, message):
+    def statuserr(self, node:Node, message: Message):
         logger.error("Can't handle status %s." % node.status)
 
 

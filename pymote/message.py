@@ -1,14 +1,20 @@
 from copy import deepcopy
 from copy import copy
+from enum import StrEnum
 
-
+class MetaHeader(StrEnum):
+    NORMAL_MESSAGE = "NORMAL_MESSAGE"
+    INITALIZATION_MESSAGE = "INITALIZATION_MESSAGE"
+    ALARM_MESSAGE = "ALARM_MESSAGE"
+    
 class Message(object):
 
-    def __init__(self, source=None, destination=None, nexthop=None, header="", data={}):
+    def __init__(self, source=None, destination=None, nexthop=None, header="", meta_header=MetaHeader.NORMAL_MESSAGE, data={}):
         self.source = source
         self.destination = destination
         self.nexthop = nexthop
         self.header = header
+        self.meta_header = meta_header
         self.data = data
 
     def __repr__(self):
@@ -22,9 +28,9 @@ class Message(object):
         ):
             destination = "Broadcasting"
         return (
-            "\n------ Message ------ \n     source = %s \ndestination = %s"
+            "\n------ Message '%s' ------ \n     source = %s \ndestination = %s"
             " \n     header = '%s' \nid(message) = 0x%x>"
-        ) % (self.source, destination, self.header, id(self))
+        ) % (self.meta_header, self.source, destination, self.header, id(self))
 
     def copy(self):
         # nodes are protected from copying by __deepcopy__()
