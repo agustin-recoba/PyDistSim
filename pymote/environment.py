@@ -1,21 +1,21 @@
 from pymote.conf import settings
 import png
-from itertools import imap
+
 from numpy import vstack, uint8, ones
-from numpy.core.numeric import sign, sqrt, Inf
+from numpy import sign, sqrt, Inf
 
 
 class Environment(object):
-    """ Environment abstract base class """
+    """Environment abstract base class"""
 
     def __new__(self, **kwargs):
-        """ return instance of default Environment """
+        """return instance of default Environment"""
         for cls in self.__subclasses__():
-            if (cls.__name__ == settings.ENVIRONMENT):
-                return object.__new__(cls, **kwargs)
+            if cls.__name__ == settings.ENVIRONMENT:
+                return super().__new__(cls, **kwargs)
         # if self is not Environment class (as in pickle.load_newobj) return
         # instance of self
-        return object.__new__(self, **kwargs)
+        return super().__new__(self)
 
     def is_space(self, xy):
         raise NotImplementedError
@@ -30,17 +30,17 @@ class Environment2D(Environment):
     The Environment2D allows to define map and scale of 2D environment.
     """
 
-    def __init__(self, path='', scale=None, shape=None):
+    def __init__(self, path="", scale=None, shape=None):
         shape = shape if shape else settings.ENVIRONMENT2D_SHAPE
-        if (path):
+        if path:
             try:
                 r = png.Reader(path)
-                planes = r.read()[3]['planes']
-                self.im = vstack(imap(uint8, r.asDirect()[2]))[:, ::planes]
+                planes = r.read()[3]["planes"]
+                self.im = vstack((map(uint8, r.asDirect()[2])))[:, ::planes]
                 self.im = self.im[::-1, :]  # flip-up-down
-                assert((r.height, r.width) == self.im.shape)
+                assert (r.height, r.width) == self.im.shape
             except IOError:
-                print 'Can\'t open %s creating new default environment.' % path
+                print("Can't open %s creating new default environment." % path)
 
                 self.im = uint8(ones((shape)) * 255)
         else:
@@ -57,19 +57,19 @@ class Environment2D(Environment):
         return dup
 
     def is_space(self, xy):
-        """ Returns true if selected space (x,y) is space. If point xy
-        is exactly on the edge or crossing check surrounding pixels. """
+        """Returns true if selected space (x,y) is space. If point xy
+        is exactly on the edge or crossing check surrounding pixels."""
         x, y = xy
         h, w = self.im.shape
-        if x<0 or x>w or y<0 or y>h:
+        if x < 0 or x > w or y < 0 or y > h:
             return False
         check = True
         points = [xy]
-        if (xy[0] % 1 == 0):
+        if xy[0] % 1 == 0:
             points.append([xy[0] - 1, xy[1]])
-        if (xy[1] % 1 == 0):
+        if xy[1] % 1 == 0:
             points.append([xy[0], xy[1] - 1])
-        if (xy[0] % 1 == 0 and xy[1] % 1 == 0):
+        if xy[0] % 1 == 0 and xy[1] % 1 == 0:
             points.append([xy[0] - 1, xy[1] - 1])
         try:
             for p in points:
@@ -97,10 +97,10 @@ class Environment2D(Environment):
 
         # check if pixel (x,y) is target pixel (x1,y1) or
         # if float (x,y) is on N or E edge then check also W or S neighbor
-        while (not((int(x) == int(x1) or\
-                    (x % 1 == 0 and int(x) - 1 == int(x1))) and
-                   (int(y) == int(y1) or\
-                    (y % 1 == 0 and int(y) - 1 == int(y1))))):
+        while not (
+            (int(x) == int(x1) or (x % 1 == 0 and int(x) - 1 == int(x1)))
+            and (int(y) == int(y1) or (y % 1 == 0 and int(y) - 1 == int(y1)))
+        ):
             if incrE > 0:
                 dx = 1 - x % 1
             else:
@@ -130,6 +130,6 @@ class Environment2D(Environment):
                 y = round(y + sign(incrN) * dy)  # spread on N
 
             # logger.debug('x = %s, y = %s' % (str(x),str(y)))
-            if (not self.is_space([x, y])):
+            if not self.is_space([x, y]):
                 return False
         return True

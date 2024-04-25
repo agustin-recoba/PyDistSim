@@ -30,7 +30,6 @@ import inspect
 
 
 class Sensor(object):
-
     """
     Abstract base class for all Sensors.
 
@@ -40,7 +39,7 @@ class Sensor(object):
 
     """
 
-    pf_settings_key = ''
+    pf_settings_key = ""
 
     def __init__(self, pf_params={}):
         pf_params_final = getattr(settings, self.pf_settings_key, {})
@@ -60,28 +59,29 @@ class Sensor(object):
 
 def node_in_network(fun):
     """Decorator function that checks if node is in network."""
+
     def f(sensor, node):
         if not node.network:
-            raise Exception('Cannot take a sensor reading if node is'
-                            ' outside of a network.')
+            raise Exception(
+                "Cannot take a sensor reading if node is" " outside of a network."
+            )
         return fun(sensor, node)
+
     return f
 
 
 class NeighborsSensor(Sensor):
-
     """Provides list of node's neighbors."""
 
     @node_in_network
     def read(self, node):
-        return {'Neighbors': node.network.neighbors(node)}
+        return {"Neighbors": node.network.neighbors(node)}
 
 
 class AoASensor(Sensor):
-
     """Provides azimuth between node and its neighbors."""
 
-    pf_settings_key = 'AOA_PF_PARAMS'
+    pf_settings_key = "AOA_PF_PARAMS"
 
     @node_in_network
     def read(self, node):
@@ -94,14 +94,13 @@ class AoASensor(Sensor):
             measurement = (arctan2(v[1], v[0]) - o) % (2 * pi)
             measurement = self.probabilityFunction.getNoisyReading(measurement)
             measurements.update({neighbor: measurement})
-        return {'AoA': measurements}
+        return {"AoA": measurements}
 
 
 class DistSensor(Sensor):
-
     """Provides distance between node and its neighbors."""
 
-    pf_settings_key = 'DIST_PF_PARAMS'
+    pf_settings_key = "DIST_PF_PARAMS"
 
     @node_in_network
     def read(self, node):
@@ -113,20 +112,18 @@ class DistSensor(Sensor):
             measurement = sqrt(sum(pow(p - pn, 2)))
             measurement = self.probabilityFunction.getNoisyReading(measurement)
             measurements.update({neighbor: measurement})
-        return {'Dist': measurements}
+        return {"Dist": measurements}
 
 
 class TruePosSensor(Sensor):
-
     """Provides node's true position."""
 
     @node_in_network
     def read(self, node):
-        return {'TruePos': node.network.pos[node]}
+        return {"TruePos": node.network.pos[node]}
 
 
 class CompositeSensor(object):
-
     """
     Wrap multiple sensors, coalesce results and return composite readout.
 
@@ -158,22 +155,21 @@ class CompositeSensor(object):
         self._sensors = ()
         # instantiate sensors passed by class name
         for cls in Sensor.__subclasses__():
-            if (cls.__name__ in sensors):
-                self._sensors += cls(),
+            if cls.__name__ in sensors:
+                self._sensors += (cls(),)
         # instantiate sensors passed by class
         for cls in sensors:
             if inspect.isclass(cls) and issubclass(cls, Sensor):
-                self._sensors += cls(),
+                self._sensors += (cls(),)
         # add sensors that are already instantiated
         for sensor in sensors:
             if isinstance(sensor, Sensor):
-                self._sensors += sensor,
+                self._sensors += (sensor,)
 
     def get_sensor(self, name):
-        sensor = [s for s in self._sensors if s.name()==name]
-        if len(sensor)!=1:
-            raise Exception("Multiple or no sensors found with name %s"
-                            % name)
+        sensor = [s for s in self._sensors if s.name() == name]
+        if len(sensor) != 1:
+            raise Exception("Multiple or no sensors found with name %s" % name)
         return sensor[0]
 
     def read(self):
@@ -184,7 +180,6 @@ class CompositeSensor(object):
 
 
 class ProbabilityFunction(object):
-
     """Provides a way to get noisy reading."""
 
     def __init__(self, scale, pf):

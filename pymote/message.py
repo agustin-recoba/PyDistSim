@@ -4,8 +4,7 @@ from copy import copy
 
 class Message(object):
 
-    def __init__(self, source=None, destination=None, nexthop=None, header='',
-                 data={}):
+    def __init__(self, source=None, destination=None, nexthop=None, header="", data={}):
         self.source = source
         self.destination = destination
         self.nexthop = nexthop
@@ -15,14 +14,17 @@ class Message(object):
     def __repr__(self):
         destination = self.destination
         if self.destination is None:
-            destination = 'Broadcasted'
-        elif isinstance(self.destination, list) and\
-             len(self.destination) == 1 and\
-             self.destination[0] is None:
-            destination = 'Broadcasting'
-        return ("\n------ Message ------ \n     source = %s \ndestination = %s"
-                " \n     header = '%s' \nid(message) = 0x%x>")\
-                % (self.source, destination, self.header, id(self))
+            destination = "Broadcasted"
+        elif (
+            isinstance(self.destination, list)
+            and len(self.destination) == 1
+            and self.destination[0] is None
+        ):
+            destination = "Broadcasting"
+        return (
+            "\n------ Message ------ \n     source = %s \ndestination = %s"
+            " \n     header = '%s' \nid(message) = 0x%x>"
+        ) % (self.source, destination, self.header, id(self))
 
     def copy(self):
         # nodes are protected from copying by __deepcopy__()

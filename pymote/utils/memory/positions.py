@@ -1,5 +1,6 @@
 from copy import copy
 from pymote.utils.memory import MemoryStructure
+from functools import reduce
 
 
 class Positions(MemoryStructure):
@@ -15,13 +16,13 @@ class Positions(MemoryStructure):
         self.subclusters = []
         if subclusters is not None:
             # list of dictionaries of positioned subclusters
-            assert(isinstance(subclusters, list))
+            assert isinstance(subclusters, list)
             # create subclusters by copying from given list and its dicts
             ini_subclusters = list(subclusters)
             self.subclusters = []
             for subcluster in ini_subclusters:
                 new_subcluster = {}
-                for n, p in subcluster.items():
+                for n, p in list(subcluster.items()):
                     new_subcluster.update({n: copy(p)})
                 self.subclusters.append(new_subcluster)
         self.old_style_positions = {}
@@ -29,7 +30,7 @@ class Positions(MemoryStructure):
 
     @classmethod
     def create(cls, obj):
-        """ Create Positions instance from obj which can be dict or list.
+        """Create Positions instance from obj which can be dict or list.
 
         If it's dict this method wraps it in list. Returns Position object
         dereferenced from the initial list or dict.
@@ -46,19 +47,19 @@ class Positions(MemoryStructure):
 
     @property
     def subclusters_nodes(self):
-        """ Returns list of subclusters without positions. """
+        """Returns list of subclusters without positions."""
         cl = []
         for c in self.subclusters:
-            cl.append(c.keys())
+            cl.append(list(c.keys()))
         return cl
 
     def set_pos_copy(self, positions):
-        """ Empty all subclusters and copy in data from ``positions``. """
+        """Empty all subclusters and copy in data from ``positions``."""
         assert isinstance(positions, Positions)
         self.subclusters = []
         for subcluster in positions.subclusters:
             new_subcluster = {}
-            for n, p in subcluster.items():
+            for n, p in list(subcluster.items()):
                 new_subcluster.update({n: copy(p)})
             self.subclusters.append(new_subcluster)
 
@@ -66,23 +67,24 @@ class Positions(MemoryStructure):
         return len(self.subclusters)
 
     def get_nodes(self):
-        """ Returns nodes in all subclusters. """
+        """Returns nodes in all subclusters."""
         nodes = []
         for subcluster in self.subclusters:
             nodes += [node for node in subcluster if node not in nodes]
         return nodes
 
     def get_largest_subcluster(self):
-        """ Returns new Positions instance with only one largest subcluster.
-            If multiple subclusters have maximum number of nodes, first one is
-            returned. """
-        return Positions([reduce(lambda x, y: len(x)>len(y) and
-                                 x or y, self.subclusters)])
+        """Returns new Positions instance with only one largest subcluster.
+        If multiple subclusters have maximum number of nodes, first one is
+        returned."""
+        return Positions(
+            [reduce(lambda x, y: len(x) > len(y) and x or y, self.subclusters)]
+        )
 
     def get_dic(self):
         dic = {}
         for i, sc in enumerate(self.subclusters):
-            dic['subclusters[%d] (%d nodes)' % (i, len(sc))] = sc
+            dic["subclusters[%d] (%d nodes)" % (i, len(sc))] = sc
         return dic
 
     def __str__(self):
@@ -91,18 +93,18 @@ class Positions(MemoryStructure):
     # Backward compatibility - usage raises exception
     # -----------------------------------------------
     def __getitem__(self, key):
-        if key is 'positions':
-            key = 'old_style_positions'
-            raise(Exception('Old style positions usage, please refactor code'))
-        if key is 'subclusters':
-            key = 'old_style_subclusters'
-            raise(Exception('Old style positions usage, please refactor code'))
+        if key == "positions":
+            key = "old_style_positions"
+            raise Exception
+        if key == "subclusters":
+            key = "old_style_subclusters"
+            raise Exception
         if isinstance(key, int):
             return self.subclusters[key]
         return self.__getattribute__(key)
 
     def has_key(self, key):
-        raise(Exception('Old style positions usage, please refactor code'))
+        raise Exception
         try:
             self.__getitem__(key)
         except AttributeError:
@@ -110,10 +112,12 @@ class Positions(MemoryStructure):
         return True
 
     def keys(self):
-        raise (Exception('Old style positions usage, please refactor code'))
-        return ['positions', 'subclusters']
+        raise Exception
+        return ["positions", "subclusters"]
 
     def items(self):
-        raise (Exception('Old style positions usage, please refactor code'))
-        return [('positions', self.old_style_positions),
-                ('subclusters', self.old_style_subclusters)]
+        raise Exception
+        return [
+            ("positions", self.old_style_positions),
+            ("subclusters", self.old_style_subclusters),
+        ]

@@ -1,7 +1,21 @@
 from pymote.logger import logger
 from numpy import sum as nsum
-from numpy import asarray, sqrt, dot, concatenate, diag, mean, zeros, min, \
-max, arctan2, sin, cos, square, tile
+from numpy import (
+    asarray,
+    sqrt,
+    dot,
+    concatenate,
+    diag,
+    mean,
+    zeros,
+    min,
+    max,
+    arctan2,
+    sin,
+    cos,
+    square,
+    tile,
+)
 from pymote.utils.localization.aoastitcher import AoAStitcher
 from numpy.linalg import inv, pinv
 from copy import deepcopy
@@ -11,9 +25,9 @@ from xml.dom import NotSupportedErr
 
 
 def align_clusters(dst, src, scale):
-    """ Scale, rotate, translate srcLoc w.r.t. dst. """
-    assert(isinstance(src, Positions))
-    assert(isinstance(dst, Positions))
+    """Scale, rotate, translate srcLoc w.r.t. dst."""
+    assert isinstance(src, Positions)
+    assert isinstance(dst, Positions)
     if scale:
         stitcher = AoAStitcher(reflectable=True)
     else:
@@ -34,7 +48,7 @@ def get_rms(truePos, estimated, align=False, scale=False, norm=False):
 
     """
     truePos = Positions.create(truePos)
-    assert(len(truePos) == 1)
+    assert len(truePos) == 1
     estimated = Positions.create(estimated)
 
     if align:
@@ -45,16 +59,18 @@ def get_rms(truePos, estimated, align=False, scale=False, norm=False):
     node_count = 0
     for estimated_subcluster in estimated:
         for n in estimated_subcluster:
-            suma += (estimated_subcluster[n][0] - truePos[0][n][0]) ** 2 + \
-                    (estimated_subcluster[n][1] - truePos[0][n][1]) ** 2
+            suma += (estimated_subcluster[n][0] - truePos[0][n][0]) ** 2 + (
+                estimated_subcluster[n][1] - truePos[0][n][1]
+            ) ** 2
             node_count += 1
 
     rms = sqrt(suma / node_count)
     if norm:
         sc = truePos.subclusters[0]
-        truePos.subclusters[0] = {n: p for n, p in sc.items()
-                                  if n in estimated.subclusters[0]}
-        rms = rms/get_pos_norm(truePos)
+        truePos.subclusters[0] = {
+            n: p for n, p in list(sc.items()) if n in estimated.subclusters[0]
+        }
+        rms = rms / get_pos_norm(truePos)
     return rms
 
 
@@ -72,7 +88,7 @@ def construct_G(pos, edges, u, sensor):
     mu(pos) = arctan((pos_y_j - pos_y_i)/(pos_x_j - pos_x_i) - alpha_i)
 
     """
-    nodes = pos.keys()
+    nodes = list(pos.keys())
     neighbors = {n: [] for n in nodes}
     for n1, n2 in edges:
         neighbors[n1].append(n2)
@@ -86,24 +102,24 @@ def construct_G(pos, edges, u, sensor):
             t = nodes.index(neighbor)
             (x_t, y_t) = pos[neighbor][:2]
             d = sqrt((x_r - x_t) ** 2 + (y_r - y_t) ** 2)
-            if sensor == 'DistSensor':
-                G[m, r*u] = (x_r-x_t)/d
-                G[m, r*u+1] = (y_r-y_t)/d
-                G[m, t*u] = (x_t-x_r)/d
-                G[m, t*u+1] = (y_t-y_r)/d
-            elif sensor == 'AoASensor':
-                G[m, r*u] = (y_t-y_r)/d**2
-                G[m, r*u+1] = (x_r-x_t)/d**2
-                G[m, t*u] = (y_r-y_t)/d**2
-                G[m, t*u+1] = (x_t-x_r)/d**2
+            if sensor == "DistSensor":
+                G[m, r * u] = (x_r - x_t) / d
+                G[m, r * u + 1] = (y_r - y_t) / d
+                G[m, t * u] = (x_t - x_r) / d
+                G[m, t * u + 1] = (y_t - y_r) / d
+            elif sensor == "AoASensor":
+                G[m, r * u] = (y_t - y_r) / d**2
+                G[m, r * u + 1] = (x_r - x_t) / d**2
+                G[m, t * u] = (y_r - y_t) / d**2
+                G[m, t * u + 1] = (x_t - x_r) / d**2
                 if u == 3:
-                    G[m, t * u + 2] = -1.
+                    G[m, t * u + 2] = -1.0
             m += 1  # next measurement
     return G
 
 
-#TODO: only one per row -1 element in G?
-def get_crb(net, sensor, compass='off', loc_type='anchor-free', anchors=[]):
+# TODO: only one per row -1 element in G?
+def get_crb(net, sensor, compass="off", loc_type="anchor-free", anchors=[]):
     """
     Calculates Cramer-Rao lower bound on covariance matrix of unbiased multihop
     location estimator based on sensor (distance/angle) measurement between
@@ -128,15 +144,15 @@ def get_crb(net, sensor, compass='off', loc_type='anchor-free', anchors=[]):
                         Cramer-Rao-Type Bounds for Localization, 2006
     """
 
-    if loc_type == 'anchored' and not anchors:
-        raise Exception('Anchors not defined.')
-    if loc_type == 'anchor-free' and anchors:
-        logger.warning('Anchors are ignored')
+    if loc_type == "anchored" and not anchors:
+        raise Exception("Anchors not defined.")
+    if loc_type == "anchor-free" and anchors:
+        logger.warning("Anchors are ignored")
         anchors = []
 
     nodes = [node for node in net.nodes() if node not in anchors]
 
-    if sensor.name()=='AoASensor' and compass=='off':
+    if sensor.name() == "AoASensor" and compass == "off":
         u = 3  # x, y, theta
     else:  # DistSensor or AoASensor with compass on
         u = 2  # x, y
@@ -148,15 +164,15 @@ def get_crb(net, sensor, compass='off', loc_type='anchor-free', anchors=[]):
             sigma = s.probabilityFunction.scale
             break
     else:
-        raise Exception('Sensor not found in nodes')
+        raise Exception("Sensor not found in nodes")
 
-    J = (dot(G.T, G)) / sigma ** 2
+    J = (dot(G.T, G)) / sigma**2
 
-    #print matrix_rank(J)
+    # print matrix_rank(J)
 
-    if loc_type == 'anchor-free':
+    if loc_type == "anchor-free":
         cov = pinv(J)
-    elif loc_type=='anchored':
+    elif loc_type == "anchored":
         cov = inv(J)
 
     # Chang2006 (28)
@@ -164,8 +180,8 @@ def get_crb(net, sensor, compass='off', loc_type='anchor-free', anchors=[]):
     # extract only position from cov
     di = concatenate((di[::3], di[1::3]))
 
-    #return is lower bound on rms -> sqrt(1/n*sum_i^n((x_i'-x_i)^2+(y_i'-y_i)^2))
-    return sqrt(2*mean(di))
+    # return is lower bound on rms -> sqrt(1/n*sum_i^n((x_i'-x_i)^2+(y_i'-y_i)^2))
+    return sqrt(2 * mean(di))
 
 
 def get_crb_norm(*args, **kwargs):
@@ -175,21 +191,21 @@ def get_crb_norm(*args, **kwargs):
     """
     net = args[0]
     norm = get_pos_norm(net.pos)
-    return get_crb(*args, **kwargs)/norm
+    return get_crb(*args, **kwargs) / norm
 
 
 def get_pos_norm(pos):
-    """ Translate positions so that centroid is in the origin and return mean
-    norm of the translated positions. """
+    """Translate positions so that centroid is in the origin and return mean
+    norm of the translated positions."""
     pos = Positions.create(pos)
-    assert(len(pos) == 1)
+    assert len(pos) == 1
     n = len(pos[0])
     p = zeros((n, 2))
     for i, node in enumerate(pos[0]):
         p[i, :] = pos[0][node][:2]
-    centroid = p.sum(axis=0)/n
+    centroid = p.sum(axis=0) / n
     p -= tile(centroid, (n, 1))
-    p_norm = nsum(sqrt(nsum(square(p), axis=1)))/n
+    p_norm = nsum(sqrt(nsum(square(p), axis=1))) / n
     return p_norm
 
 
@@ -201,22 +217,26 @@ def get_aoa_gdop_rel(estimated):
     As regular GDOP, it is not dependent on scale nor on sigma_AoA.
     """
     estimated = Positions.create(estimated)
-    assert len(estimated.subclusters)==1
+    assert len(estimated.subclusters) == 1
     pos = estimated.subclusters[0]
-    nodes = pos.keys()
-    edges = [e for e in pos.keys()[0].network.edges()
-             if e[0] in nodes and e[1] in nodes]
-    G = construct_G(pos, edges, 3, 'AoASensor')
+    nodes = list(pos.keys())
+    edges = [
+        e
+        for e in list(pos.keys())[0].network.edges()
+        if e[0] in nodes and e[1] in nodes
+    ]
+    G = construct_G(pos, edges, 3, "AoASensor")
     J = dot(G.T, G)
     cov = pinv(J)
     di = diag(cov)
     di = concatenate((di[::3], di[1::3]))
-    var_p = sum(di)/len(nodes)
-    distances = [sqrt(dot(pos[n1][:2] - pos[n2][:2],
-                          pos[n1][:2] - pos[n2][:2]))
-                 for n1, n2 in edges]
-    var_d = sum(square(distances))/len(edges)
-    return sqrt(var_p/var_d)
+    var_p = sum(di) / len(nodes)
+    distances = [
+        sqrt(dot(pos[n1][:2] - pos[n2][:2], pos[n1][:2] - pos[n2][:2]))
+        for n1, n2 in edges
+    ]
+    var_d = sum(square(distances)) / len(edges)
+    return sqrt(var_p / var_d)
 
 
 def get_aoa_gdop_node(estimated, node):
@@ -225,17 +245,16 @@ def get_aoa_gdop_node(estimated, node):
     Node is in the formation and all other nodes should be neighbors of
     node. Node should have Neighbors sensorReadings in it memory.
     """
-    if 'AoASensor' not in [sensor.name() for sensor in node.sensors]:
-        raise NotSupportedErr('Only angle of arrival based gdop is supported')
-    sensor = node.compositeSensor.get_sensor('AoASensor')
+    if "AoASensor" not in [sensor.name() for sensor in node.sensors]:
+        raise NotSupportedErr("Only angle of arrival based gdop is supported")
+    sensor = node.compositeSensor.get_sensor("AoASensor")
     sigma = sensor.probabilityFunction.scale
     for n in estimated:
-        sensor = n.compositeSensor.get_sensor('AoASensor')
-        if sensor.probabilityFunction.scale!=sigma:
-            raise NotSupportedErr('All nodes\' AoA sensors should have '
-                                  'same scale')
-    if len(estimated)<=2:
-        return 0.
+        sensor = n.compositeSensor.get_sensor("AoASensor")
+        if sensor.probabilityFunction.scale != sigma:
+            raise NotSupportedErr("All nodes' AoA sensors should have " "same scale")
+    if len(estimated) <= 2:
+        return 0.0
     # Note from Torrieri, Statistical Theory of Passive Location Systems
     # if measurement sigmas are all equal gdop doesn't depend on sigma.
     sigma = 1
@@ -246,7 +265,7 @@ def get_aoa_gdop_node(estimated, node):
 
     for n in estimated:
         xi, yi = estimated[n][:2]
-        if n != node and n in node.memory['sensorReadings']['Neighbors']:
+        if n != node and n in node.memory["sensorReadings"]["Neighbors"]:
             fi.append(arctan2(y - yi, x - xi))
             d.append(sqrt((x - xi) ** 2 + (y - yi) ** 2))
 
@@ -256,17 +275,17 @@ def get_aoa_gdop_node(estimated, node):
         l += (sin(fii) / di / sigma) ** 2  # (130)
         ni += sin(fii) * cos(fii) / (di * sigma) ** 2  # (131)
 
-    sigma1 = sqrt(mi / (mi * l - ni ** 2))  # (126)
-    sigma2 = sqrt(l / (mi * l - ni ** 2))  # (127)
+    sigma1 = sqrt(mi / (mi * l - ni**2))  # (126)
+    sigma2 = sqrt(l / (mi * l - ni**2))  # (127)
     # sigma12 = sqrt(ni/(mi*l-ni**2))
 
     sigmad = sqrt(sum((di * sigma) ** 2 for di in d) / len(d))  # (138)
-    return sqrt((sigma1 ** 2 + sigma2 ** 2)) / sigmad  # (139)
+    return sqrt((sigma1**2 + sigma2**2)) / sigmad  # (139)
 
 
 def get_aoa_gdops(estimated):
     estimated = Positions.create(estimated)
-    assert len(estimated.subclusters)==1
+    assert len(estimated.subclusters) == 1
     estimated = estimated.subclusters[0]
     return [get_aoa_gdop_node(estimated, node) for node in estimated]
 
@@ -276,13 +295,14 @@ def get_aoa_gdop(estimated):
 
 
 def show_subclusters(net, subclusters):
-    """ Show colored subclusters. """
-    colors = [node in subclusters[0] and 'g' or 'r' for node in net.nodes()]
+    """Show colored subclusters."""
+    colors = [node in subclusters[0] and "g" or "r" for node in net.nodes()]
     net.show(nodeColor=colors)
 
 
-def show_localized(net, estimated, scale=False, align=True,\
-                   display_loc_err=True, show_labels=True):
+def show_localized(
+    net, estimated, scale=False, align=True, display_loc_err=True, show_labels=True
+):
     """
     Display estimated positions.
 
@@ -300,32 +320,34 @@ def show_localized(net, estimated, scale=False, align=True,\
         # rotate, translate and if needed scale estimated w.r.t. true positions
         align_clusters(truePos, estimated, scale)
 
-    #TODO: implement display of all subclusters
-    if len(estimated)>1:
-        raise(NotImplementedError)
+    # TODO: implement display of all subclusters
+    if len(estimated) > 1:
+        raise (NotImplementedError)
     else:
         estimated_sc = estimated[0]
 
-        #net.show(positions=estimated_sc, show_labels=show_labels)
+        # net.show(positions=estimated_sc, show_labels=show_labels)
         fig = net.get_fig(positions=estimated_sc, show_labels=show_labels)
         ax = fig.gca()
-        minpos = min(estimated_sc.values(), axis=0)
-        maxpos = max(estimated_sc.values(), axis=0)
-        minpos -= (maxpos-minpos)*0.1
-        maxpos += (maxpos-minpos)*0.1
+        minpos = min(list(estimated_sc.values()), axis=0)
+        maxpos = max(list(estimated_sc.values()), axis=0)
+        minpos -= (maxpos - minpos) * 0.1
+        maxpos += (maxpos - minpos) * 0.1
 
         ax.set_xlim(minpos[0], maxpos[0])
         ax.set_ylim(minpos[1], maxpos[1])
-        #fig.show()
+        # fig.show()
         if display_loc_err:
-            #TODO: not working in ipython notepad
+            # TODO: not working in ipython notepad
             ax = gca()
-            ax.set_title('Localized positions')
-            ax.set_title('Localization error display')
-            edge_pos = asarray([(net.pos[n], estimated_sc[n])
-                                for n in estimated_sc.keys()])
-            errorCollection = LineCollection(edge_pos, colors='r',
-                                             transOffset=ax.transData)
+            ax.set_title("Localized positions")
+            ax.set_title("Localization error display")
+            edge_pos = asarray(
+                [(net.pos[n], estimated_sc[n]) for n in list(estimated_sc.keys())]
+            )
+            errorCollection = LineCollection(
+                edge_pos, colors="r", transOffset=ax.transData
+            )
             errorCollection.set_zorder(1)  # errors go behind nodes
             ax.add_collection(errorCollection)
             ax.figure.canvas.draw()
