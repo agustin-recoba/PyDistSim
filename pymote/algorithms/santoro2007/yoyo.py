@@ -1,4 +1,5 @@
 from pymote.algorithm import NodeAlgorithm, StatusValues
+from pymote.logger import logger
 from pymote.message import Message
 
 
@@ -388,7 +389,7 @@ class YoYo(NodeAlgorithm):
 
             if num_of_in_neighbors + num_of_out_neighbors >= len(
                 node.memory[self.neighborsKey]
-            ):
+            ):  # if all neighbors have sent their ids
                 self.change_status(node)
 
         elif message.header == "id":
