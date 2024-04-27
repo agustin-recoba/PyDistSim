@@ -3,16 +3,16 @@ Windows virtualenv installation
 .. warning::
 
     This installation procedure is much more involved then the one using WinPython as described in :doc:`installation`. Without good reason please use WinPython version.
-    
+
 Python
 ======
-    
+
 Install Python 2.7 using appropriate installer: `Python 2.7.3 x86 MSI Installer <http://www.python.org/ftp/python/2.7.3/python-2.7.3.msi>`_
 
 .. warning::
 
-    After installation append paths to ``python.exe`` (i.e. ``C:\Python27``) and path to directory 
-    ``Scripts`` (i.e. ``C:\Python27\Scripts``) in the PATH 
+    After installation append paths to ``python.exe`` (i.e. ``C:\Python27``) and path to directory
+    ``Scripts`` (i.e. ``C:\Python27\Scripts``) in the PATH
     `environment variable <http://superuser.com/a/284351/169714>`_.
 
 
@@ -35,12 +35,12 @@ To install ``virtualenv`` first install ``distribute`` and ``pip``:
 
 #.  Navigate to the directory where the files were downloaded (i.e. ``C:\Users\user\Desktop``) and
     run following commands::
-    
+
         C:\> cd Users\user\Desktop
         C:\Users\user\Desktop> python distribute_setup.py
         C:\Users\user\Desktop> python get-pip.py
 
-#.  After this distribute should be installed so downloaded files and temporary ``build`` directory 
+#.  After this distribute should be installed so downloaded files and temporary ``build`` directory
     can be deleted.
 
 #.  Install ``virtualenv``::
@@ -50,7 +50,7 @@ To install ``virtualenv`` first install ``distribute`` and ``pip``:
 .. note::
 
     When the installation of ``virtualenv`` is completed the elevated/administrator Command prompt
-    is not needed anymore so it can be closed. All subsequent commands should go in the regular 
+    is not needed anymore so it can be closed. All subsequent commands should go in the regular
     Command prompt.
 
 Pymote virtual environment
@@ -65,9 +65,9 @@ Pymote virtual environment
         New python executable in pymote_env\Scripts\python.exe
         Installing setuptools................done.
         Installing pip...................done.
-    
+
     This command has made a new directory ``pymote_env`` inside ``C:\Users\user\Documents`` with
-    separate python interpreter and two necessary packages. 
+    separate python interpreter and two necessary packages.
 
 .. _windows-venvact:
 
@@ -75,7 +75,7 @@ Pymote virtual environment
 
         C:\Users\user\Documents> pymote_env\Scripts\activate
         (pymote_env) C:\Users\user\Documents>
-    
+
     .. note::
 
         The ``(pymote_env)`` prefix to prompt in the last line indicates that newly created environment
@@ -98,9 +98,9 @@ Pymote virtual environment
 #.  Add line ``set IPYTHONDIR=%VIRTUAL_ENV%\.ipython`` *below* the line that sets ``VIRTUAL_ENV``
     environment variable, near the top. Save the document. This way IPython package which is not
     yet fully compatible with the virtualenv knows where to look for its conguration files.
-  
-#.  Open ``pymote_env\Scripts\deactivate.bat`` in text editor and insert line ``set IPYTHONDIR=`` 
-    just below the line ``@echo off``, near the top of the document. Save the document. 
+
+#.  Open ``pymote_env\Scripts\deactivate.bat`` in text editor and insert line ``set IPYTHONDIR=``
+    just below the line ``@echo off``, near the top of the document. Save the document.
 
 .. warning::
 
@@ -112,42 +112,42 @@ Required packages
 =================
 
 All required packages are installed in the environment created in the previous section so before
-continuing ensure that the environment is activated. Active environment is indicated with prompt 
+continuing ensure that the environment is activated. Active environment is indicated with prompt
 prefix i.e. ``(pymote_env)``.
 
 NumPy and SciPy
 ---------------
-Since normal installation of these packages requires compiling we make a shortcut by using 
+Since normal installation of these packages requires compiling we make a shortcut by using
 precompiled binaries and installing them into virtual environment using
 `this solution <http://stackoverflow.com/a/6753898/1247955>`_:
 
-#.  Download 
-    NumPy binary `numpy-1.7.0-win32-superpack-python2.7.exe <http://sourceforge.net/projects/numpy/files/NumPy/1.7.0/numpy-1.7.0-win32-superpack-python2.7.exe/download>`_ and 
+#.  Download
+    NumPy binary `numpy-1.7.0-win32-superpack-python2.7.exe <http://sourceforge.net/projects/numpy/files/NumPy/1.7.0/numpy-1.7.0-win32-superpack-python2.7.exe/download>`_ and
     SciPy binary `scipy-0.11.0-win32-superpack-python2.7.exe <http://sourceforge.net/projects/scipy/files/scipy/0.11.0/scipy-0.11.0-win32-superpack-python2.7.exe/download>`_.
-    
-    .. note::
-    
-        Newer versions of `NumPy <http://sourceforge.net/projects/numpy/files/NumPy/>`__ and 
-        `SciPy <http://sourceforge.net/projects/scipy/files/scipy/>`__ may be available.
-        
 
-#.  Do not run downloaded ``.exe`` files as that would install them systemwide. Instead *extract* 
+    .. note::
+
+        Newer versions of `NumPy <http://sourceforge.net/projects/numpy/files/NumPy/>`__ and
+        `SciPy <http://sourceforge.net/projects/scipy/files/scipy/>`__ may be available.
+
+
+#.  Do not run downloaded ``.exe`` files as that would install them systemwide. Instead *extract*
     them (with `7-zip <http://www.7-zip.org/download.html>`_) in some temporary
     directory i.e. ``C:\Users\user\Desktop``.
 
-#.  Based on your processor support of `SSE <http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions>`_ 
+#.  Based on your processor support of `SSE <http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions>`_
     instructions (probably sse3, see the note below) install appropriate extracted ``.exe`` files
     (nosse|sse2|sse3) using ``easy_install`` command::
-    
+
         (pymote_env) C:\Users\user\Desktop> easy_install numpy-1.7.0-[nosse|sse2|sse3].exe
         (pymote_env) C:\Users\user\Desktop> easy_install scipy-0.11.0-[nosse|sse2|sse3].exe
-    
+
     .. note::
 
-        SSE3 instructions are supported by all 
-        `reasonably modern processors <http://en.wikipedia.org/wiki/SSE3#CPUs_with_SSE3>`_. If 
+        SSE3 instructions are supported by all
+        `reasonably modern processors <http://en.wikipedia.org/wiki/SSE3#CPUs_with_SSE3>`_. If
         you're not sure try `CPU-Z <http://www.softpedia.com/get/System/System-Info/CPU-Z.shtml>`_.
-        
+
 After installation all downloaded and extracted files can be deleted.
 
 
@@ -156,7 +156,7 @@ Matplotlib
 Matplotlib package
 is installed almost the same way as NumPy and SciPy packages in previous section using the
 appropriate binary `matplotlib-1.2.0.win32-py2.7.exe <https://github.com/downloads/matplotlib/matplotlib/matplotlib-1.2.0.win32-py2.7.exe>`_.
-The only difference is in the 3rd step where the extracted contents from directory 
+The only difference is in the 3rd step where the extracted contents from directory
 ``PLATLIB`` should be copied to ``pymote_env/Lib/site-packages/`` directory::
 
     C:\Users\user\Desktop> xcopy /s matplotlib-1.2.0.win32-py2.7\PLATLIB\* %PYMOTE_ENV%\Lib\site-packages
@@ -174,31 +174,31 @@ For Pyreadline package use ``easy_install`` as ``pip`` currently installs versio
 
 PySide
 ------
-For Pymote GUI part of the library PySide Qt bindings for Python should be installed. This is 
-achieved `using this solution <http://stackoverflow.com/a/4673823/1247955>`__, that is, running 
+For Pymote GUI part of the library PySide Qt bindings for Python should be installed. This is
+achieved `using this solution <http://stackoverflow.com/a/4673823/1247955>`__, that is, running
 following commands:
 
 .. code-block:: bash
 
     (pymote_env)> easy_install PySide
     (pymote_env)> python pymote_env\Scripts\pyside_postinstall.py -install
-    
+
 Pymote
 ======
 Finally, in order to download and install Pymote and all other required packages there are two
 aviliable options, use one of them:
 
 #. Stable: for latest stable version use package from PyPI::
-    
+
     (pymote_env)> pip install pymote
 
 #. Development: to install latest development version of the Pymote use source from github repo::
-    
+
     (pymote_env)> pip install -e git+https://github.com/darbula/pymote.git#egg=Pymote
-    
+
 .. _pymote-deps:
 
-To list all packages installed in the environment run ``pip freeze``. The output should look 
+To list all packages installed in the environment run ``pip freeze``. The output should look
 something like this::
 
     (pymote_env)> pip freeze
@@ -211,7 +211,7 @@ something like this::
     pyreadline==1.7.1
     pyside==1.1.2
     scipy==0.11.0
-    
+
 
 Starting Pymote
 ===============

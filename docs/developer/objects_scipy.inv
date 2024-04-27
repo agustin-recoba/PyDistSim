@@ -3333,4 +3333,3 @@ scipy.sparse.dok_matrix.getrow np:method 1 generated/scipy.sparse.dok_matrix.get
 scipy.sparse.csr_matrix.toarray np:method 1 generated/scipy.sparse.csr_matrix.toarray.html#$ -
 scipy.sparse.csr_matrix.asfptype np:method 1 generated/scipy.sparse.csr_matrix.asfptype.html#$ -
 scipy.ndimage.filters.laplace np:function 1 generated/scipy.ndimage.filters.laplace.html#$ -
-

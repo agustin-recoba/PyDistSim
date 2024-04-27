@@ -19,7 +19,7 @@ This document refers to the Pymote version |release|
    reference/index
    developer/index
 .. extending/algorithms
-   
+
 
 
 Indices and tables
@@ -31,9 +31,9 @@ Indices and tables
 * :ref:`glossary`
 
 
-    
+
 ..    faq/common_issues
-    
+
 
 
 ..

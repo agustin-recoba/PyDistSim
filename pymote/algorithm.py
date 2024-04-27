@@ -1,6 +1,7 @@
-from pymote.message import Message
-from pymote.logger import logger
 from inspect import getmembers
+
+from pymote.logger import logger
+from pymote.message import Message
 
 
 class AlgorithmMeta(type):
@@ -28,17 +29,17 @@ class AlgorithmMeta(type):
         ), "Some required params %s defined in multiple classes." % str(rps)
         assert len(all_params) == len(
             set(all_params)
-        ), "Required params %s and default params %s should be unique." % (
+        ), "Required params {} and default params {} should be unique.".format(
             str(rps),
             str(list(dps.keys())),
         )
 
         dct["required_params"] = tuple(rps)
         dct["default_params"] = dps
-        return super(AlgorithmMeta, cls).__new__(cls, clsname, bases, dct)
+        return super().__new__(cls, clsname, bases, dct)
 
 
-class Algorithm(object, metaclass=AlgorithmMeta):
+class Algorithm(metaclass=AlgorithmMeta):
     """
     Abstract base class for all algorithms.
 

@@ -1,11 +1,12 @@
-from pymote.logger import logger
-from pymote.sensor import CompositeSensor
-from pymote.conf import settings
 import logging
 from collections.abc import Iterable
 
+from pymote.conf import settings
+from pymote.logger import logger
+from pymote.sensor import CompositeSensor
 
-class Node(object):
+
+class Node:
 
     cid = 1
 

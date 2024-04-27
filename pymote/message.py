@@ -1,8 +1,7 @@
-from copy import deepcopy
-from copy import copy
+from copy import copy, deepcopy
 
 
-class Message(object):
+class Message:
 
     def __init__(self, source=None, destination=None, nexthop=None, header="", data={}):
         self.source = source

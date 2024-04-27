@@ -1,15 +1,17 @@
-from networkx import is_connected
-from numpy.core.numeric import Inf
-from pymote.network import Network
-from pymote.logger import logger
-from pymote.conf import settings
-from numpy import sign, sqrt, array
-from pymote.node import Node
-from numpy.random import rand
 from itertools import product
 
+from networkx import is_connected
+from numpy import array, sign, sqrt
+from numpy.core.numeric import Inf
+from numpy.random import rand
 
-class NetworkGenerator(object):
+from pymote.conf import settings
+from pymote.logger import logger
+from pymote.network import Network
+from pymote.node import Node
+
+
+class NetworkGenerator:
 
     def __init__(
         self,

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Form implementation generated from reading ui file 'E:\Damir\FER\Postdiplomski\Doktorat\Istrazivanje\pymote\pymote\gui\simulation.ui'
 #
 # Created: Fri Sep 30 12:31:55 2011
@@ -15,7 +13,7 @@ except AttributeError:
     _fromUtf8 = lambda s: s
 
 
-class Ui_SimulationWindow(object):
+class Ui_SimulationWindow:
     def setupUi(self, SimulationWindow):
         SimulationWindow.setObjectName(_fromUtf8("SimulationWindow"))
         SimulationWindow.resize(1106, 800)

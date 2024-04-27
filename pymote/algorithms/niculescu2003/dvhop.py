@@ -1,5 +1,6 @@
+from numpy import array, concatenate, dot, sqrt
+
 from pymote.algorithms.niculescu2003.floodingupdate import FloodingUpdate
-from numpy import concatenate, array, sqrt, dot
 
 
 class DVHop(FloodingUpdate):

@@ -14,5 +14,3 @@ Reference
    networkgenerator
    conf
 .. introduction
-
-

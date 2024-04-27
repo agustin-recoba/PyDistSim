@@ -1,9 +1,10 @@
-from pymote.conf import settings
 from numpy import sqrt
 from numpy.random import random
 
+from pymote.conf import settings
 
-class ChannelType(object):
+
+class ChannelType:
     """ChannelType abstract base class."""
 
     def __new__(self, environment=None, **kwargs):
