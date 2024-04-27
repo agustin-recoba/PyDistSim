@@ -77,7 +77,7 @@ class NeighborsSensor(Sensor):
 
     @node_in_network
     def read(self, node):
-        return {"Neighbors": node.network.neighbors(node)}
+        return {"Neighbors": list(node.network.neighbors(node))}
 
 
 class AoASensor(Sensor):

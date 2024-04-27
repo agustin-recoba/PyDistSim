@@ -1,4 +1,4 @@
-from pymote.algorithm import NodeAlgorithm
+from pymote.algorithm import NodeAlgorithm, StatusValues
 from pymote.message import Message
 
 
@@ -6,25 +6,34 @@ class DFT(NodeAlgorithm):
     required_params = ()
     default_params = {"neighborsKey": "Neighbors"}
 
+    class Status(StatusValues):
+        INITIATOR = "INITIATOR"
+        IDLE = "IDLE"
+        DONE = "DONE"
+        VISITED = "VISITED"
+
     def initializer(self):
         for node in self.network.nodes():
             node.memory[self.neighborsKey] = node.compositeSensor.read()["Neighbors"]
-            node.status = "IDLE"
+            node.status = self.Status.IDLE
         ini_node = self.network.nodes()[0]
-        ini_node.status = "INITIATOR"
+        ini_node.status = self.Status.INITIATOR
         self.network.outbox.insert(
-            0, Message(header=NodeAlgorithm.INI, destination=ini_node)
+            0, Message(meta_header=NodeAlgorithm.INI, destination=ini_node)
         )
 
-    def initiator(self, node, message):
-        if message.header == NodeAlgorithm.INI:
-            node.memory["parent"] = None
-            node.memory["unvisited"] = list(node.memory[self.neighborsKey])
-            self.visit(node)
-        else:
-            raise Exception("Dont disturb intitator!")
+    @Status.INITIATOR
+    def spontaneously(self, node, message):
+        node.memory["parent"] = None
+        node.memory["unvisited"] = list(node.memory[self.neighborsKey])
+        self.visit(node)
 
-    def idle(self, node, message):
+    @Status.INITIATOR
+    def default(self, node, message):
+        raise Exception("Dont disturb intitator!")
+
+    @Status.IDLE
+    def receiving(self, node, message):
         if message.header == "Token":
             node.memory["parent"] = message.source
             node.memory["unvisited"] = list(node.memory[self.neighborsKey])
@@ -33,7 +42,8 @@ class DFT(NodeAlgorithm):
         else:
             raise Exception("Should not be here.")
 
-    def visited(self, node, message):
+    @Status.VISITED
+    def receiving(self, node, message):
         if message.header == "Token":
             node.memory["unvisited"].remove(message.source)
             node.send(Message(header="Backedge", destination=message.source))
@@ -42,56 +52,56 @@ class DFT(NodeAlgorithm):
         elif message.header == "Backedge":
             self.visit(node)
 
-    def done(self, node, message):
+    @Status.DONE
+    def default(self, node, message):
         raise Exception("Im done!!!")
 
     def visit(self, node):
         if len(node.memory["unvisited"]) == 0:
             if node.memory["parent"] is not None:
                 node.send(Message(header="Return", destination=node.memory["parent"]))
-            node.status = "DONE"
+            node.status = self.Status.DONE
         else:
             next_unvisited = node.memory["unvisited"].pop()
             node.send(Message(header="Token", destination=next_unvisited))
-            node.status = "VISITED"
-
-    STATUS = {
-        "INITIATOR": initiator,
-        "IDLE": idle,
-        "VISITED": visited,
-        "DONE": done,
-    }
+            node.status = self.Status.VISITED
 
 
 class DFStar(NodeAlgorithm):
     required_params = ()
     default_params = {"neighborsKey": "Neighbors"}
 
+    class Status(StatusValues):
+        INITIATOR = "INITIATOR"
+        IDLE = "IDLE"
+        AVAILABLE = "AVAILABLE"
+        VISITED = "VISITED"
+        DONE = "DONE"
+
     def initializer(self):
         for node in self.network.nodes():
             node.memory[self.neighborsKey] = node.compositeSensor.read()["Neighbors"]
-            node.status = "IDLE"
+            node.status = self.Status.IDLE
         ini_node = self.network.nodes()[0]
-        ini_node.status = "INITIATOR"
+        ini_node.status = self.Status.INITIATOR
         self.network.outbox.insert(
-            0, Message(header=NodeAlgorithm.INI, destination=ini_node)
+            0, Message(meta_header=NodeAlgorithm.INI, destination=ini_node)
         )
 
-    def initiator(self, node, message):
-        if message.header == NodeAlgorithm.INI:
-            node.memory["initiator"] = True
-            node.memory["unvisited"] = list(node.memory[self.neighborsKey])
-            node.memory["next"] = node.memory["unvisited"].pop()
-            if node.memory["unvisited"]:
-                node.send(Message(header="T", destination=node.memory["next"]))
-                node.send(
-                    Message(header="Visited", destination=node.memory["unvisited"])
-                )
-                node.status = "VISITED"
-            else:
-                node.status = "DONE"
+    @Status.INITIATOR
+    def spontaneously(self, node, message):
+        node.memory["initiator"] = True
+        node.memory["unvisited"] = list(node.memory[self.neighborsKey])
+        node.memory["next"] = node.memory["unvisited"].pop()
+        if len(node.memory["unvisited"]) > 0:
+            node.send(Message(header="T", destination=node.memory["next"]))
+            node.send(Message(header="Visited", destination=node.memory["unvisited"]))
+            node.status = self.Status.VISITED
+        else:
+            node.status = self.Status.DONE
 
-    def idle(self, node, message):
+    @Status.IDLE
+    def receiving(self, node, message):
         if message.header == "T":
             node.memory["unvisited"] = list(node.memory[self.neighborsKey])
             self.first_visit(node, message)
@@ -99,16 +109,18 @@ class DFStar(NodeAlgorithm):
         if message.header == "Visited":
             node.memory["unvisited"] = list(node.memory[self.neighborsKey])
             node.memory["unvisited"].remove(message.source)
-            node.status = "AVAILABLE"
+            node.status = self.Status.AVAILABLE
 
-    def available(self, node, message):
+    @Status.AVAILABLE
+    def receiving(self, node, message):
         if message.header == "T":
             self.first_visit(node, message)
 
         if message.header == "Visited":
             node.memory["unvisited"].remove(message.source)
 
-    def visited(self, node, message):
+    @Status.VISITED
+    def receiving(self, node, message):
         if message.header == "T":
             node.memory["unvisited"].remove(message.source)
             # late visited, should not happen in unitary communication delay
@@ -123,7 +135,8 @@ class DFStar(NodeAlgorithm):
         if message.header == "Return":
             self.visit(node, message)
 
-    def done(self, node, message):
+    @Status.DONE
+    def default(self, node, message):
         pass
 
     def first_visit(self, node, message):
@@ -144,7 +157,7 @@ class DFStar(NodeAlgorithm):
                     - {node.memory["entry"], node.memory["next"]},
                 )
             )
-            node.status = "VISITED"
+            node.status = self.Status.VISITED
         else:
             node.send(Message(header="Return", destination=node.memory["entry"]))
             node.send(
@@ -154,7 +167,7 @@ class DFStar(NodeAlgorithm):
                     - {node.memory["entry"]},
                 )
             )
-            node.status = "DONE"
+            node.status = self.Status.DONE
 
     def visit(self, node, message):
         if node.memory["unvisited"]:
@@ -163,12 +176,4 @@ class DFStar(NodeAlgorithm):
         else:
             if not node.memory["initiator"]:
                 node.send(Message(header="Return", destination=node.memory["entry"]))
-            node.status = "DONE"
-
-    STATUS = {
-        "INITIATOR": initiator,
-        "IDLE": idle,
-        "AVAILABLE": available,
-        "VISITED": visited,
-        "DONE": done,
-    }
+            node.status = self.Status.DONE

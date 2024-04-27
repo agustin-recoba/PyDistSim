@@ -29,7 +29,7 @@ class Node:
     def reset(self):
         self.outbox = []
         self._inbox = []
-        self.status = ""
+        self.status = None
         self.memory = {}
 
     def send(self, message):
@@ -129,7 +129,7 @@ class Node:
         return {
             "1. info": {
                 "id": self.id,
-                "status": self.status,
+                "status": self.status or "",
                 "position": self.network.pos[self],
                 "orientation": self.network.ori[self],
             },

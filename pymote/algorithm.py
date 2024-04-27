@@ -1,7 +1,38 @@
+from collections.abc import Callable
+from enum import StrEnum
 from inspect import getmembers
 
 from pymote.logger import logger
 from pymote.message import Message
+from pymote.message import MetaHeader as MessageMetaHeader
+from pymote.node import Node
+
+
+class ActionEnum(StrEnum):
+    default = "default"
+    receiving = "receiving"
+    spontaneously = "spontaneously"
+    alarm = "alarm"
+
+
+MSG_META_HEADER_MAP = {
+    MessageMetaHeader.NORMAL_MESSAGE: ActionEnum.receiving,
+    MessageMetaHeader.INITALIZATION_MESSAGE: ActionEnum.spontaneously,
+    MessageMetaHeader.ALARM_MESSAGE: ActionEnum.alarm,
+}
+
+
+class StatusValues(StrEnum):
+    def __call__(self, func: Callable):
+        assert (
+            func.__name__ in ActionEnum.__members__
+        ), f"Invalid function name '{func.__name__}'."
+
+        setattr(self, func.__name__, func)
+        return func
+
+    def implements(self, action: ActionEnum):
+        return hasattr(self, action.value)
 
 
 class AlgorithmMeta(type):
@@ -122,21 +153,23 @@ class NodeAlgorithm(Algorithm):
 
     """
 
-    INI = "initialize"
-    STATUS = {}
+    INI = MessageMetaHeader.INITALIZATION_MESSAGE
+
+    class Status(StatusValues):
+        IDLE = "IDLE"
 
     def initializer(self):
         """Pass INI message to certain nodes in network based on type."""
         node = self.network.nodes()[0]
         self.network.outbox.insert(
-            0, Message(header=NodeAlgorithm.INI, destination=node)
+            0, Message(meta_header=NodeAlgorithm.INI, destination=node)
         )
         for node in self.network.nodes():
-            node.status = "IDLE"
+            node.status = self.Status.IDLE
 
-    def step(self, node):
+    def step(self, node: Node):
         """Executes one step of the algorithm for given node."""
-        message = node.receive()
+        message: Message = node.receive()
         if message:
             if message.destination is None or message.destination == node:
                 # when destination is None it is broadcast message
@@ -144,7 +177,7 @@ class NodeAlgorithm(Algorithm):
             elif message.nexthop == node.id:
                 self._forward_message(node, message)
 
-    def _forward_message(self, node, message):
+    def _forward_message(self, node: Node, message: Message):
         try:
             message.nexthop = node.memory["routing"][message.destination]
         except KeyError:
@@ -152,13 +185,21 @@ class NodeAlgorithm(Algorithm):
         else:
             node.send(message)
 
-    def _process_message(self, node, message):
-        return self.__class__.STATUS.get(node.status, self.statuserr)(
-            self, node, message
-        )
+    def _process_message(self, node: Node, message: Message):
+        status = getattr(self.Status, node.status.value)
+        print(message)
+        method_name = MSG_META_HEADER_MAP[message.meta_header]
 
-    def statuserr(self, node, message):
-        logger.error("Can't handle status %s." % node.status)
+        if status.implements(method_name):
+            method = getattr(status, method_name)
+            return method(self, node, message)
+        elif status.implements(ActionEnum.default):
+            method = getattr(status, ActionEnum.default)
+            return method(self, node, message)
+        else:
+            logger.error(
+                f"Method {method_name} not implemented for status {node.status}."
+            )
 
 
 class NetworkAlgorithm(Algorithm):
