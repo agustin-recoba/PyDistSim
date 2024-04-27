@@ -62,7 +62,9 @@ class TestBroadcastConcatenated(unittest.TestCase):
             with self.subTest(node=node):
                 if node == self.initiator:
                     assert node.memory["greet"] == HELLO
+                    assert "bye" not in node.memory
                 elif node == self.initiator2:
+                    assert "greet" not in node.memory
                     assert node.memory["bye"] == BYE
                 else:
                     assert "greet" not in node.memory
