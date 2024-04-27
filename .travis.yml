@@ -11,13 +11,12 @@ before_install:
 
 install:
   - pip install -r requirements.txt
+  - pip install coverage coveralls
+  - pip install pytest pytest-cov
 
 script:
-  - pytest
-# - coverage run --source=pymote setup.py nosetests
+  - pytest --cov-config .coveragerc --cov=pymote
+  - coverage report --show-missing
 
 after_success:
   - coveralls
-# Force precise (Ubuntu 12.04) because of systemwide packages
-# like PySide http://ebanshi.cc/questions/1415911/how-can-i-install-pyside-on-travis
-# dist: precise
