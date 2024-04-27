@@ -1,15 +1,24 @@
-from copy import deepcopy
-from copy import copy
+from copy import copy, deepcopy
 from enum import StrEnum
+
 
 class MetaHeader(StrEnum):
     NORMAL_MESSAGE = "NORMAL_MESSAGE"
     INITALIZATION_MESSAGE = "INITALIZATION_MESSAGE"
     ALARM_MESSAGE = "ALARM_MESSAGE"
-    
-class Message(object):
 
-    def __init__(self, source=None, destination=None, nexthop=None, header="", meta_header=MetaHeader.NORMAL_MESSAGE, data={}):
+
+class Message:
+
+    def __init__(
+        self,
+        source=None,
+        destination=None,
+        nexthop=None,
+        header="",
+        meta_header=MetaHeader.NORMAL_MESSAGE,
+        data={},
+    ):
         self.source = source
         self.destination = destination
         self.nexthop = nexthop

@@ -1,8 +1,9 @@
-from PySide6.QtCore import QThread, SIGNAL
 import logging
+
+from PySide6.QtCore import SIGNAL, QThread
+
+from pymote.algorithm import NetworkAlgorithm, NodeAlgorithm
 from pymote.network import Network
-from pymote.algorithm import NetworkAlgorithm
-from pymote.algorithm import NodeAlgorithm
 
 
 class Simulation(QThread):

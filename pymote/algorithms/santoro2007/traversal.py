@@ -141,7 +141,7 @@ class DFStar(NodeAlgorithm):
                 Message(
                     header="Visited",
                     destination=set(node.memory[self.neighborsKey])
-                    - set([node.memory["entry"], node.memory["next"]]),
+                    - {node.memory["entry"], node.memory["next"]},
                 )
             )
             node.status = "VISITED"
@@ -151,7 +151,7 @@ class DFStar(NodeAlgorithm):
                 Message(
                     header="Visited",
                     destination=set(node.memory[self.neighborsKey])
-                    - set([node.memory["entry"]]),
+                    - {node.memory["entry"]},
                 )
             )
             node.status = "DONE"

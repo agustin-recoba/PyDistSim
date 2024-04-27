@@ -16,7 +16,7 @@ Pymote's main goal is to provide framework for fast implementation and simulatio
 
 .. figure:: docs/install/_images/pymote_console_gui.png
    :align: center
-   
+
    Pymote is being developed on top of `NetworkX <https://github.com/networkx/networkx/>`_ and is ment to be used along other scientific packages such as SciPy, NumPy and matplotlib. Currently, gui runs on PySide (Qt bindings) and console is jazzy IPython.
 
 Installation

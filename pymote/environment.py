@@ -1,11 +1,10 @@
-from pymote.conf import settings
 import png
+from numpy import Inf, ones, sign, sqrt, uint8, vstack
 
-from numpy import vstack, uint8, ones
-from numpy import sign, sqrt, Inf
+from pymote.conf import settings
 
 
-class Environment(object):
+class Environment:
     """Environment abstract base class"""
 
     def __new__(self, **kwargs):
@@ -36,15 +35,15 @@ class Environment2D(Environment):
             try:
                 r = png.Reader(path)
                 planes = r.read()[3]["planes"]
-                self.im = vstack((map(uint8, r.asDirect()[2])))[:, ::planes]
+                self.im = vstack(map(uint8, r.asDirect()[2]))[:, ::planes]
                 self.im = self.im[::-1, :]  # flip-up-down
                 assert (r.height, r.width) == self.im.shape
-            except IOError:
+            except OSError:
                 print("Can't open %s creating new default environment." % path)
 
-                self.im = uint8(ones((shape)) * 255)
+                self.im = uint8(ones(shape) * 255)
         else:
-            self.im = uint8(ones((shape)) * 255)
+            self.im = uint8(ones(shape) * 255)
 
         self.dim = 2
         scale = not scale and 1 or int(scale)

@@ -1,4 +1,5 @@
 from numpy import dot
+
 from pymote.utils.localization.basestitcher import BaseStitcher
 from pymote.utils.localization.stitchsubclusterselectors import (
     MaxCommonNodeSelector,
@@ -19,7 +20,7 @@ class DistStitcher(BaseStitcher):
     def __new__(cls, *args, **kwargs):
         """Legacy: by default returns DistStitcherHorn instance."""
         if cls is not DistStitcher:
-            return super(DistStitcher, cls).__new__(cls)
+            return super().__new__(cls)
         return DistStitcherHorn()
 
     def __init__(self, selector=None, **kwargs):

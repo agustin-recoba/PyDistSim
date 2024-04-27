@@ -1,27 +1,28 @@
-from pymote.logger import logger
-from numpy import sum as nsum
-from numpy import (
-    asarray,
-    sqrt,
-    dot,
-    concatenate,
-    diag,
-    mean,
-    zeros,
-    min,
-    max,
-    arctan2,
-    sin,
-    cos,
-    square,
-    tile,
-)
-from pymote.utils.localization.aoastitcher import AoAStitcher
-from numpy.linalg import inv, pinv
 from copy import deepcopy
+from xml.dom import NotSupportedErr
+
+from numpy import (
+    arctan2,
+    asarray,
+    concatenate,
+    cos,
+    diag,
+    dot,
+    max,
+    mean,
+    min,
+    sin,
+    sqrt,
+    square,
+)
+from numpy import sum as nsum
+from numpy import tile, zeros
+from numpy.linalg import inv, pinv
+
+from pymote.logger import logger
+from pymote.utils.localization.aoastitcher import AoAStitcher
 from pymote.utils.localization.diststitcher import DistStitcher
 from pymote.utils.memory.positions import Positions
-from xml.dom import NotSupportedErr
 
 
 def align_clusters(dst, src, scale):
@@ -280,7 +281,7 @@ def get_aoa_gdop_node(estimated, node):
     # sigma12 = sqrt(ni/(mi*l-ni**2))
 
     sigmad = sqrt(sum((di * sigma) ** 2 for di in d) / len(d))  # (138)
-    return sqrt((sigma1**2 + sigma2**2)) / sigmad  # (139)
+    return sqrt(sigma1**2 + sigma2**2) / sigmad  # (139)
 
 
 def get_aoa_gdops(estimated):
@@ -309,8 +310,8 @@ def show_localized(
     estimated should be a list of dictionaries.
 
     """
-    from matplotlib.pylab import gca
     from matplotlib.collections import LineCollection
+    from matplotlib.pylab import gca
 
     truePos = Positions.create(net.pos)
     estimated = Positions.create(estimated)

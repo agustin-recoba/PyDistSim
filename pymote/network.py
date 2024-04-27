@@ -1,19 +1,22 @@
 import inspect
-from pymote.logger import logger
-from pymote.conf import settings
-from networkx import Graph, is_connected
+from copy import deepcopy
+
 import networkx as nx
-from .environment import Environment
-from .channeltype import ChannelType
-from .node import Node
-from numpy.random import rand
+from networkx import Graph, is_connected
+from numpy import array, max, min, pi, sign
 from numpy.core.numeric import Inf, allclose
-from numpy import array, pi, sign, max, min
 from numpy.lib.function_base import average
-from .algorithm import Algorithm
+from numpy.random import rand
+
+from pymote.conf import settings
+from pymote.logger import logger
 from pymote.sensor import CompositeSensor
 from pymote.utils.helpers import pymote_equal_objects
-from copy import deepcopy
+
+from .algorithm import Algorithm
+from .channeltype import ChannelType
+from .environment import Environment
+from .node import Node
 
 
 class Network(Graph):
@@ -24,7 +27,7 @@ class Network(Graph):
         channelType=None,
         algorithms=(),
         networkRouting=True,
-        **kwargs
+        **kwargs,
     ):
         self._environment = environment or Environment()
         # assert(isinstance(self.environment, Environment))
@@ -350,9 +353,7 @@ class Network(Graph):
             )
 
     def send(self, destination, message):
-        logger.debug(
-            "Sending message from %s to %s." % (repr(message.source), destination)
-        )
+        logger.debug(f"Sending message from {repr(message.source)} to {destination}.")
         if destination in self.nodes():
             destination.push_to_inbox(message)
         else:

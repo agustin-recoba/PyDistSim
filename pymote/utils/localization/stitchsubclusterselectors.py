@@ -1,4 +1,4 @@
-class StitchSubclusterSelectorBase(object):
+class StitchSubclusterSelectorBase:
     """Subclasses of this class are used to make choice which subclusters
     will be stitched next based on criteria."""
 

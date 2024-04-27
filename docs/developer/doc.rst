@@ -28,7 +28,7 @@ To get and decode objects.inv for numpy::
 
     $ wget http://docs.scipy.org/doc/numpy/
     $ ipython
-    
+
 In python::
 
     import zlib
@@ -58,9 +58,9 @@ In order for readthedocs.org to make documentation it needs to have certain pack
 
 2. Make ``readthedocs.py``  module and put it in ``docs`` folder with Mock class found `here  <http://read-the-docs.readthedocs.org/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules>`_
 
-3. In documentation ``conf.py`` put the following lines to import mock class for certain modules that are not present in virtual environment. 
+3. In documentation ``conf.py`` put the following lines to import mock class for certain modules that are not present in virtual environment.
    ::
-   
+
         if os.environ.get('READTHEDOCS', None) == 'True':
             sys.path.insert(0,'.')
             from readthedocs import *

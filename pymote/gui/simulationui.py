@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 # Form implementation generated from reading ui file 'simulation.ui'
 #
 # Created: Wed Feb 06 01:24:05 2013
@@ -12,7 +10,7 @@ from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
 
-class Ui_SimulationWindow(object):
+class Ui_SimulationWindow:
     def setupUi(self, SimulationWindow):
         SimulationWindow.setObjectName("SimulationWindow")
         SimulationWindow.resize(1106, 800)

@@ -1,31 +1,33 @@
-from pymote import *  # @UnusedWildImport
-import sys
 import os  # @Reimport
-import numpy
-from PySide6.QtGui import QCursor
-from PySide6.QtWidgets import QMainWindow, QMenu, QFileDialog, QMessageBox
-from PySide6.QtCore import SIGNAL, QRect, QSize, QEvent
-from matplotlib.figure import Figure
-from matplotlib.patches import Circle
+import sys
+from datetime import datetime
 
+import networkx as nx
+import numpy
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.collections import LineCollection, PatchCollection
+from matplotlib.figure import Figure
+from matplotlib.patches import Circle
 from networkx.drawing.nx_pylab import draw_networkx_edges
-from datetime import datetime
-from matplotlib.collections import PatchCollection, LineCollection
-import networkx as nx
+from PySide6.QtCore import SIGNAL, QEvent, QRect, QSize
+from PySide6.QtGui import QCursor
+from PySide6.QtWidgets import QFileDialog, QMainWindow, QMenu, QMessageBox
+
+from pymote import *  # @UnusedWildImport
 from pymote.algorithm import NodeAlgorithm
 
 try:
-    from .simulationui import Ui_SimulationWindow
     from .dictionarytreemodel import DictionaryTreeModel
+    from .simulationui import Ui_SimulationWindow
 except ImportError:
     from simulationui import Ui_SimulationWindow
     from dictionarytreemodel import DictionaryTreeModel
 
+from copy import deepcopy
+
 from pymote.utils.localization.helpers import align_clusters, get_rms
 from pymote.utils.memory.positions import Positions
-from copy import deepcopy
 
 
 class SimulationGui(QMainWindow):

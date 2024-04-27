@@ -1,15 +1,27 @@
-from numpy import dot, concatenate, arctan2, nan, pi, mod, isnan, eye
-from numpy.lib.type_check import real, imag
+from numpy import (
+    arctan2,
+    array,
+    concatenate,
+    dot,
+    eye,
+    isnan,
+    mod,
+    nan,
+    outer,
+    pi,
+    sqrt,
+)
+from numpy.lib.type_check import imag, real
+from numpy.linalg import det, eig
+
+from pymote.logger import logger
 from pymote.utils.localization.stitchsubclusterselectors import (
     MaxCommonNodeSelector,
     StitchSubclusterSelectorBase,
 )
-from pymote.logger import logger
-from numpy import array, sqrt, outer
-from numpy.linalg import eig, det
 
 
-class BaseStitcher(object):
+class BaseStitcher:
     """
     Base class for stitching two clusters.
 

@@ -1,5 +1,5 @@
-from pymote.message import Message
 from pymote.algorithm import NodeAlgorithm
+from pymote.message import Message
 
 
 class FloodingUpdate(NodeAlgorithm):

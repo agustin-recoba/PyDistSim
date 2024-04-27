@@ -24,12 +24,14 @@ To manually set sensor parameters first make an sensor instance:
 
 """
 
-from pymote.conf import settings
-from numpy import arctan2, pi, sqrt
 import inspect
 
+from numpy import arctan2, pi, sqrt
 
-class Sensor(object):
+from pymote.conf import settings
+
+
+class Sensor:
     """
     Abstract base class for all Sensors.
 
@@ -123,7 +125,7 @@ class TruePosSensor(Sensor):
         return {"TruePos": node.network.pos[node]}
 
 
-class CompositeSensor(object):
+class CompositeSensor:
     """
     Wrap multiple sensors, coalesce results and return composite readout.
 
@@ -179,7 +181,7 @@ class CompositeSensor(object):
         return measurements
 
 
-class ProbabilityFunction(object):
+class ProbabilityFunction:
     """Provides a way to get noisy reading."""
 
     def __init__(self, scale, pf):
