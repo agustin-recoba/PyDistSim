@@ -1,10 +1,11 @@
 __all__ = ["read_pickle", "write_pickle"]
 
-from pymote.logger import logger
-import pickle as pickle
 import errno
-import sys
 import os
+import pickle as pickle
+import sys
+
+from pymote.logger import logger
 
 
 def _get_fh(path, mode="r"):
@@ -34,7 +35,7 @@ def write_pickle(obj, path, makedir=True):
     fh = _get_fh(str(path), mode="wb")
     pickle.dump(obj, fh, pickle.HIGHEST_PROTOCOL)
     fh.close()
-    logger.info("instance of %s saved in %s" % (str(obj.__class__), path))
+    logger.info(f"instance of {str(obj.__class__)} saved in {path}")
 
 
 write_npickle = write_pickle
@@ -48,9 +49,9 @@ def read_pickle(path, not_found_raises=True):
     try:
         fh = _get_fh(str(path), "rb")
         obj = pickle.load(fh)
-        logger.info("instance of %s loaded: %s" % (str(obj.__class__), path))
+        logger.info(f"instance of {str(obj.__class__)} loaded: {path}")
         return obj
-    except IOError as e:
+    except OSError as e:
         # if error is some other than errno.ENOENT ='file not found raise
         if not_found_raises or e.errno != errno.ENOENT:
             raise

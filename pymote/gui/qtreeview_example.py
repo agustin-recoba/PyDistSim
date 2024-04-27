@@ -1,26 +1,26 @@
-from PySide6.QtGui import (
-    QApplication,
-    QDialog,
-    QVBoxLayout,
-    QTreeView,
-    QLabel,
-    QFrame,
-    QHBoxLayout,
-    QPushButton,
-)
-from PySide6.QtCore import (
+from PySide6.QtCore import (  # @UnresolvedImport
+    SIGNAL,
     QAbstractItemModel,
     QModelIndex,
     QObject,
-    SIGNAL,
     Qt,
     QVariant,
-)  # @UnresolvedImport
+)
+from PySide6.QtGui import (
+    QApplication,
+    QDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QTreeView,
+    QVBoxLayout,
+)
 
 HORIZONTAL_HEADERS = ("Surname", "Given Name")
 
 
-class person_class(object):
+class person_class:
     """
     a trivial custom data object
     """
@@ -31,10 +31,10 @@ class person_class(object):
         self.isMale = isMale
 
     def __repr__(self):
-        return "PERSON - %s %s" % (self.fname, self.sname)
+        return f"PERSON - {self.fname} {self.sname}"
 
 
-class TreeItem(object):
+class TreeItem:
     """
     a python object used to return row/column data, and keep note of
     it's parents and/or children
@@ -86,7 +86,7 @@ class treeModel(QAbstractItemModel):
     """
 
     def __init__(self, parent=None):
-        super(treeModel, self).__init__(parent)
+        super().__init__(parent)
         self.people = []
         for fname, sname, isMale in (
             ("John", "Brown", 1),

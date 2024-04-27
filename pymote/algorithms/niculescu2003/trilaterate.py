@@ -1,6 +1,6 @@
+from numpy import array, average, diag, dot, linalg, ones, sqrt
+
 from pymote.algorithms.niculescu2003.floodingupdate import FloodingUpdate
-from numpy import array, sqrt, average, dot, diag, ones
-from numpy import linalg
 
 
 class Trilaterate(FloodingUpdate):

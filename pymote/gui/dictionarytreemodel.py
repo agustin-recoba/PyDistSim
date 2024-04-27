@@ -8,7 +8,7 @@ from PySide6.QtCore import QAbstractItemModel, QModelIndex, Qt
 
 class DictionaryTreeModel(QAbstractItemModel):
     def __init__(self, parent=None, dic={}):
-        super(DictionaryTreeModel, self).__init__(parent)
+        super().__init__(parent)
         self.dic = dic
         self.rootItem = TreeItem(("tree", "root"), None)
         self.parents = {0: self.rootItem}
@@ -80,7 +80,7 @@ class DictionaryTreeModel(QAbstractItemModel):
         return p_Item.childCount()
 
 
-class TreeItem(object):
+class TreeItem:
     """
     a python object used to return row/column data, and keep note of
     it's parents and/or children

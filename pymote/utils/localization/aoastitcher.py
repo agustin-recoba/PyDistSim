@@ -1,10 +1,11 @@
-from numpy import dot, arctan2, sqrt, array, sin, cos
+from numpy import arctan2, array, cos, dot, sin, sqrt
 from numpy.linalg import det
+
+from pymote.utils.localization.basestitcher import BaseStitcher
 from pymote.utils.localization.stitchsubclusterselectors import (
     MaxCommonNodeSelector,
     StitchSubclusterSelectorBase,
 )
-from pymote.utils.localization.basestitcher import BaseStitcher
 
 
 class AoAStitcher(BaseStitcher):
@@ -23,7 +24,7 @@ class AoAStitcher(BaseStitcher):
     def __new__(cls, *args, **kwargs):
         """Legacy: by default returns AoAStitcherHorn instance."""
         if cls is not AoAStitcher:
-            return super(AoAStitcher, cls).__new__(cls)
+            return super().__new__(cls)
         return AoAStitcherHorn()
 
     def __init__(self, selector=None, **kwargs):
@@ -64,7 +65,7 @@ class AoAStitcherHorn(AoAStitcher):
         """
         self.reflectable = kwargs.get("reflectable", False)
         self.get_rotation_matrix = self._get_rotation_matrix_horn
-        super(AoAStitcherHorn, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def stitch_subclusters(self, dstSubPos, srcSubPos):
         commonNodes = self._get_common_nodes(dstSubPos, srcSubPos)

@@ -11,19 +11,19 @@ or if they are configured:
 
 """
 
+import importlib
 import os
-import sys
 import re
+import sys
+from warnings import warn
 
 from pymote.conf import global_settings
-from warnings import warn
 from pymote.logger import logger
-import importlib
 
 ENVIRONMENT_VARIABLE = "PYMOTE_SETTINGS_MODULE"
 
 
-class LazySettings(object):
+class LazySettings:
     """
     A lazy proxy for either global pymote settings or custom settings object.
 
@@ -140,7 +140,7 @@ class LazySettings(object):
     configured = property(configured)
 
 
-class Settings(object):
+class Settings:
 
     def __init__(self, settings_module=None):
         # update this dict from global settings, but only for ALL_CAPS settings
@@ -174,7 +174,7 @@ class Settings(object):
                     setattr(self, setting, getattr(mod, setting))
 
 
-class UserSettingsHolder(object):
+class UserSettingsHolder:
     """Holder for user configured settings."""
 
     # SETTINGS_MODULE doesn't make much sense in the manually configured
@@ -211,7 +211,7 @@ def _resolve_name(name, package, level):
             dot = package.rindex(".", 0, dot)
         except ValueError:
             raise ValueError("attempted relative import beyond top-level " "package")
-    return "%s.%s" % (package[:dot], name)
+    return f"{package[:dot]}.{name}"
 
 
 def import_module(name, package=None):

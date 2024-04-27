@@ -1,13 +1,15 @@
 # @PydevCodeAnalysisIgnore
 import unittest
+from inspect import isclass
+
 from numpy.core.numeric import Inf
-from pymote.networkgenerator import NetworkGenerator, NetworkGeneratorException
+
+from pymote.algorithms.readsensors import ReadSensors
+from pymote.channeltype import Udg
 from pymote.conf import settings
 from pymote.environment import Environment2D
-from pymote.channeltype import Udg
+from pymote.networkgenerator import NetworkGenerator, NetworkGeneratorException
 from pymote.sensor import NeighborsSensor
-from pymote.algorithms.readsensors import ReadSensors
-from inspect import isclass
 
 
 class TestNetworkGeneration(unittest.TestCase):

@@ -1,6 +1,7 @@
 from copy import copy
-from pymote.utils.memory import MemoryStructure
 from functools import reduce
+
+from pymote.utils.memory import MemoryStructure
 
 
 class Positions(MemoryStructure):

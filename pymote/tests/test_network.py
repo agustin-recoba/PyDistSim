@@ -1,9 +1,10 @@
 import unittest
-from pymote.network import Network
-from pymote.node import Node
-from pymote.environment import Environment2D
+
 from pymote.channeltype import ChannelType
 from pymote.conf import settings
+from pymote.environment import Environment2D
+from pymote.network import Network
+from pymote.node import Node
 
 
 class TestNetworkCreation(unittest.TestCase):

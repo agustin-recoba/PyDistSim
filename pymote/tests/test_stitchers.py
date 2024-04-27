@@ -1,13 +1,14 @@
 import unittest
+
 from numpy import array
+from numpy.core.numeric import concatenate, dot, nan
+from numpy.ma.core import cos, sin
+from numpy.random import rand
+from scipy.constants import pi
+
 from pymote.utils.localization.aoastitcher import AoAStitcher
 from pymote.utils.localization.diststitcher import DistStitcher
 from pymote.utils.localization.helpers import get_rms
-from numpy.core.numeric import dot, concatenate, nan
-from numpy.ma.core import cos, sin
-from scipy.constants import pi
-from numpy.random import rand
-
 from pymote.utils.memory.positions import Positions
 
 
