@@ -1,6 +1,6 @@
 import unittest
 
-from pymote import Network, NetworkGenerator, Simulation, write_pickle
+from pymote import Network, NetworkGenerator, Simulation
 from pymote.algorithms.santoro2007.yoyo import YoYo
 
 
@@ -44,7 +44,7 @@ class TestSantoro2007(unittest.TestCase):
                 if node.id != min_id:
                     # Check if every other node is PRUNED
                     assert (
-                        node.status == "PRUNED"
+                        node.status == YoYo.Status.PRUNED
                     ), "%s: Node %d has status %s, not PRUNED" % (
                         name,
                         node.id,
@@ -53,7 +53,7 @@ class TestSantoro2007(unittest.TestCase):
                 else:
                     # Check if the node with the smallest ID is the LEADER
                     assert (
-                        node.status == "LEADER"
+                        node.status == YoYo.Status.LEADER
                     ), "%s: Node %d has status %s, not LEADER" % (
                         name,
                         node.id,
@@ -79,7 +79,7 @@ class TestSantoro2007(unittest.TestCase):
                     if node.id == min_id:
                         # Check if the node with the smallest ID is the LEADER
                         assert (
-                            node.status == "LEADER"
+                            node.status == YoYo.Status.LEADER
                         ), "%s: Node %d has status %s, not LEADER" % (
                             name,
                             node.id,
@@ -88,7 +88,7 @@ class TestSantoro2007(unittest.TestCase):
                     else:
                         # Check if every other node is PRUNED
                         assert (
-                            node.status == "PRUNED"
+                            node.status == YoYo.Status.PRUNED
                         ), "%s: Node %d has status %s, not PRUNED" % (
                             name,
                             node.id,

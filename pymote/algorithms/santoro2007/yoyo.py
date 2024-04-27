@@ -1,4 +1,4 @@
-from pymote.algorithm import NodeAlgorithm
+from pymote.algorithm import NodeAlgorithm, StatusValues
 from pymote.message import Message
 
 
@@ -8,6 +8,15 @@ class YoYo(NodeAlgorithm):
         "inNeighborsKey": "InNeighbors",
         "outNeighborsKey": "OutNeighbors",
     }
+
+    class Status(StatusValues):
+        INITIATOR = "INITIATOR"
+        IDLE = "IDLE"
+        SOURCE = "SOURCE"
+        INTERMEDIATE = "INTERMEDIATE"
+        SINK = "SINK"
+        PRUNED = "PRUNED"
+        LEADER = "LEADER"
 
     # Store assigned id (assigned in SetupYoYo)
     ID_KEY = "id"
@@ -38,7 +47,7 @@ class YoYo(NodeAlgorithm):
             node.memory[self.outNeighborsKey] = []
 
             node.memory[self.neighborsKey] = node.compositeSensor.read()["Neighbors"]
-            node.status = "INITIATOR"
+            node.status = self.Status.INITIATOR
 
             node.memory[self.RECEIVED_IDS_KEY] = {}
             node.memory[self.RECEIVED_RESPONSES_KEY] = {}
@@ -47,7 +56,7 @@ class YoYo(NodeAlgorithm):
             node.memory[self.RECEIVED_IDS_WHILE_WAITING_RESPONSE_KEY] = {}
 
             self.network.outbox.insert(
-                0, Message(header=NodeAlgorithm.INI, destination=node)
+                0, Message(meta_header=NodeAlgorithm.INI, destination=node)
             )
 
     def invert_edges(self, node, nodes_to_process, invert_from):
@@ -140,34 +149,34 @@ class YoYo(NodeAlgorithm):
 
     def change_status(self, node):
 
-        if node.status == "SOURCE":
+        if node.status == self.Status.SOURCE:
             if len(node.memory[self.inNeighborsKey]) == 0:
                 if len(node.memory[self.outNeighborsKey]) == 0:
-                    node.status = "LEADER"
+                    node.status = self.Status.LEADER
             else:
                 if len(node.memory[self.outNeighborsKey]) > 0:
-                    node.status = "INTERMEDIATE"
+                    node.status = self.Status.INTERMEDIATE
                 else:
-                    node.status = "SINK"
+                    node.status = self.Status.SINK
 
-        elif node.status == "INTERMEDIATE":
+        elif node.status == self.Status.INTERMEDIATE:
             if len(node.memory[self.outNeighborsKey]) == 0:
                 if len(node.memory[self.inNeighborsKey]) == 0:
-                    node.status = "PRUNED"
+                    node.status = self.Status.PRUNED
 
-        elif node.status == "SINK":
+        elif node.status == self.Status.SINK:
             if len(node.memory[self.inNeighborsKey]) == 0:
-                node.status = "PRUNED"
+                node.status = self.Status.PRUNED
             else:
-                node.status = "INTERMEDIATE"
+                node.status = self.Status.INTERMEDIATE
 
-        elif node.status == "IDLE":
+        elif node.status == self.Status.IDLE:
             if node.memory[self.inNeighborsKey]:
-                node.status = "SINK"
+                node.status = self.Status.SINK
                 if node.memory[self.outNeighborsKey]:
-                    node.status = "INTERMEDIATE"
+                    node.status = self.Status.INTERMEDIATE
             else:
-                node.status = "SOURCE"
+                node.status = self.Status.SOURCE
 
         self.do(node)
 
@@ -346,27 +355,28 @@ class YoYo(NodeAlgorithm):
             self.change_status(node)
 
     def do(self, node):
-        if node.status == "SOURCE":
+        if node.status == self.Status.SOURCE:
             self.do_source(node)
-        elif node.status == "INTERMEDIATE":
+        elif node.status == self.Status.INTERMEDIATE:
             self.do_intermediate(node)
-        elif node.status == "SINK":
+        elif node.status == self.Status.SINK:
             self.do_sink(node)
 
-    def initiator(self, node, message):
-        if message.header == NodeAlgorithm.INI:
-            # Special case. Only one node in graph
-            # If node has no neighbors set its status to LEADER
-            if not node.memory[self.neighborsKey]:
-                node.status = "LEADER"
-                return
+    @Status.INITIATOR
+    def spontaneously(self, node, message):
+        # Special case. Only one node in graph
+        # If node has no neighbors set its status to LEADER
+        if not node.memory[self.neighborsKey]:
+            node.status = self.Status.LEADER
+            return
 
-            # default destination: send to every neighbor
-            node.send(Message(header="init_id", data=node.id))
+        # default destination: send to every neighbor
+        node.send(Message(header="init_id", data=node.id))
 
-            node.status = "IDLE"
+        node.status = self.Status.IDLE
 
-    def idle(self, node, message):
+    @Status.IDLE
+    def receiving(self, node, message):
         if message.header == "init_id":
             if message.data < node.id:
                 node.memory[self.inNeighborsKey].append(message.source)
@@ -384,7 +394,8 @@ class YoYo(NodeAlgorithm):
         elif message.header == "id":
             self.receive_id(node, message)
 
-    def source(self, node, message):
+    @Status.SOURCE
+    def receiving(self, node, message):
         if message.header == "response":
             num_receiverd_responses = self.receive_response(node, message)
 
@@ -393,7 +404,8 @@ class YoYo(NodeAlgorithm):
 
         self.do_source(node)
 
-    def intermediate(self, node, message):
+    @Status.INTERMEDIATE
+    def receiving(self, node, message):
         if message.header == "id":
             self.receive_id(node, message)
 
@@ -402,7 +414,8 @@ class YoYo(NodeAlgorithm):
 
         self.do_intermediate(node)
 
-    def sink(self, node, message):
+    @Status.SINK
+    def receiving(self, node, message):
         if message.header == "id":
             self.receive_id(node, message)
 
@@ -411,18 +424,10 @@ class YoYo(NodeAlgorithm):
 
         self.do_sink(node)
 
-    def pruned(self, node, message):
+    @Status.PRUNED
+    def default(self, node, message):
         pass
 
-    def leader(self, node, message):
+    @Status.LEADER
+    def default(self, node, message):
         pass
-
-    STATUS = {
-        "INITIATOR": initiator,
-        "IDLE": idle,
-        "SOURCE": source,
-        "INTERMEDIATE": intermediate,
-        "SINK": sink,
-        "PRUNED": pruned,
-        "LEADER": leader,
-    }
