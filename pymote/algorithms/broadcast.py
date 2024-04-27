@@ -1,33 +1,47 @@
-from pymote.algorithm import NodeAlgorithm
+from pymote.algorithm import NodeAlgorithm, StatusValues
 from pymote.message import Message
+from pymote.restrictions import Restrictions
 
 
 class Flood(NodeAlgorithm):
     required_params = ("informationKey",)
     default_params = {"neighborsKey": "Neighbors"}
 
+    class Status(StatusValues):
+        INITIATOR = "INITIATOR"
+        IDLE = "IDLE"
+        DONE = "DONE"
+
+    S_init = [Status.INITIATOR, Status.IDLE]
+    S_term = [Status.DONE]
+
+    restrictions = [
+        Restrictions.BidirectionalLinks,
+        Restrictions.TotalReliability,
+        Restrictions.Connectivity,
+        Restrictions.UniqueInitiator,
+    ]
+
     def initializer(self):
         ini_nodes = []
         for node in self.network.nodes():
             node.memory[self.neighborsKey] = node.compositeSensor.read()["Neighbors"]
-            node.status = "IDLE"
+            node.status = self.Status.IDLE
             if self.informationKey in node.memory:
-                node.status = "INITIATOR"
+                node.status = self.Status.INITIATOR
                 ini_nodes.append(node)
         for ini_node in ini_nodes:
             self.network.outbox.insert(
-                0, Message(header=NodeAlgorithm.INI, destination=ini_node)
+                0, Message(meta_header=NodeAlgorithm.INI, destination=ini_node)
             )
 
-    def initiator(self, node, message):
-        if message.header == NodeAlgorithm.INI:
-            # default destination: send to every neighbor
-            node.send(
-                Message(header="Information", data=node.memory[self.informationKey])
-            )
-            node.status = "DONE"
+    @Status.INITIATOR
+    def spontaneously(self, node, message):
+        node.send(Message(header="Information", data=node.memory[self.informationKey]))
+        node.status = self.Status.DONE
 
-    def idle(self, node, message):
+    @Status.IDLE
+    def receiving(self, node, message):
         if message.header == "Information":
             node.memory[self.informationKey] = message.data
             destination_nodes = list(node.memory[self.neighborsKey])
@@ -41,13 +55,9 @@ class Flood(NodeAlgorithm):
                         data=message.data,
                     )
                 )
-        node.status = "DONE"
+        node.status = self.Status.DONE
 
-    def done(self, node, message):
+    @Status.DONE
+    def default(self, *args, **kwargs):
+        "Do nothing, for all inputs."
         pass
-
-    STATUS = {
-        "INITIATOR": initiator,
-        "IDLE": idle,
-        "DONE": done,
-    }

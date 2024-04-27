@@ -1,51 +1,38 @@
+from collections.abc import Callable
 from enum import StrEnum
-from pymote.message import Message, MetaHeader as MessageMetaHeader
-from pymote.logger import logger
-from pymote.node import Node
 from inspect import getmembers
 
+from pymote.logger import logger
+from pymote.message import Message
+from pymote.message import MetaHeader as MessageMetaHeader
+from pymote.node import Node
+
+
+class ActionEnum(StrEnum):
+    default = "default"
+    receiving = "receiving"
+    spontaneously = "spontaneously"
+    alarm = "alarm"
+
+
 MSG_META_HEADER_MAP = {
-    MessageMetaHeader.NORMAL_MESSAGE: "receiving",
-    MessageMetaHeader.INITALIZATION_MESSAGE: "spontaneously",
-    MessageMetaHeader.ALARM_MESSAGE: "alarm",
+    MessageMetaHeader.NORMAL_MESSAGE: ActionEnum.receiving,
+    MessageMetaHeader.INITALIZATION_MESSAGE: ActionEnum.spontaneously,
+    MessageMetaHeader.ALARM_MESSAGE: ActionEnum.alarm,
 }
 
 
 class StatusValues(StrEnum):
-    def __call__(self, func):
-        assert func.__name__ in [
-            *MSG_META_HEADER_MAP.values(),
-            "default",
-        ], f"Invalid function name '{func.__name__}'."
+    def __call__(self, func: Callable):
+        assert (
+            func.__name__ in ActionEnum.__members__
+        ), f"Invalid function name '{func.__name__}'."
 
         setattr(self, func.__name__, func)
-        setattr(getattr(self, func.__name__), "implemented", True)
         return func
 
-    def default(self, *args, **kwargs):
-        raise NotImplementedError(
-            f"Rection 'default' not implemented for state '{self.value}'."
-        )
-    setattr(default, "implemented", False)
-
-    def receiving(self, *args, **kwargs):
-        raise NotImplementedError(
-            f"Rection 'receiving' not implemented for state '{self.value}'."
-        )
-    setattr(receiving, "implemented", False)
-
-
-    def spontaneously(self, *args, **kwargs):
-        raise NotImplementedError(
-            f"Rection 'spontaneously' not implemented for state '{self.value}'."
-        )
-    setattr(spontaneously, "implemented", False)
-
-    def alarm(self, *args, **kwargs):
-        raise NotImplementedError(
-            f"Rection 'alarm' not implemented for state '{self.value}'."
-        )
-    setattr(alarm, "implemented", False)
+    def implements(self, action: ActionEnum):
+        return hasattr(self, action.value)
 
 
 class AlgorithmMeta(type):
@@ -73,17 +60,17 @@ class AlgorithmMeta(type):
         ), "Some required params %s defined in multiple classes." % str(rps)
         assert len(all_params) == len(
             set(all_params)
-        ), "Required params %s and default params %s should be unique." % (
+        ), "Required params {} and default params {} should be unique.".format(
             str(rps),
             str(list(dps.keys())),
         )
 
         dct["required_params"] = tuple(rps)
         dct["default_params"] = dps
-        return super(AlgorithmMeta, cls).__new__(cls, clsname, bases, dct)
+        return super().__new__(cls, clsname, bases, dct)
 
 
-class Algorithm(object, metaclass=AlgorithmMeta):
+class Algorithm(metaclass=AlgorithmMeta):
     """
     Abstract base class for all algorithms.
 
@@ -180,7 +167,7 @@ class NodeAlgorithm(Algorithm):
         for node in self.network.nodes():
             node.status = self.Status.IDLE
 
-    def step(self, node:Node):
+    def step(self, node: Node):
         """Executes one step of the algorithm for given node."""
         message: Message = node.receive()
         if message:
@@ -190,7 +177,7 @@ class NodeAlgorithm(Algorithm):
             elif message.nexthop == node.id:
                 self._forward_message(node, message)
 
-    def _forward_message(self, node:Node, message: Message):
+    def _forward_message(self, node: Node, message: Message):
         try:
             message.nexthop = node.memory["routing"][message.destination]
         except KeyError:
@@ -198,19 +185,21 @@ class NodeAlgorithm(Algorithm):
         else:
             node.send(message)
 
-    def _process_message(self, node:Node, message: Message):
+    def _process_message(self, node: Node, message: Message):
         status = getattr(self.Status, node.status.value)
         print(message)
-        method_name = MSG_META_HEADER_MAP.get(message.meta_header, "default")
-        method = getattr(status, method_name)
-        
-        if method.implemented:
+        method_name = MSG_META_HEADER_MAP[message.meta_header]
+
+        if status.implements(method_name):
+            method = getattr(status, method_name)
+            return method(self, node, message)
+        elif status.implements(ActionEnum.default):
+            method = getattr(status, ActionEnum.default)
             return method(self, node, message)
         else:
-            return status.default(self, node, message)
-
-    def statuserr(self, node:Node, message: Message):
-        logger.error("Can't handle status %s." % node.status)
+            logger.error(
+                f"Method {method_name} not implemented for status {node.status}."
+            )
 
 
 class NetworkAlgorithm(Algorithm):
