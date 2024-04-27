@@ -1,8 +1,9 @@
-.. image:: https://api.travis-ci.org/darbula/pymote.png?branch=master
-  :target: http://travis-ci.org/darbula/pymote
+.. image:: https://app.travis-ci.com/agustin-recoba/pydistsim.svg?token=zk1hY6ZALwZTY3bjX2Aq&branch=master
+  :target: https://app.travis-ci.com/agustin-recoba/pydistsim
 
-.. image:: https://coveralls.io/repos/darbula/pymote/badge.png?branch=master
-  :target: https://coveralls.io/r/darbula/pymote?branch=master
+.. image:: https://coveralls.io/repos/github/agustin-recoba/pydistsim/badge.svg?branch=master
+  :target: https://coveralls.io/github/agustin-recoba/pydistsim?branch=master
+
 
 
 Pymote
