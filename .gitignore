@@ -8,6 +8,7 @@ build
 docs/_build
 eggs
 parts
+env/
 
 var
 sdist

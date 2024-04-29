@@ -25,6 +25,7 @@ To manually set sensor parameters first make an sensor instance:
 """
 
 import inspect
+from functools import wraps
 
 from numpy import arctan2, pi, sqrt
 
@@ -62,6 +63,7 @@ class Sensor:
 def node_in_network(fun):
     """Decorator function that checks if node is in network."""
 
+    @wraps(fun)
     def f(sensor, node):
         if not node.network:
             raise Exception(

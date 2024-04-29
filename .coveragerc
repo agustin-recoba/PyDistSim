@@ -5,6 +5,7 @@ branch = True
 omit =
     pymote/conf/ipython/ipython_config.py
     pymote/release.py
+    pymote/gui/*
 
 [report]
 # Regexes for lines to exclude from consideration
