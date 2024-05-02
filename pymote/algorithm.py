@@ -26,13 +26,13 @@ class StatusValues(StrEnum):
     def __call__(self, func: Callable):
         assert (
             func.__name__ in ActionEnum.__members__
-        ), f"Invalid function name '{func.__name__}'."
+        ), f"Invalid function name '{func.__name__}', please make sure it is one of {list(ActionEnum.__members__)}."
 
         setattr(self, func.__name__, func)
         return func
 
-    def implements(self, action: ActionEnum):
-        return hasattr(self, action.value)
+    def implements(self, action: ActionEnum | str):
+        return hasattr(self, str(action))
 
 
 class AlgorithmMeta(type):
