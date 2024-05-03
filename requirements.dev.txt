@@ -1,0 +1,7 @@
+pytest==8.2.0
+pytest-cov==5.0.0
+Sphinx==7.3.7
+sphinx-rtd-theme==2.0.0
+virtualenv==20.26.0
+coverage==7.5
+pre-commit==3.7.0
