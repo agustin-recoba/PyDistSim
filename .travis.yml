@@ -15,7 +15,7 @@ install:
   - pip install pytest pytest-cov
 
 script:
-  - pytest --cov-config .coveragerc --cov=pymote
+  - pytest --cov-config .coveragerc --cov=pymote --cov-report=xml
   - coverage report --show-missing
 
 after_success:
