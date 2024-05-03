@@ -14,7 +14,7 @@ def get_root_node(net, treeKey="mst"):
     """
     check_tree_key(net, treeKey)
 
-    node = net.nodes()[0]
+    node = net.nodes_sorted()[0]
     while (
         node.memory[treeKey]["parent"] and node.memory[treeKey]["parent"] in net.nodes()
     ):

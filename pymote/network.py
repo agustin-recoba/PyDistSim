@@ -8,15 +8,16 @@ from numpy.core.numeric import Inf, allclose
 from numpy.lib.function_base import average
 from numpy.random import rand
 
+from pymote.algorithm import Algorithm
+from pymote.channeltype import ChannelType
 from pymote.conf import settings
+from pymote.environment import Environment
 from pymote.logger import logger
+from pymote.node import Node
 from pymote.sensor import CompositeSensor
 from pymote.utils.helpers import pymote_equal_objects
 
-from .algorithm import Algorithm
-from .channeltype import ChannelType
-from .environment import Environment
-from .node import Node
+AlgorithmsParam = tuple[type[Algorithm] | tuple[type[Algorithm], dict]]
 
 
 class Network(Graph):
@@ -25,8 +26,9 @@ class Network(Graph):
         self,
         environment=None,
         channelType=None,
-        algorithms=(),
+        algorithms: AlgorithmsParam = (),
         networkRouting=True,
+        graph=None,
         **kwargs,
     ):
         self._environment = environment or Environment()
@@ -37,38 +39,46 @@ class Network(Graph):
         self.ori = {}
         self.labels = {}
         Graph.__init__(self)
-        self._algorithms = ()
         self.algorithms = algorithms or settings.ALGORITHMS
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self.outbox = []
         self.networkRouting = networkRouting
         logger.info("Instance of Network has been initialized.")
 
-    def subgraph(self, nbunch):
-        """Returns Graph instance with nbunch nodes, see subnetwork."""
-        return Graph(self).subgraph(nbunch)
+    def copy(self, as_view=False):
+        """Return a copy of the graph."""
+        return deepcopy(self)
 
-    # TODO: incomplete add other properties
     def subnetwork(self, nbunch, pos=None):
         """Returns Network instance with nbunch nodes, see subgraph."""
         if not pos:
             pos = self.pos
-        H = Graph.subgraph(self, nbunch)
-        for node in H:
-            H.pos.update({node: pos[node][:2]})
-            if len(pos[node]) > 2:
-                H.ori.update({node: pos[node][2]})
+        H = self.copy()
+        for node in self.nodes():
+            node_H = H.node_by_id(node.id)
+            if node in nbunch:
+                # Copy node attributes
+                H.pos.update({node_H: pos[node][:2]})
+                if len(pos[node]) > 2:
+                    H.ori.update({node_H: pos[node][2]})
+                else:
+                    H.ori.update({node_H: deepcopy(self.ori[node])})
+                H.labels.update({node_H: deepcopy(self.labels[node])})
+                node_H.network = H
             else:
-                H.ori.update({node: self.ori[node]})
-            H.labels.update({node: self.labels[node]})
-            node.network = H
-        H._environment = deepcopy(self._environment)
+                H.remove_node(node_H)
+
+        # Copy network attributes and reinitialize algorithms
+        H.algorithms = deepcopy(self._algorithms_param) or settings.ALGORITHMS
+        H.algorithmState = {"index": 0, "step": 1, "finished": False}
+        H.outbox = []
+
         assert isinstance(H, Network)
         return H
 
-    def nodes(self, data=False):
+    def nodes_sorted(self, data=False):
         """Override, sort nodes by id, important for message ordering."""
-        return list(sorted(self, key=lambda k: k.id))
+        return list(sorted(self.nodes(), key=lambda k: k.id))
 
     @property
     def algorithms(self):
@@ -85,7 +95,7 @@ class Network(Graph):
         return self._algorithms
 
     @algorithms.setter
-    def algorithms(self, algorithms):
+    def algorithms(self, algorithms: AlgorithmsParam):
         self.reset()
         self._algorithms = ()
         if not isinstance(algorithms, tuple):
@@ -103,6 +113,9 @@ class Network(Graph):
             else:
                 raise PymoteNetworkError("algorithm")
 
+        # If everything went ok, set algorithms param for coping
+        self._algorithms_param = algorithms
+
     @property
     def environment(self):
         return self._environment
@@ -113,7 +126,7 @@ class Network(Graph):
         corresponding channelType environment must be changed also."""
         self._environment = environment
         self.channelType.environment = environment
-        for node in self.nodes():
+        for node in self.nodes_sorted():
             self.remove_node(node)
             self.add_node(node)
         logger.warning("All nodes are moved into new environment.")
@@ -174,12 +187,16 @@ class Network(Graph):
     def avg_degree(self):
         return average(list(deg for n, deg in self.degree()))
 
+    def algorithms_param(self):
+        """Returns list of algorithms with their parameters."""
+        return [(a.__class__, a.params) for a in self.algorithms]
+
     def modify_avg_degree(self, value):
         """
         Modifies (increases) average degree based on given value by
         modifying nodes commRange."""
         # assert all nodes have same commRange
-        assert allclose([n.commRange for n in self], self.nodes()[0].commRange)
+        assert allclose([n.commRange for n in self], self.nodes_sorted()[0].commRange)
         # TODO: implement decreasing of degree, preserve connected network
         assert value + settings.DEG_ATOL > self.avg_degree()  # only increment
         step_factor = 7.0
@@ -287,7 +304,7 @@ class Network(Graph):
                     elif Graph.has_edge(self, n1, n2):
                         Graph.remove_edge(self, n1, n2)
 
-    def add_edge(self):
+    def add_edge(self, u_of_edge, v_of_edge, **attr):
         logger.warn("Edges are auto-calculated from channelType and commRange")
 
     def find_random_pos(self, n=100):
@@ -310,7 +327,7 @@ class Network(Graph):
     def communicate(self):
         """Pass all messages from node's outboxes to its neighbors inboxes."""
         # Collect messages
-        for node in self.nodes():
+        for node in self.nodes_sorted():
             self.outbox.extend(node.outbox)
             node.outbox = []
         while self.outbox:
@@ -377,7 +394,7 @@ class Network(Graph):
         pos = {
             n: "x: %.2f y: %.2f theta: %.2f deg"
             % (self.pos[n][0], self.pos[n][1], self.ori[n] * 180.0 / pi)
-            for n in self.nodes()
+            for n in self.nodes_sorted()
         }
         return {
             "nodes": pos,
@@ -401,25 +418,39 @@ class Network(Graph):
         neighbors or a dict with 'parent' (node) and 'children' (list) keys.
 
         """
-        edgelist = []
-        for node in self.nodes():
-            nodelist = []
+        tree_edges_ids = []
+        tree_nodes = []
+        for node in self.nodes_sorted():
+            neighbors_in_tree = []
             if treeKey not in node.memory:
                 continue
             if isinstance(node.memory[treeKey], list):
-                nodelist = node.memory[treeKey]
+                neighbors_in_tree = node.memory[treeKey]
             elif (
                 isinstance(node.memory[treeKey], dict)
                 and "children" in node.memory[treeKey]
             ):
-                nodelist = node.memory[treeKey]["children"]
-            edgelist.extend(
-                [(node, neighbor) for neighbor in nodelist if neighbor in self.nodes()]
+                neighbors_in_tree = node.memory[treeKey]["children"]
+            tree_edges_ids.extend(
+                [
+                    (node.id, neighbor.id)
+                    for neighbor in neighbors_in_tree
+                    if neighbor in self.nodes()
+                ]
             )
-        treeNet = self.copy()
-        for e in treeNet.edges():
-            if e not in edgelist and (e[1], e[0]) not in edgelist:
-                treeNet.remove_edge(*e)
+            tree_nodes.extend(
+                neighbor for neighbor in neighbors_in_tree if neighbor in self.nodes()
+            )
+            if tree_nodes:
+                tree_nodes.append(node)
+
+        treeNet = self.subnetwork(tree_nodes)
+        for u, v in treeNet.edges():
+            if (u.id, v.id) not in tree_edges_ids and (
+                v.id,
+                u.id,
+            ) not in tree_edges_ids:
+                treeNet.remove_edge(u, v)
         return treeNet
 
     def validate_params(self, params):

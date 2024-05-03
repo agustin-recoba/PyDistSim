@@ -39,6 +39,15 @@ class Udg(ChannelType):
         return False
 
 
+class Complete(ChannelType):
+
+    def __init__(self, environment):
+        self.environment = environment
+
+    def in_comm_range(self, network, node1, node2):
+        return True
+
+
 class SquareDisc(ChannelType):
     """Probability of connection is 1-d^2/r^2"""
 

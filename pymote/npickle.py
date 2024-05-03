@@ -25,8 +25,10 @@ def write_pickle(obj, path, makedir=True):
     """Write object in Python pickle format."""
     # TODO: use normal pickling by implementing pickling protocol for Network
     # class http://docs.python.org/library/pickle.html#the-pickle-protocol
+
     # TODO: find out origin of maximum recursion depth problem, hack solution:
-    sys.setrecursionlimit(6000)
+    # sys.setrecursionlimit(6000)
+
     try:
         os.makedirs(os.path.split(path)[0])
     except OSError as e:
@@ -54,7 +56,7 @@ def read_pickle(path, not_found_raises=True):
     except OSError as e:
         # if error is some other than errno.ENOENT ='file not found raise
         if not_found_raises or e.errno != errno.ENOENT:
-            raise
+            raise e
         return None
 
 

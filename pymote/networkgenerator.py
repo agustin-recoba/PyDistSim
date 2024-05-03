@@ -111,19 +111,20 @@ class NetworkGenerator:
                 else:
                     return None
             else:
+                min_node = net.nodes_sorted()[0]
                 if len(net) > self.n_min and len(net) > 1:
-                    net.remove_node(net.nodes()[0])
+                    net.remove_node(min_node)
                     logger.debug("Removed node, nodes left: %d" % len(net))
                 elif not self.comm_range:
                     for node in net:
                         node.commRange += step
-                    logger.debug("Decreased commRange to %d" % net.nodes()[0].commRange)
+                    logger.debug("Decreased commRange to %d" % min_node.commRange)
                 else:
                     return None
         return net
 
     def _are_conditions_satisfied(self, net):
-        cr = net.nodes()[0].commRange
+        cr = net.nodes_sorted()[0].commRange
         if self.connected and not is_connected(net):
             logger.debug("Not connected")
             return round(0.2 * cr)
@@ -197,7 +198,7 @@ class NetworkGenerator:
             pos = array([-1, -1])  # some non space point
             while not net.environment.is_space(pos):
                 pos = positions[i, :n] + (rand(2) - 0.5) * (size * randomness)
-            net.pos[net.nodes()[i]] = pos
+            net.pos[net.nodes_sorted()[i]] = pos
         net.recalculate_edges()
         # TODO: this is not intuitive but generate_random network with net
         # given as argument will check if conditions are satisfied and act

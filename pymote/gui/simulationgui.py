@@ -332,7 +332,7 @@ class SimulationGui(QMainWindow):
         SCALE_FACTOR = 0.6
         if not net:
             net = self.net
-        if any([not locKey in node.memory for node in net.nodes()]):
+        if any([locKey not in node.memory for node in net.nodes()]):
             self.propagation_error_collection = []
             self.ini_error_collection = []
             return

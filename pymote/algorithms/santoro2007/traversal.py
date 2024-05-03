@@ -16,7 +16,7 @@ class DFT(NodeAlgorithm):
         for node in self.network.nodes():
             node.memory[self.neighborsKey] = node.compositeSensor.read()["Neighbors"]
             node.status = self.Status.IDLE
-        ini_node = self.network.nodes()[0]
+        ini_node = self.network.nodes_sorted()[0]
         ini_node.status = self.Status.INITIATOR
         self.network.outbox.insert(
             0, Message(meta_header=NodeAlgorithm.INI, destination=ini_node)
@@ -82,7 +82,7 @@ class DFStar(NodeAlgorithm):
         for node in self.network.nodes():
             node.memory[self.neighborsKey] = node.compositeSensor.read()["Neighbors"]
             node.status = self.Status.IDLE
-        ini_node = self.network.nodes()[0]
+        ini_node = self.network.nodes_sorted()[0]
         ini_node.status = self.Status.INITIATOR
         self.network.outbox.insert(
             0, Message(meta_header=NodeAlgorithm.INI, destination=ini_node)

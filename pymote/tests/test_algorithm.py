@@ -10,6 +10,7 @@ from pymote.algorithm import (
 )
 from pymote.network import PymoteNetworkError
 from pymote.networkgenerator import NetworkGenerator
+from pymote.simulation import Simulation
 
 
 def set_algorithms(net, algorithms):
@@ -147,6 +148,41 @@ class TestAlgorithmsSetter(unittest.TestCase):
         self.assertTrue(self.net.algorithms[0].dp1 == "dp1_value")
         self.assertTrue(self.net.algorithms[0].dp2 == "overriden_dp2_value")
         self.assertTrue(self.net.algorithms[0].dp3 == "dp3_value")
+
+
+class TestRunBaseAlgorithm(unittest.TestCase):
+    class UnimplementedAlgorithm(NodeAlgorithm): ...
+
+    def setUp(self):
+        net_gen = NetworkGenerator(100)
+        self.net = net_gen.generate_random_network()
+        self.net.algorithms = (self.UnimplementedAlgorithm,)
+
+    def test_run_base_algorithm(self):
+        sim = Simulation(self.net, "DEBUG")
+
+        for node in self.net.nodes():
+            with self.subTest(node=node):
+                print(f"{node.id=}, {node.status=}, {node.outbox=}, {node.inbox=}")
+                assert len(node.outbox) == 0
+                assert len(node.inbox) == 0
+
+        sim.run(1)
+        # First step should transfer the INI from the outbox to the inbox of the initiator node
+        assert len(self.net.outbox) == 0
+
+        nodes_with_1_msg = 0
+        for node in self.net.nodes():
+            with self.subTest(node=node):
+                print(f"{node.id=}, {node.status=}, {node.outbox=}, {node.inbox=}")
+                assert len(node.outbox) == 0
+                nodes_with_1_msg += 1 if len(node.inbox) else 0
+        assert nodes_with_1_msg == 1
+
+        sim.run(1)
+        # Second step should process the INI message (and do nothing)
+
+        assert sim.is_halted()
 
 
 class TestStatusValues(unittest.TestCase):

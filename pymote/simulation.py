@@ -80,7 +80,7 @@ class Simulation(QThread):
             while not self.is_halted():
                 self.stepsLeft -= 1
                 self.network.communicate()
-                for node in self.network.nodes():
+                for node in self.network.nodes_sorted():
                     nodeTerminated = algorithm.step(node)
                 self.emit(
                     SIGNAL("updateLog(QString)"),

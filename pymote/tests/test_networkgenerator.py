@@ -6,7 +6,6 @@ from numpy.core.numeric import Inf
 
 from pymote.algorithms.readsensors import ReadSensors
 from pymote.channeltype import Udg
-from pymote.conf import settings
 from pymote.environment import Environment2D
 from pymote.networkgenerator import NetworkGenerator, NetworkGeneratorException
 from pymote.sensor import NeighborsSensor
@@ -266,15 +265,15 @@ class TestNetworkGeneration(unittest.TestCase):
     def test_random_generation(self):
         """Test different random generation parameters"""
         for input, output in self.in_out:
-            if isclass(output) and issubclass(output, Exception):
-                self.assertRaises(output, NetworkGenerator, **input)
-                continue
-            net_gen = NetworkGenerator(**input)
-            if output == None:
-                self.assertEqual(None, net_gen.generate_random_network())
-            elif isinstance(output, dict):
-                net = net_gen.generate_random_network()
-                try:
+            with self.subTest(input=input, output=output):
+                print(f"{input=}\n{output=}")
+                if isclass(output) and issubclass(output, Exception):
+                    self.assertRaises(output, NetworkGenerator, **input)
+                    continue
+                net_gen = NetworkGenerator(**input)
+                if output is None:
+                    self.assertEqual(None, net_gen.generate_random_network())
+                elif isinstance(output, dict):
+                    net = net_gen.generate_random_network()
+                    print(f"{len(net)=}")
                     net.validate_params(output)
-                except AssertionError:
-                    self.fail("Network params did not validate.")
