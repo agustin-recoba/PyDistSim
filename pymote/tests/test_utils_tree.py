@@ -8,7 +8,7 @@ from pymote.conf import settings
 from pymote.environment import Environment2D
 from pymote.network import Network, PymoteNetworkError
 from pymote.node import Node
-from pymote.utils import tree
+from pymote.utils import tree, visualization
 
 
 class TestNetwork(unittest.TestCase):
@@ -63,3 +63,48 @@ class TestNetwork(unittest.TestCase):
         tree.change_root_node(self.net, self.node2, self.treeKey)
         root = tree.get_root_node(self.net, self.treeKey)
         assert root == self.node2, "Incorrect tree root"
+
+    def test_not_tree_network(self):
+        env = Environment2D()
+        net = Network(channelType=Complete(env))
+
+        with self.assertRaises(tree.TreeNetworkException):
+            tree.check_tree_key(net, self.treeKey)
+
+        net.environment.im[22, 22] = 0
+        node1 = net.add_node(pos=[22.8, 21.8])
+        node2 = net.add_node(pos=[21.9, 22.9])
+        node3 = net.add_node(pos=[21.7, 21.7])
+
+        net.algorithms = (NodeAlgorithm,)
+
+        with self.assertRaises(tree.MissingTreeKey):
+            tree.check_tree_key(net, self.treeKey)
+
+        node1.memory[self.treeKey] = {
+            "parent": None,
+            "children": [node2, node3],
+        }
+
+        with self.assertRaises(tree.MissingTreeKey):
+            tree.check_tree_key(net, self.treeKey)
+
+        node2.memory[self.treeKey] = {"parent": node1, "children": []}
+        node3.memory[self.treeKey] = {"parent": node1, "children": []}
+
+        tree.check_tree_key(net, self.treeKey)
+
+    def test_visualization(self):
+        """Test visualization functions."""
+        visualization.show_mst(self.net, self.treeKey)
+
+        env = Environment2D()
+        net = Network(channelType=Complete(env))
+        node1 = net.add_node(pos=[22.8, 21.8])
+
+        node1.memory[self.treeKey] = {
+            "parent": None,
+            "children": [],
+        }
+
+        visualization.show_mst(net, self.treeKey)
