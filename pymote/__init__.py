@@ -1,8 +1,12 @@
-from pymote import release
+from importlib import metadata
 
-__author__ = "%s <%s>" % release.authors["Arbula"]
-__license__ = release.license
-__version__ = release.version
+try:
+    package_metadata = metadata.metadata("pymote")
+
+    __author__ = package_metadata["author-email"]
+    __version__ = package_metadata["version"]
+except metadata.PackageNotFoundError:
+    __author__ = __version__ = None
 
 # For interactive sessions these import names with from pymote import *
 import os

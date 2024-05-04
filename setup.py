@@ -1,7 +1,7 @@
 import os
 import sys
 
-from setuptools import find_packages, setup
+from setuptools import setup
 
 # transfer profile_pymote for ipython into IPYTHONDIR
 if "install" in sys.argv or "develop" in sys.argv:
@@ -35,49 +35,4 @@ if "install" in sys.argv or "develop" in sys.argv:
             profiledir,
         )
 
-sys.path.insert(0, "pymote")
-import release  # @UnresolvedImport
-
-sys.path.pop(0)
-
-setup(
-    name=release.name,
-    version=release.version,
-    url=release.url,
-    author=release.authors["Arbula"][0],
-    author_email=release.authors["Arbula"][1],
-    description=release.description,
-    keywords=release.keywords,
-    download_url=release.download_url,
-    license=release.license,
-    platforms=release.platforms,
-    classifiers=release.classifiers,
-    packages=find_packages(),
-    # package_data = {
-    #    '': ['*.bat'],
-    # },
-    exclude_package_data={"": ["README.rst"]},
-    install_requires=[
-        "networkx",
-        "numpy",
-        "scipy",
-        "pypng",
-        "ipython",
-        "matplotlib",
-        "pyside6",
-    ],
-    long_description=open(os.path.join(os.path.dirname(__file__), "README.rst")).read(),
-    entry_points={
-        "pymote.algorithms": [],
-        "console_scripts": [
-            "ipymote = pymote.scripts.ipymote:start_ipymote",
-        ],
-        "gui_scripts": [
-            "pymote-simgui = pymote.gui.simulationgui:main",
-        ],
-    },
-    test_suite="nose.collector",
-    tests_require=["nose"],
-    #    include_package_data=True,
-    #    zip_safe = False,
-)
+setup()
