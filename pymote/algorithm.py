@@ -188,7 +188,7 @@ class NodeAlgorithm(Algorithm):
         try:
             message.nexthop = node.memory["routing"][message.destination]
         except KeyError:
-            logger.warn("Missing routing table or destination node not in it.")
+            logger.warning("Missing routing table or destination node not in it.")
         else:
             node.send(message)
 

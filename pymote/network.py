@@ -1,5 +1,6 @@
 import inspect
 from copy import deepcopy
+from enum import StrEnum
 
 import networkx as nx
 from networkx import Graph, is_connected
@@ -99,7 +100,7 @@ class Network(Graph):
         self.reset()
         self._algorithms = ()
         if not isinstance(algorithms, tuple):
-            raise PymoteNetworkError("algorithm")
+            raise PymoteNetworkError(NetwkErrorMsg.ALGORITHM)
         for algorithm in algorithms:
             if inspect.isclass(algorithm) and issubclass(algorithm, Algorithm):
                 self._algorithms += (algorithm(self),)
@@ -111,7 +112,7 @@ class Network(Graph):
             ):
                 self._algorithms += (algorithm[0](self, **algorithm[1]),)
             else:
-                raise PymoteNetworkError("algorithm")
+                raise PymoteNetworkError(NetwkErrorMsg.ALGORITHM)
 
         # If everything went ok, set algorithms param for coping
         self._algorithms_param = algorithms
@@ -135,8 +136,8 @@ class Network(Graph):
         """Remove node from network."""
         if node not in self.nodes():
             logger.error("Node not in network")
-            return
-        Graph.remove_node(self, node)
+            raise PymoteNetworkError(NetwkErrorMsg.NODE_NOT_IN_NET)
+        super().remove_node(node)
         del self.pos[node]
         del self.labels[node]
         node.network = None
@@ -158,15 +159,15 @@ class Network(Graph):
         if not node.network:
             node.network = self
         else:
-            logger.warning("Node is already in another network, can't add.")
-            return None
+            logger.exception("Node is already in another network, can't add.")
+            raise PymoteNetworkError(NetwkErrorMsg.NODE)
 
         pos = pos if pos is not None else self.find_random_pos(n=100)
         ori = ori if ori is not None else rand() * 2 * pi
         ori = ori % (2 * pi)
 
         if self._environment.is_space(pos):
-            Graph.add_node(self, node)
+            super().add_node(node)
             self.pos[node] = array(pos)
             self.ori[node] = ori
             self.labels[node] = str(node.id)
@@ -174,6 +175,7 @@ class Network(Graph):
             self.recalculate_edges([node])
         else:
             logger.error("Given position is not free space.")
+            raise PymoteNetworkError(NetwkErrorMsg.NODE_SPACE)
         return node
 
     def node_by_id(self, id_):
@@ -182,7 +184,7 @@ class Network(Graph):
             if n.id == id_:
                 return n
         logger.error("Network has no node with id %d." % id_)
-        return None
+        raise PymoteNetworkError(NetwkErrorMsg.NODE_NOT_IN_NET)
 
     def avg_degree(self):
         return average(list(deg for n, deg in self.degree()))
@@ -212,10 +214,13 @@ class Network(Graph):
         logger.debug("Modified degree to %f" % self.avg_degree())
 
     def get_current_algorithm(self):
-        """Try to return current algorithm based on algorithmState."""
+        """Try to return current algorithm based on algorithmState. If there are no
+        algorithms defined in the network, raise an error. If the current algorithm is
+        finished, try to return the next one. If there are no more algorithms, return None.
+        """
         if len(self.algorithms) == 0:
-            logger.warning("There is no algorithm defined in a network.")
-            return None
+            logger.error("There is no algorithm defined in the network.")
+            raise PymoteNetworkError(NetwkErrorMsg.ALGORITHM_NOT_FOUND)
         if self.algorithmState["finished"]:
             if len(self.algorithms) > self.algorithmState["index"] + 1:
                 self.algorithmState["index"] += 1
@@ -300,16 +305,18 @@ class Network(Graph):
             for n2 in self.nodes():
                 if n1 != n2:
                     if self.channelType.in_comm_range(self, n1, n2):
-                        Graph.add_edge(self, n1, n2)
-                    elif Graph.has_edge(self, n1, n2):
-                        Graph.remove_edge(self, n1, n2)
+                        self.add_edge(n1, n2)
+                    elif self.has_edge(n1, n2):
+                        self().remove_edge(self, n1, n2)
 
     def add_edge(self, u_of_edge, v_of_edge, **attr):
-        logger.warn("Edges are auto-calculated from channelType and commRange")
+        logger.warning("Edges are auto-calculated from channelType and commRange")
+        super().add_edge(u_of_edge, v_of_edge, **attr)
 
     def find_random_pos(self, n=100):
         """Returns random position, position is free space in environment if
         it can find free space in n iterations"""
+        n_init = n
         while n > 0:
             pos = rand(self._environment.dim) * tuple(
                 reversed(self._environment.im.shape)
@@ -317,6 +324,7 @@ class Network(Graph):
             if self._environment.is_space(pos):
                 break
             n -= 1
+        logger.debug("Random position found in %d iterations." % (n_init - n))
         return pos
 
     def reset_all_nodes(self):
@@ -518,16 +526,25 @@ class PymoteMessageUndeliverable(Exception):
         return self.e + repr(self.message)
 
 
+class NetwkErrorMsg(StrEnum):
+    ALGORITHM = (
+        "Algorithms must be in tuple (AlgorithmClass,)"
+        " or in form: ((AlgorithmClass, params_dict),)."
+        "AlgorithmClass should be subclass of Algorithm"
+    )
+    NODE = "Node is already in another network."
+    NODE_SPACE = "Given position is not free space."
+    NODE_NOT_IN_NET = "Node not in network."
+    ALGORITHM_NOT_FOUND = "Algorithm not found in network."
+
+
 class PymoteNetworkError(Exception):
+
     def __init__(self, type_):
-        if type_ == "algorithm":
-            self.message = (
-                "\nAlgorithms must be in tuple (AlgorithmClass,)"
-                " or in form: ((AlgorithmClass, params_dict),)."
-                "AlgorithmClass should be subclass of Algorithm"
-            )
+        if isinstance(type_, NetwkErrorMsg):
+            self.message = type_.value
         else:
-            self.message = ""
+            self.message = "Unknown error."
 
     def __str__(self):
         return self.message

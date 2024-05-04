@@ -6,7 +6,7 @@ from pymote.algorithm import NodeAlgorithm
 from pymote.channeltype import ChannelType, Complete
 from pymote.conf import settings
 from pymote.environment import Environment2D
-from pymote.network import Network
+from pymote.network import Network, PymoteNetworkError
 from pymote.node import Node
 from pymote.utils.tree import check_tree_key
 
@@ -22,6 +22,9 @@ class TestNetwork(unittest.TestCase):
         self.node3 = self.net.add_node(pos=[21.7, 21.7])
 
         self.net.algorithms = (NodeAlgorithm,)
+
+        self.other_net = Network(channelType=Complete(env))
+        self.node_in_other_net = self.other_net.add_node()
 
     def test_nodes(self):
         """Make sure the nodes are added."""
@@ -85,11 +88,22 @@ class TestNetwork(unittest.TestCase):
         """Test node removal."""
         pos = self.net.pos[self.node1]
 
+        print(f"Nodes ids pre-remove: {[node.id for node in self.net.nodes()]}")
         self.net.remove_node(self.node1)
+        print(f"Nodes ids post-remove: {[node.id for node in self.net.nodes()]}")
         assert len(self.net.nodes()) == 2
         assert self.node1 not in self.net.nodes()
 
+        with self.assertLogs(level="ERROR"):
+            with self.assertRaises(PymoteNetworkError):
+                self.net.remove_node(self.node1)
+
         self.net.add_node(self.node1, pos=pos)
+
+    def test_add_node_error_in_other_net(self):
+        """Test adding node to network."""
+        with self.assertRaises(PymoteNetworkError):
+            self.net.add_node(self.node_in_other_net)
 
     def test_get_current_algorithm(self):
         """Test getting current algorithm."""
@@ -97,8 +111,9 @@ class TestNetwork(unittest.TestCase):
 
         self.net.algorithms = ()
 
-        with self.assertLogs(level="WARNING"):
-            assert self.net.get_current_algorithm() is None
+        with self.assertLogs(level="ERROR"):
+            with self.assertRaises(PymoteNetworkError):
+                self.net.get_current_algorithm()
 
         self.net.algorithms = (NodeAlgorithm,)
 
@@ -128,3 +143,9 @@ class TestNetwork(unittest.TestCase):
         assert len(tree.nodes()) == 3
         assert is_connected(tree)
         assert (node.network == tree for node in tree.nodes())
+
+    def test_get_fig_runs(self):
+        """Test getting figure of the network."""
+        assert self.net.get_fig() is not None
+
+        assert self.other_net.get_fig() is not None
