@@ -22,26 +22,32 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python :: 2",
-    "Programming Language :: Python :: 2.6",
-    "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3.11",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: System :: Distributed Computing",
     "Topic :: System :: Networking",
     "Topic :: Scientific/Engineering :: Information Analysis",
 ]
 dynamic = ["dependencies", "optional-dependencies"]
-# licence = {file = "LICENSE.txt"}
 
 [project.urls]
-Homepage = "https://github.com/pypa/sampleproject"
-Issues = "https://github.com/pypa/sampleproject/issues"
+Homepage = "https://github.com/agustin-recoba/pydistsim"
+Issues = "https://github.com/agustin-recoba/pydistsim/issues"
+Documentation = "https://pydistsim.readthedocs.io/"
+Repository = "https://github.com/agustin-recoba/pydistsim.git"
+"CI-CD" = "https://app.travis-ci.com/github/agustin-recoba/pydistsim/"
+"Test Coverage" = "https://coveralls.io/github/agustin-recoba/pydistsim"
 
 [project.scripts]
 ipymote = "pymote.scripts.ipymote:start_ipymote"
 
 [project.gui-scripts]
 pymote-simgui = "pymote.gui.simulationgui:main"
+
+[tool.setuptools]
+license-files = [
+    'LICENSE.txt',
+]
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
