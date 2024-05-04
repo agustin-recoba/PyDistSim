@@ -1,0 +1,85 @@
+[build-system]
+requires = [
+    "setuptools",
+    "wheel",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "Pymote"
+version = "1.0.0.dev"
+authors = [
+  { name="Agustin Recoba", email="agustin.recoba@outlook.com" }, # Fork author
+  { name="Damir Arbula", email="damir.arbula@gmail.com" }, # Original author
+]
+description = "A high-level Python library for simulation of distributed algorithms."
+readme = "README.rst"
+requires-python = ">=3.11"
+keywords = ["Networks", "Distributed algorithms"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 2",
+    "Programming Language :: Python :: 2.6",
+    "Programming Language :: Python :: 2.7",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Distributed Computing",
+    "Topic :: System :: Networking",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dynamic = ["dependencies", "optional-dependencies"]
+# licence = {file = "LICENSE.txt"}
+
+[project.urls]
+Homepage = "https://github.com/pypa/sampleproject"
+Issues = "https://github.com/pypa/sampleproject/issues"
+
+[project.scripts]
+ipymote = "pymote.scripts.ipymote:start_ipymote"
+
+[project.gui-scripts]
+pymote-simgui = "pymote.gui.simulationgui:main"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+optional-dependencies = {dev = { file = ["requirements.dev.txt"] }}
+
+[tool.pytest.ini_options]
+addopts = "--cov=pymote --cov-report=xml"
+
+[tool.coverage.run]
+source = ["pymote"]
+branch = true
+omit = [
+    "pymote/conf/ipython/ipython_config.py",
+    "pymote/release.py",
+    "pymote/gui/*",
+]
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_lines = [
+    # Have to re-enable the standard pragma
+    "pragma: no cover",
+
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    "if self\\.debug",
+    "if dev:",
+
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if __name__ == .__main__.:",
+]
+
+ignore_errors = true
+
+[tool.coverage.html]
+directory = "coverage_html_report"
