@@ -24,6 +24,9 @@ class Mock:
         else:
             return Mock()
 
+    def __or__(self, other):
+        return Mock()
+
 
 MOCK_MODULES = [
     "networkx",
