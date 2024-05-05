@@ -17,6 +17,7 @@ install:
 script:
   - pytest
   - coverage report --show-missing
+  - pip install .
 
 after_success:
   - coveralls
