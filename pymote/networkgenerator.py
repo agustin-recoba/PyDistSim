@@ -18,11 +18,12 @@ class NetworkGenerator:
         n_count=None,
         n_min=None,
         n_max=None,
-        connected=True,
+        enforce_connected=True,
         degree=None,
         comm_range=None,
         method="random_network",
-        **kwargs
+        degree_tolerance=0.5,
+        **kwargs,
     ):
         """
         Arguments:
@@ -32,7 +33,7 @@ class NetworkGenerator:
                 minimum number of nodes, if not set it is equal to n_count
             n_max (int):
                 maximum number of nodes, if not set it is equal to n_count
-            connected (bool):
+            enforce_connected (bool):
                 if True network must be fully connected
             degree (int):
                 average number of neighbors per node
@@ -76,8 +77,9 @@ class NetworkGenerator:
                 "Generation could be slow for large degree"
                 "parameter with bounded n_max."
             )
-        self.connected = connected
+        self.enforce_connected = enforce_connected
         self.degree = degree
+        self.degree_tolerance = degree_tolerance
         self.comm_range = kwargs.pop("commRange", comm_range)
         # TODO: use subclass based generators instead of method based
         self.generate = self.__getattribute__("generate_" + method)
@@ -125,14 +127,19 @@ class NetworkGenerator:
 
     def _are_conditions_satisfied(self, net):
         cr = net.nodes_sorted()[0].commRange
-        if self.connected and not is_connected(net):
+        if self.enforce_connected and not is_connected(net):
             logger.debug("Not connected")
             return round(0.2 * cr)
         elif self.degree:
-            logger.debug("Degree not satisfied %f" % net.avg_degree())
             diff = self.degree - net.avg_degree()
-            diff = sign(diff) * min(abs(diff), 7)
-            return round((sign(diff) * (round(diff)) ** 2) * cr / 100)
+            if abs(diff) > self.degree_tolerance:
+                logger.debug("Degree not satisfied: %f" % net.avg_degree())
+                diff = sign(diff) * min(
+                    max(abs(diff), 3), 7
+                )  # If diff is too big, it will be set to 7, if it is too small, it will be set to 3
+                condition_returned = round((sign(diff) * (round(diff)) ** 2) * cr / 100)
+                logger.debug("Degree condition returned: %d" % condition_returned)
+                return condition_returned
         return 0
 
     def generate_random_network(self, net=None):
@@ -165,6 +172,7 @@ class NetworkGenerator:
         Finds out node in the middle, that is the node with minimum maximum
         distance to all other nodes and sets that distance as new commRange.
 
+        This generator ignores all other parameters except comm_range and n counts.
         """
         net = self._create_modify_network()
 
