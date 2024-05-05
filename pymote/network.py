@@ -1,5 +1,6 @@
 import inspect
 from copy import deepcopy
+from enum import StrEnum
 
 import networkx as nx
 from networkx import Graph, is_connected
@@ -8,15 +9,16 @@ from numpy.core.numeric import Inf, allclose
 from numpy.lib.function_base import average
 from numpy.random import rand
 
+from pymote.algorithm import Algorithm
+from pymote.channeltype import ChannelType
 from pymote.conf import settings
+from pymote.environment import Environment
 from pymote.logger import logger
+from pymote.node import Node
 from pymote.sensor import CompositeSensor
 from pymote.utils.helpers import pymote_equal_objects
 
-from .algorithm import Algorithm
-from .channeltype import ChannelType
-from .environment import Environment
-from .node import Node
+AlgorithmsParam = tuple[type[Algorithm] | tuple[type[Algorithm], dict]]
 
 
 class Network(Graph):
@@ -25,8 +27,9 @@ class Network(Graph):
         self,
         environment=None,
         channelType=None,
-        algorithms=(),
+        algorithms: AlgorithmsParam = (),
         networkRouting=True,
+        graph=None,
         **kwargs,
     ):
         self._environment = environment or Environment()
@@ -36,39 +39,49 @@ class Network(Graph):
         self.pos = {}
         self.ori = {}
         self.labels = {}
-        Graph.__init__(self)
-        self._algorithms = ()
+        super().__init__()
         self.algorithms = algorithms or settings.ALGORITHMS
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self.outbox = []
         self.networkRouting = networkRouting
+        self.simulation = None
         logger.info("Instance of Network has been initialized.")
 
-    def subgraph(self, nbunch):
-        """Returns Graph instance with nbunch nodes, see subnetwork."""
-        return Graph(self).subgraph(nbunch)
+    def copy(self, as_view=False):
+        """Return a copy of the graph."""
+        return deepcopy(self)
 
-    # TODO: incomplete add other properties
     def subnetwork(self, nbunch, pos=None):
         """Returns Network instance with nbunch nodes, see subgraph."""
         if not pos:
             pos = self.pos
-        H = Graph.subgraph(self, nbunch)
-        for node in H:
-            H.pos.update({node: pos[node][:2]})
-            if len(pos[node]) > 2:
-                H.ori.update({node: pos[node][2]})
+        H = self.copy()
+        for node in self.nodes():
+            node_H = H.node_by_id(node.id)
+            if node in nbunch:
+                # Copy node attributes
+                H.pos.update({node_H: pos[node][:2]})
+                if len(pos[node]) > 2:
+                    H.ori.update({node_H: pos[node][2]})
+                else:
+                    H.ori.update({node_H: deepcopy(self.ori[node])})
+                H.labels.update({node_H: deepcopy(self.labels[node])})
+                node_H.network = H
             else:
-                H.ori.update({node: self.ori[node]})
-            H.labels.update({node: self.labels[node]})
-            node.network = H
-        H._environment = deepcopy(self._environment)
+                H.remove_node(node_H)
+
+        # Copy network attributes and reinitialize algorithms
+        H.algorithms = deepcopy(self._algorithms_param) or settings.ALGORITHMS
+        H.algorithmState = {"index": 0, "step": 1, "finished": False}
+        H.outbox = []
+        H.simulation = None
+
         assert isinstance(H, Network)
         return H
 
-    def nodes(self, data=False):
+    def nodes_sorted(self, data=False):
         """Override, sort nodes by id, important for message ordering."""
-        return list(sorted(self, key=lambda k: k.id))
+        return list(sorted(self.nodes(), key=lambda k: k.id))
 
     @property
     def algorithms(self):
@@ -85,11 +98,11 @@ class Network(Graph):
         return self._algorithms
 
     @algorithms.setter
-    def algorithms(self, algorithms):
+    def algorithms(self, algorithms: AlgorithmsParam):
         self.reset()
         self._algorithms = ()
         if not isinstance(algorithms, tuple):
-            raise PymoteNetworkError("algorithm")
+            raise PymoteNetworkError(NetwkErrorMsg.ALGORITHM)
         for algorithm in algorithms:
             if inspect.isclass(algorithm) and issubclass(algorithm, Algorithm):
                 self._algorithms += (algorithm(self),)
@@ -101,7 +114,10 @@ class Network(Graph):
             ):
                 self._algorithms += (algorithm[0](self, **algorithm[1]),)
             else:
-                raise PymoteNetworkError("algorithm")
+                raise PymoteNetworkError(NetwkErrorMsg.ALGORITHM)
+
+        # If everything went ok, set algorithms param for coping
+        self._algorithms_param = algorithms
 
     @property
     def environment(self):
@@ -113,7 +129,7 @@ class Network(Graph):
         corresponding channelType environment must be changed also."""
         self._environment = environment
         self.channelType.environment = environment
-        for node in self.nodes():
+        for node in self.nodes_sorted():
             self.remove_node(node)
             self.add_node(node)
         logger.warning("All nodes are moved into new environment.")
@@ -122,8 +138,8 @@ class Network(Graph):
         """Remove node from network."""
         if node not in self.nodes():
             logger.error("Node not in network")
-            return
-        Graph.remove_node(self, node)
+            raise PymoteNetworkError(NetwkErrorMsg.NODE_NOT_IN_NET)
+        super().remove_node(node)
         del self.pos[node]
         del self.labels[node]
         node.network = None
@@ -145,15 +161,15 @@ class Network(Graph):
         if not node.network:
             node.network = self
         else:
-            logger.warning("Node is already in another network, can't add.")
-            return None
+            logger.exception("Node is already in another network, can't add.")
+            raise PymoteNetworkError(NetwkErrorMsg.NODE)
 
         pos = pos if pos is not None else self.find_random_pos(n=100)
         ori = ori if ori is not None else rand() * 2 * pi
         ori = ori % (2 * pi)
 
         if self._environment.is_space(pos):
-            Graph.add_node(self, node)
+            super().add_node(node)
             self.pos[node] = array(pos)
             self.ori[node] = ori
             self.labels[node] = str(node.id)
@@ -161,6 +177,7 @@ class Network(Graph):
             self.recalculate_edges([node])
         else:
             logger.error("Given position is not free space.")
+            raise PymoteNetworkError(NetwkErrorMsg.NODE_SPACE)
         return node
 
     def node_by_id(self, id_):
@@ -169,17 +186,21 @@ class Network(Graph):
             if n.id == id_:
                 return n
         logger.error("Network has no node with id %d." % id_)
-        return None
+        raise PymoteNetworkError(NetwkErrorMsg.NODE_NOT_IN_NET)
 
     def avg_degree(self):
         return average(list(deg for n, deg in self.degree()))
+
+    def algorithms_param(self):
+        """Returns list of algorithms with their parameters."""
+        return [(a.__class__, a.params) for a in self.algorithms]
 
     def modify_avg_degree(self, value):
         """
         Modifies (increases) average degree based on given value by
         modifying nodes commRange."""
         # assert all nodes have same commRange
-        assert allclose([n.commRange for n in self], self.nodes()[0].commRange)
+        assert allclose([n.commRange for n in self], self.nodes_sorted()[0].commRange)
         # TODO: implement decreasing of degree, preserve connected network
         assert value + settings.DEG_ATOL > self.avg_degree()  # only increment
         step_factor = 7.0
@@ -195,10 +216,13 @@ class Network(Graph):
         logger.debug("Modified degree to %f" % self.avg_degree())
 
     def get_current_algorithm(self):
-        """Try to return current algorithm based on algorithmState."""
+        """Try to return current algorithm based on algorithmState. If there are no
+        algorithms defined in the network, raise an error. If the current algorithm is
+        finished, try to return the next one. If there are no more algorithms, return None.
+        """
         if len(self.algorithms) == 0:
-            logger.warning("There is no algorithm defined in a network.")
-            return None
+            logger.error("There is no algorithm defined in the network.")
+            raise PymoteNetworkError(NetwkErrorMsg.ALGORITHM_NOT_FOUND)
         if self.algorithmState["finished"]:
             if len(self.algorithms) > self.algorithmState["index"] + 1:
                 self.algorithmState["index"] += 1
@@ -232,8 +256,8 @@ class Network(Graph):
     ):
         try:
             from matplotlib import pyplot as plt
-        except ImportError:
-            raise ImportError("Matplotlib required for show()")
+        except ImportError as e:
+            raise ImportError("Matplotlib required for show()") from e
 
         # TODO: environment when positions defined
         fig_size = tuple(array(self._environment.im.shape) / dpi)
@@ -283,16 +307,18 @@ class Network(Graph):
             for n2 in self.nodes():
                 if n1 != n2:
                     if self.channelType.in_comm_range(self, n1, n2):
-                        Graph.add_edge(self, n1, n2)
-                    elif Graph.has_edge(self, n1, n2):
-                        Graph.remove_edge(self, n1, n2)
+                        super().add_edge(n1, n2)
+                    elif self.has_edge(n1, n2):
+                        self.remove_edge(n1, n2)
 
-    def add_edge(self):
-        logger.warn("Edges are auto-calculated from channelType and commRange")
+    def add_edge(self, u_of_edge, v_of_edge, **attr):
+        logger.warning("Edges are auto-calculated from channelType and commRange")
+        super().add_edge(u_of_edge, v_of_edge, **attr)
 
     def find_random_pos(self, n=100):
         """Returns random position, position is free space in environment if
         it can find free space in n iterations"""
+        n_init = n
         while n > 0:
             pos = rand(self._environment.dim) * tuple(
                 reversed(self._environment.im.shape)
@@ -300,6 +326,7 @@ class Network(Graph):
             if self._environment.is_space(pos):
                 break
             n -= 1
+        logger.debug("Random position found in %d iterations." % (n_init - n))
         return pos
 
     def reset_all_nodes(self):
@@ -310,7 +337,7 @@ class Network(Graph):
     def communicate(self):
         """Pass all messages from node's outboxes to its neighbors inboxes."""
         # Collect messages
-        for node in self.nodes():
+        for node in self.nodes_sorted():
             self.outbox.extend(node.outbox)
             node.outbox = []
         while self.outbox:
@@ -377,7 +404,7 @@ class Network(Graph):
         pos = {
             n: "x: %.2f y: %.2f theta: %.2f deg"
             % (self.pos[n][0], self.pos[n][1], self.ori[n] * 180.0 / pi)
-            for n in self.nodes()
+            for n in self.nodes_sorted()
         }
         return {
             "nodes": pos,
@@ -401,25 +428,39 @@ class Network(Graph):
         neighbors or a dict with 'parent' (node) and 'children' (list) keys.
 
         """
-        edgelist = []
-        for node in self.nodes():
-            nodelist = []
+        tree_edges_ids = []
+        tree_nodes = []
+        for node in self.nodes_sorted():
+            neighbors_in_tree = []
             if treeKey not in node.memory:
                 continue
             if isinstance(node.memory[treeKey], list):
-                nodelist = node.memory[treeKey]
+                neighbors_in_tree = node.memory[treeKey]
             elif (
                 isinstance(node.memory[treeKey], dict)
                 and "children" in node.memory[treeKey]
             ):
-                nodelist = node.memory[treeKey]["children"]
-            edgelist.extend(
-                [(node, neighbor) for neighbor in nodelist if neighbor in self.nodes()]
+                neighbors_in_tree = node.memory[treeKey]["children"]
+            tree_edges_ids.extend(
+                [
+                    (node.id, neighbor.id)
+                    for neighbor in neighbors_in_tree
+                    if neighbor in self.nodes()
+                ]
             )
-        treeNet = self.copy()
-        for e in treeNet.edges():
-            if e not in edgelist and (e[1], e[0]) not in edgelist:
-                treeNet.remove_edge(*e)
+            tree_nodes.extend(
+                neighbor for neighbor in neighbors_in_tree if neighbor in self.nodes()
+            )
+            if tree_nodes:
+                tree_nodes.append(node)
+
+        treeNet = self.subnetwork(tree_nodes)
+        for u, v in treeNet.edges():
+            if (u.id, v.id) not in tree_edges_ids and (
+                v.id,
+                u.id,
+            ) not in tree_edges_ids:
+                treeNet.remove_edge(u, v)
         return treeNet
 
     def validate_params(self, params):
@@ -487,16 +528,25 @@ class PymoteMessageUndeliverable(Exception):
         return self.e + repr(self.message)
 
 
+class NetwkErrorMsg(StrEnum):
+    ALGORITHM = (
+        "Algorithms must be in tuple (AlgorithmClass,)"
+        " or in form: ((AlgorithmClass, params_dict),)."
+        "AlgorithmClass should be subclass of Algorithm"
+    )
+    NODE = "Node is already in another network."
+    NODE_SPACE = "Given position is not free space."
+    NODE_NOT_IN_NET = "Node not in network."
+    ALGORITHM_NOT_FOUND = "Algorithm not found in network."
+
+
 class PymoteNetworkError(Exception):
+
     def __init__(self, type_):
-        if type_ == "algorithm":
-            self.message = (
-                "\nAlgorithms must be in tuple (AlgorithmClass,)"
-                " or in form: ((AlgorithmClass, params_dict),)."
-                "AlgorithmClass should be subclass of Algorithm"
-            )
+        if isinstance(type_, NetwkErrorMsg):
+            self.message = type_.value
         else:
-            self.message = ""
+            self.message = "Unknown error."
 
     def __str__(self):
         return self.message

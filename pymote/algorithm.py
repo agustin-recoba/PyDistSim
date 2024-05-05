@@ -2,6 +2,7 @@ from collections.abc import Callable
 from enum import StrEnum
 from inspect import getmembers
 
+import pymote.network as nt
 from pymote.logger import logger
 from pymote.message import Message
 from pymote.message import MetaHeader as MessageMetaHeader
@@ -26,13 +27,13 @@ class StatusValues(StrEnum):
     def __call__(self, func: Callable):
         assert (
             func.__name__ in ActionEnum.__members__
-        ), f"Invalid function name '{func.__name__}'."
+        ), f"Invalid function name '{func.__name__}', please make sure it is one of {list(ActionEnum.__members__)}."
 
         setattr(self, func.__name__, func)
         return func
 
-    def implements(self, action: ActionEnum):
-        return hasattr(self, action.value)
+    def implements(self, action: ActionEnum | str):
+        return hasattr(self, str(action))
 
 
 class AlgorithmMeta(type):
@@ -116,7 +117,7 @@ class Algorithm(metaclass=AlgorithmMeta):
     default_params = {}
 
     def __init__(self, network, **kwargs):
-        self.network = network
+        self.network: nt.Network = network
         self.name = self.__class__.__name__
         logger.debug("Instance of %s class has been initialized." % self.name)
 
@@ -131,6 +132,12 @@ class Algorithm(metaclass=AlgorithmMeta):
         # override default params
         for kw, arg in list(kwargs.items()):
             self.__setattr__(kw, arg)
+
+    def __eq__(self, value: object) -> bool:
+        return self.__dict__ == value.__dict__ and isinstance(value, self.__class__)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.__dict__})"
 
 
 class NodeAlgorithm(Algorithm):
@@ -160,11 +167,11 @@ class NodeAlgorithm(Algorithm):
 
     def initializer(self):
         """Pass INI message to certain nodes in network based on type."""
-        node = self.network.nodes()[0]
+        node = self.network.nodes_sorted()[0]
         self.network.outbox.insert(
             0, Message(meta_header=NodeAlgorithm.INI, destination=node)
         )
-        for node in self.network.nodes():
+        for node in self.network.nodes_sorted():
             node.status = self.Status.IDLE
 
     def step(self, node: Node):
@@ -181,7 +188,7 @@ class NodeAlgorithm(Algorithm):
         try:
             message.nexthop = node.memory["routing"][message.destination]
         except KeyError:
-            logger.warn("Missing routing table or destination node not in it.")
+            logger.warning("Missing routing table or destination node not in it.")
         else:
             node.send(message)
 

@@ -3,12 +3,13 @@ __all__ = ["read_pickle", "write_pickle"]
 import errno
 import os
 import pickle as pickle
-import sys
+from types import MethodType
+from typing import Any, Type
 
 from pymote.logger import logger
 
 
-def _get_fh(path, mode="r"):
+def _get_fh(path: str, mode="r"):
     """Return a file handle for given path and attempt to uncompress/compress
     files ending in '.gz'"""
 
@@ -21,17 +22,19 @@ def _get_fh(path, mode="r"):
     return fh
 
 
-def write_pickle(obj, path, makedir=True):
+def write_pickle(obj: Any, path: str, makedir=True):
     """Write object in Python pickle format."""
     # TODO: use normal pickling by implementing pickling protocol for Network
     # class http://docs.python.org/library/pickle.html#the-pickle-protocol
+
     # TODO: find out origin of maximum recursion depth problem, hack solution:
-    sys.setrecursionlimit(6000)
+    # sys.setrecursionlimit(6000)
+
     try:
         os.makedirs(os.path.split(path)[0])
     except OSError as e:
         if e.errno != errno.EEXIST and e.filename != "":
-            raise
+            raise e
     fh = _get_fh(str(path), mode="wb")
     pickle.dump(obj, fh, pickle.HIGHEST_PROTOCOL)
     fh.close()
@@ -41,7 +44,7 @@ def write_pickle(obj, path, makedir=True):
 write_npickle = write_pickle
 
 
-def read_pickle(path, not_found_raises=True):
+def read_pickle(path: str, not_found_raises=True):
     """
     Read object in Python pickle format. If not_found_raises is True then raise
     an exception if file is missing.
@@ -54,7 +57,7 @@ def read_pickle(path, not_found_raises=True):
     except OSError as e:
         # if error is some other than errno.ENOENT ='file not found raise
         if not_found_raises or e.errno != errno.ENOENT:
-            raise
+            raise e
         return None
 
 
@@ -65,7 +68,7 @@ read_npickle = read_pickle
 # (instance) methods that needs to be pickled
 # this is solution for pickling instance methods found at
 # http://stackoverflow.com/a/1816969/1247955
-def _pickle_method(method):
+def _pickle_method(method: MethodType):
     # print 'pickling',
     # print method
     func_name = method.__func__.__name__
@@ -74,7 +77,7 @@ def _pickle_method(method):
     return _unpickle_method, (func_name, obj, cls)
 
 
-def _unpickle_method(func_name, obj, cls):
+def _unpickle_method(func_name: str, obj: Any, cls: type):
     for cls in cls.mro():
         try:
             func = cls.__dict__[func_name]
@@ -86,6 +89,5 @@ def _unpickle_method(func_name, obj, cls):
 
 
 import copyreg
-import types
 
-copyreg.pickle(types.MethodType, _pickle_method, _unpickle_method)
+copyreg.pickle(MethodType, _pickle_method, _unpickle_method)

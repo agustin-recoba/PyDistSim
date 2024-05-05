@@ -1,9 +1,16 @@
 import unittest
 
 from pymote import Node
-from pymote.algorithm import NetworkAlgorithm, NodeAlgorithm, PymoteAlgorithmException
+from pymote.algorithm import (
+    ActionEnum,
+    NetworkAlgorithm,
+    NodeAlgorithm,
+    PymoteAlgorithmException,
+    StatusValues,
+)
 from pymote.network import PymoteNetworkError
 from pymote.networkgenerator import NetworkGenerator
+from pymote.simulation import Simulation
 
 
 def set_algorithms(net, algorithms):
@@ -141,3 +148,55 @@ class TestAlgorithmsSetter(unittest.TestCase):
         self.assertTrue(self.net.algorithms[0].dp1 == "dp1_value")
         self.assertTrue(self.net.algorithms[0].dp2 == "overriden_dp2_value")
         self.assertTrue(self.net.algorithms[0].dp3 == "dp3_value")
+
+
+class TestStatusValues(unittest.TestCase):
+    def setUp(self):
+        class Status(StatusValues):
+            IDLE = "IDLE"
+            DONE = "DONE"
+
+        self.Status = Status
+
+    def test_state_action_names(self):
+        """Test if state action names raise exception and correct ones are allowed."""
+
+        @self.Status.IDLE
+        def spontaneously(): ...
+
+        @self.Status.IDLE
+        def receiving(): ...
+
+        @self.Status.IDLE
+        def alarm(): ...
+
+        # Test if wrong name raises exception
+        def wrong_name(): ...
+
+        self.assertRaises(AssertionError, self.Status.IDLE, wrong_name)
+
+        # Test if good name with capital letters raises exception
+        def ALARM(): ...
+
+        self.assertRaises(AssertionError, self.Status.IDLE, ALARM)
+
+    def test_implements_method(self):
+        """Test Status.implements method."""
+
+        @self.Status.DONE
+        def alarm(): ...
+
+        # Using correct ActionEnum
+        assert self.Status.DONE.implements(ActionEnum.alarm)
+
+        # Using wrong ActionEnum
+        assert not self.Status.DONE.implements(ActionEnum.spontaneously)
+
+        # Using string
+        assert self.Status.DONE.implements("alarm")
+
+        # Using wrong string
+        assert not self.Status.DONE.implements("spontaneously")
+
+        # Using string with capital letters
+        assert not self.Status.DONE.implements("ALARM")

@@ -1,8 +1,9 @@
-import logging
 from collections.abc import Iterable
+from types import NoneType
+from typing import Optional, Tuple
 
 from pymote.conf import settings
-from pymote.logger import logger
+from pymote.logger import LogLevels, logger
 from pymote.sensor import CompositeSensor
 
 
@@ -10,7 +11,13 @@ class Node:
 
     cid = 1
 
-    def __init__(self, network=None, commRange=None, sensors=None, **kwargs):
+    def __init__(
+        self,
+        network: Optional["Network"] = None,
+        commRange: NoneType | int = None,
+        sensors: NoneType | tuple[type["Sensor"] | str, ...] = None,
+        **kwargs,
+    ):
         self._compositeSensor = CompositeSensor(self, sensors or settings.SENSORS)
         self.network = network
         self._commRange = commRange or settings.COMM_RANGE
@@ -94,15 +101,15 @@ class Node:
         return self._compositeSensor.sensors
 
     @sensors.setter
-    def sensors(self, sensors):
+    def sensors(self, sensors: tuple[type["Sensor"] | str, ...]):
         self._compositeSensor = CompositeSensor(self, sensors)
 
     @property
-    def commRange(self):
+    def commRange(self) -> int:
         return self._commRange
 
     @commRange.setter
-    def commRange(self, commRange):
+    def commRange(self, commRange: int):
         self._commRange = commRange
         if self.network:
             self.network.recalculate_edges([self])
@@ -113,7 +120,7 @@ class Node:
             self.memory["log"] = []
         return self.memory["log"]
 
-    def log(self, message, level=logging.WARNING):
+    def log(self, message: str, level: LogLevels = LogLevels.WARNING):
         """Insert a log message in node memory."""
         assert isinstance(message, str)
         context = {
@@ -154,7 +161,7 @@ class Node:
             },
         }
 
-    def box_as_dic(self, box):
+    def box_as_dic(self, box: str):
         messagebox = self.__getattribute__(box)
         dic = {}
         for i, message in enumerate(messagebox):

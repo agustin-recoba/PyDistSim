@@ -14,7 +14,7 @@ def get_root_node(net, treeKey="mst"):
     """
     check_tree_key(net, treeKey)
 
-    node = net.nodes()[0]
+    node = net.nodes_sorted()[0]
     while (
         node.memory[treeKey]["parent"] and node.memory[treeKey]["parent"] in net.nodes()
     ):
@@ -78,12 +78,19 @@ def get_path(n1, n2, treeKey):
 
 
 def check_tree_key(net, treeKey):
+    if len(net.nodes()) == 0:
+        raise TreeNetworkException("Network has no nodes.")
+
     for node in net.nodes():
         if treeKey not in node.memory:
             raise MissingTreeKey(treeKey)
 
 
-class MissingTreeKey(Exception):
+class TreeNetworkException(Exception):
+    pass
+
+
+class MissingTreeKey(TreeNetworkException):
 
     def __init__(self, treeKey):
         self.treeKey = treeKey
@@ -92,7 +99,7 @@ class MissingTreeKey(Exception):
         return "At least one node is missing '%s' key in memory." % self.treeKey
 
 
-class NodeNotRoot(Exception):
+class NodeNotRoot(TreeNetworkException):
     def __init__(self, treeKey, node):
         self.treeKey = treeKey
         self.node = node

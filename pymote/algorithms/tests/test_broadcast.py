@@ -18,7 +18,7 @@ class TestBroadcastSimple(unittest.TestCase):
         self.net.algorithms = ((Flood, {"informationKey": "greet"}),)
 
         # Asigna el mensaje a enviar, la información inicial
-        self.initiator = self.net.nodes()[0]
+        self.initiator = self.net.nodes_sorted()[0]
         self.initiator.memory["greet"] = HELLO
 
     def test_broadcast(self):
@@ -49,10 +49,10 @@ class TestBroadcastConcatenated(unittest.TestCase):
         )
 
         # Asigna el mensaje a enviar, la información inicial
-        self.initiator = self.net.nodes()[0]
+        self.initiator = self.net.nodes_sorted()[0]
         self.initiator.memory["greet"] = HELLO
 
-        self.initiator2 = self.net.nodes()[-1]
+        self.initiator2 = self.net.nodes_sorted()[-1]
         self.initiator2.memory["bye"] = BYE
 
     def test_broadcast(self):

@@ -54,7 +54,7 @@ dependencies = {file = ["requirements.txt"]}
 optional-dependencies = {dev = { file = ["requirements.dev.txt"] }}
 
 [tool.pytest.ini_options]
-addopts = "--cov=pymote --cov-report=xml"
+addopts = "--cov=pymote --cov-report=xml --cov-append"
 
 [tool.coverage.run]
 source = ["pymote"]

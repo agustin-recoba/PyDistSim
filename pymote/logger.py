@@ -1,9 +1,25 @@
+import logging
+import logging.config
+from enum import IntEnum
+
+
+class LogLevels(IntEnum):
+    DEBUG = logging.DEBUG
+    INFO = logging.INFO
+    WARNING = logging.WARNING
+    ERROR = logging.ERROR
+    CRITICAL = logging.CRITICAL
+
+
 LOG_CONFIG = {
     "version": 1,
     "loggers": {
-        "pymote": {"level": "WARN", "handlers": ["fileHandler", "consoleHandler"]},
+        "pymote": {
+            "level": LogLevels.WARNING,
+            "handlers": ["fileHandler", "consoleHandler"],
+        },
         "pymote.simulation": {
-            "level": "DEBUG",
+            "level": LogLevels.DEBUG,
             "handlers": ["simFileHandler"],
             "propagate": 1,
         },
@@ -11,7 +27,7 @@ LOG_CONFIG = {
     "handlers": {
         "fileHandler": {
             "class": "logging.FileHandler",
-            "level": "DEBUG",
+            "level": LogLevels.DEBUG,
             "formatter": "fileFormatter",
             "filename": "pymote.log",
         },
@@ -22,7 +38,7 @@ LOG_CONFIG = {
         },
         "simFileHandler": {
             "class": "logging.FileHandler",
-            "level": "DEBUG",
+            "level": LogLevels.DEBUG,
             "formatter": "fileFormatter",
             "filename": "simulation.log",
         },
@@ -38,7 +54,6 @@ LOG_CONFIG = {
         },
     },
 }
-import logging.config
 
 logging.config.dictConfig(LOG_CONFIG)
 logger = logging.getLogger("pymote")

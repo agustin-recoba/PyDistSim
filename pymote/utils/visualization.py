@@ -1,7 +1,8 @@
+import pymote.network as nt
 from pymote.utils.tree import get_root_node
 
 
-def show_mst(net, treeKey="mst"):
+def show_mst(net: nt.Network, treeKey="mst"):
     """
     Show tree representation of network.
 
@@ -16,7 +17,7 @@ def show_mst(net, treeKey="mst"):
     while nodesToCheck:
         (node, level) = nodesToCheck.pop()
         edgelist += [(node, child) for child in node.memory[treeKey]["children"]]
-        levels[net.nodes().index(node)] = level
+        levels[net.nodes_sorted().index(node)] = level
         nodesToCheck += [
             (child, level + 1) for child in node.memory[treeKey]["children"]
         ]

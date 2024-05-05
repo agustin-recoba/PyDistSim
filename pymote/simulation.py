@@ -2,7 +2,8 @@ import logging
 
 from PySide6.QtCore import SIGNAL, QThread
 
-from pymote.algorithm import NetworkAlgorithm, NodeAlgorithm
+from pymote.algorithm import Algorithm, NetworkAlgorithm, NodeAlgorithm
+from pymote.logger import LogLevels
 from pymote.network import Network
 
 
@@ -10,12 +11,15 @@ class Simulation(QThread):
     """Controls single network algorithm and node algorithms simulation.
     It is responsible for visualization and logging, also."""
 
-    def __init__(self, network, logLevel=None, **kwargs):
+    def __init__(
+        self, network: Network, logLevel: LogLevels = LogLevels.DEBUG, **kwargs
+    ):
         assert isinstance(network, Network)
         self._network = network
+        self._network.simulation = self
         self.stepsLeft = 0
         self.logger = logging.getLogger("pymote.simulation")
-        self.logger.setLevel(logLevel or logging.DEBUG)
+        self.logger.setLevel(logLevel)
         self.logger.debug("Simulation %s created successfully." % (hex(id(self))))
         QThread.__init__(self)
 
@@ -62,7 +66,7 @@ class Simulation(QThread):
             if self.stepsLeft >= 0:
                 break
 
-    def run_algorithm(self, algorithm):
+    def run_algorithm(self, algorithm: Algorithm):
         """
         Run given algorithm on given network.
 
@@ -80,7 +84,7 @@ class Simulation(QThread):
             while not self.is_halted():
                 self.stepsLeft -= 1
                 self.network.communicate()
-                for node in self.network.nodes():
+                for node in self.network.nodes_sorted():
                     nodeTerminated = algorithm.step(node)
                 self.emit(
                     SIGNAL("updateLog(QString)"),
@@ -112,7 +116,9 @@ class Simulation(QThread):
 
     def is_halted(self):
         """Check if distributed algorithm have come to end or deadlock
-        i.e. no messages to pass."""
+        i.e. no messages to pass.
+        An unstarted algorithm is considered halted.
+        """
         if (
             len(self._network.outbox) > 0
             or any([len(node.outbox) for node in self.network.nodes()])
@@ -127,7 +133,7 @@ class Simulation(QThread):
         return self._network
 
     @network.setter
-    def network(self, network):
+    def network(self, network: Network):
         self._network.simulation = None
         self._network = network
         self._network.simulation = self

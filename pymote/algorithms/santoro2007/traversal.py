@@ -4,7 +4,7 @@ from pymote.message import Message
 
 class DFT(NodeAlgorithm):
     required_params = ()
-    default_params = {"neighborsKey": "Neighbors"}
+    default_params = {"neighborsKey": "Neighbors", "visitedAction": lambda node: None}
 
     class Status(StatusValues):
         INITIATOR = "INITIATOR"
@@ -16,7 +16,7 @@ class DFT(NodeAlgorithm):
         for node in self.network.nodes():
             node.memory[self.neighborsKey] = node.compositeSensor.read()["Neighbors"]
             node.status = self.Status.IDLE
-        ini_node = self.network.nodes()[0]
+        ini_node = self.network.nodes_sorted()[0]
         ini_node.status = self.Status.INITIATOR
         self.network.outbox.insert(
             0, Message(meta_header=NodeAlgorithm.INI, destination=ini_node)
@@ -26,6 +26,7 @@ class DFT(NodeAlgorithm):
     def spontaneously(self, node, message):
         node.memory["parent"] = None
         node.memory["unvisited"] = list(node.memory[self.neighborsKey])
+        self.visitedAction(node)
         self.visit(node)
 
     @Status.INITIATOR
@@ -38,6 +39,7 @@ class DFT(NodeAlgorithm):
             node.memory["parent"] = message.source
             node.memory["unvisited"] = list(node.memory[self.neighborsKey])
             node.memory["unvisited"].remove(node.memory["parent"])
+            self.visitedAction(node)
             self.visit(node)
         else:
             raise Exception("Should not be here.")
@@ -69,7 +71,7 @@ class DFT(NodeAlgorithm):
 
 class DFStar(NodeAlgorithm):
     required_params = ()
-    default_params = {"neighborsKey": "Neighbors"}
+    default_params = {"neighborsKey": "Neighbors", "visitedAction": lambda node: None}
 
     class Status(StatusValues):
         INITIATOR = "INITIATOR"
@@ -82,7 +84,7 @@ class DFStar(NodeAlgorithm):
         for node in self.network.nodes():
             node.memory[self.neighborsKey] = node.compositeSensor.read()["Neighbors"]
             node.status = self.Status.IDLE
-        ini_node = self.network.nodes()[0]
+        ini_node = self.network.nodes_sorted()[0]
         ini_node.status = self.Status.INITIATOR
         self.network.outbox.insert(
             0, Message(meta_header=NodeAlgorithm.INI, destination=ini_node)
@@ -94,9 +96,15 @@ class DFStar(NodeAlgorithm):
         node.memory["unvisited"] = list(node.memory[self.neighborsKey])
         node.memory["next"] = node.memory["unvisited"].pop()
         if len(node.memory["unvisited"]) > 0:
-            node.send(Message(header="T", destination=node.memory["next"]))
+            node.send(
+                Message(
+                    header="T",
+                    destination=node.memory["next"],
+                )
+            )
             node.send(Message(header="Visited", destination=node.memory["unvisited"]))
             node.status = self.Status.VISITED
+            self.visitedAction(node)
         else:
             node.status = self.Status.DONE
 
@@ -139,17 +147,24 @@ class DFStar(NodeAlgorithm):
     def default(self, node, message):
         pass
 
-    def first_visit(self, node, message):
+    def first_visit(self, node, message: Message):
         # TODO: initiator is redundant - it can be deduced from entry==None
         node.memory["initiator"] = False
         node.memory["entry"] = message.source
+        self.visitedAction(node)
         try:
             node.memory["unvisited"].remove(message.source)
         except ValueError:
             pass
         if node.memory["unvisited"]:
             node.memory["next"] = node.memory["unvisited"].pop()
-            node.send(Message(header="T", destination=node.memory["next"]))
+            node.send(
+                Message(
+                    header="T",
+                    destination=node.memory["next"],
+                )
+            )
+
             node.send(
                 Message(
                     header="Visited",
@@ -172,7 +187,12 @@ class DFStar(NodeAlgorithm):
     def visit(self, node, message):
         if node.memory["unvisited"]:
             node.memory["next"] = node.memory["unvisited"].pop()
-            node.send(Message(header="T", destination=node.memory["next"]))
+            node.send(
+                Message(
+                    header="T",
+                    destination=node.memory["next"],
+                )
+            )
         else:
             if not node.memory["initiator"]:
                 node.send(Message(header="Return", destination=node.memory["entry"]))
