@@ -91,34 +91,7 @@ class Positions(MemoryStructure):
     def __str__(self):
         return str(self.subclusters)
 
-    # Backward compatibility - usage raises exception
-    # -----------------------------------------------
     def __getitem__(self, key):
-        if key == "positions":
-            key = "old_style_positions"
-            raise Exception
-        if key == "subclusters":
-            key = "old_style_subclusters"
-            raise Exception
         if isinstance(key, int):
             return self.subclusters[key]
         return self.__getattribute__(key)
-
-    def has_key(self, key):
-        raise Exception
-        try:
-            self.__getitem__(key)
-        except AttributeError:
-            return False
-        return True
-
-    def keys(self):
-        raise Exception
-        return ["positions", "subclusters"]
-
-    def items(self):
-        raise Exception
-        return [
-            ("positions", self.old_style_positions),
-            ("subclusters", self.old_style_subclusters),
-        ]

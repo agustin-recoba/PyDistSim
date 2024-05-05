@@ -13,9 +13,7 @@ or if they are configured:
 
 import importlib
 import os
-import re
 import sys
-from warnings import warn
 
 from pymote.conf import global_settings
 from pymote.logger import logger
