@@ -1,5 +1,6 @@
 import unittest
 
+import pytest
 from networkx import is_connected
 
 from pymote.algorithm import NodeAlgorithm
@@ -144,6 +145,7 @@ class TestNetwork(unittest.TestCase):
         assert is_connected(tree)
         assert (node.network == tree for node in tree.nodes())
 
+    @pytest.mark.filterwarnings("ignore:No data for colormapping.*")
     def test_get_fig_runs(self):
         """Test getting figure of the network."""
         assert self.net.get_fig() is not None
