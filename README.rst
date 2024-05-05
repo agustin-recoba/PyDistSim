@@ -1,8 +1,8 @@
-.. image:: https://app.travis-ci.com/agustin-recoba/pydistsim.svg?token=zk1hY6ZALwZTY3bjX2Aq&branch=master
+.. image:: https://app.travis-ci.com/agustin-recoba/pydistsim.svg?token=zk1hY6ZALwZTY3bjX2Aq&branch=main
   :target: https://app.travis-ci.com/agustin-recoba/pydistsim
 
-.. image:: https://coveralls.io/repos/github/agustin-recoba/pydistsim/badge.svg?branch=master
-  :target: https://coveralls.io/github/agustin-recoba/pydistsim?branch=master
+.. image:: https://coveralls.io/repos/github/agustin-recoba/pydistsim/badge.svg?branch=main
+  :target: https://coveralls.io/github/agustin-recoba/pydistsim?branch=main
 
 
 
