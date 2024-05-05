@@ -5,7 +5,7 @@ term_app = c.TerminalIPythonApp
 
 # This can be used at any point in a config file to load a sub config
 # and merge it into the current one.
-load_subconfig('ipython_config.py', profile='default')  # @UndefinedVariable
+load_subconfig("ipython_config.py", profile="default")  # @UndefinedVariable
 lines = """
 from pymote import *
 %autoreload 2
@@ -15,29 +15,30 @@ from pymote import *
 # exist before using them.  Simple assigning a new list will override
 # all previous values.
 
-if hasattr(app, 'exec_lines'):
+if hasattr(app, "exec_lines"):
     app.exec_lines.append(lines)
 else:
     app.exec_lines = [lines]
 
-if hasattr(app, 'extensions'):
-    app.extensions.append('autoreload')
+if hasattr(app, "extensions"):
+    app.extensions.append("autoreload")
 else:
-    app.extensions = ['autoreload']
+    app.extensions = ["autoreload"]
 
-app.gui = 'qt'
-term_app.gui = 'qt'
-term_app.pylab = 'qt'
+app.gui = "qt"
+term_app.gui = "qt"
+term_app.pylab = "qt"
 
 import os
-os.environ['QT_API'] = 'pyside'
-# Section below is a hack to avoid (context menu) bug
-# http://stackoverflow.com/q/14788501/1247955
-#TODO: check for IPython version, for 0.14 hack is not needed
-from IPython.lib import inputhookqt4
 
+os.environ["QT_API"] = "pyside"
 from IPython.core.interactiveshell import InteractiveShell
 from IPython.external.qt_for_kernel import QtCore, QtGui
+
+# Section below is a hack to avoid (context menu) bug
+# http://stackoverflow.com/q/14788501/1247955
+# TODO: check for IPython version, for 0.14 hack is not needed
+from IPython.lib import inputhookqt4
 from IPython.lib.inputhook import allow_CTRL_C, ignore_CTRL_C, stdin_ready
 
 
@@ -75,7 +76,7 @@ def create_inputhook_qt4(mgr, app=None):
 
     # Re-use previously created inputhook if any
     ip = InteractiveShell.instance()
-    if hasattr(ip, '_inputhook_qt4'):
+    if hasattr(ip, "_inputhook_qt4"):
         return app, ip._inputhook_qt4
 
     # Otherwise create the inputhook_qt4/preprompthook_qt4 pair of
@@ -138,6 +139,7 @@ def create_inputhook_qt4(mgr, app=None):
         except:  # NO exceptions are allowed to escape from a ctypes callback
             ignore_CTRL_C()
             from traceback import print_exc
+
             print_exc()
             print("Got exception from inputhook_qt4, unregistering.")
             mgr.clear_inputhook()
@@ -156,8 +158,9 @@ def create_inputhook_qt4(mgr, app=None):
         got_kbdint[0] = False
 
     ip._inputhook_qt4 = inputhook_qt4
-    ip.set_hook('pre_prompt_hook', preprompthook_qt4)
+    ip.set_hook("pre_prompt_hook", preprompthook_qt4)
 
     return app, inputhook_qt4
+
 
 inputhookqt4.create_inputhook_qt4 = create_inputhook_qt4

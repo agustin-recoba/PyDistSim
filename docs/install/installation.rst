@@ -10,7 +10,7 @@ Requirements
 * `NumPy`_
 * `SciPy`_
 * `Matplotlib`_ 1.2
-* `PySide`_ (for gui)
+* `PySide6`_ (for gui)
 * `IPython`_
 * `NetworkX`_
 * `PyPNG`_
@@ -20,7 +20,7 @@ Requirements
 .. _NumPy: http://numpy.scipy.org
 .. _SciPy: http://www.scipy.org
 .. _Matplotlib: http://matplotlib.org/
-.. _PySide: http://qt-project.org/wiki/PySide
+.. _PySide6: http://qt-project.org/wiki/PySide
 .. _IPython: http://ipython.org/
 .. _NetworkX: http://networkx.lanl.gov/
 .. _PyPNG: https://github.com/drj11/pypng

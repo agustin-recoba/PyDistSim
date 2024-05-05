@@ -18,7 +18,7 @@ Default procedure
 -----------------
 For any generator method network attributes take default priorities
 which are defined like this:
- 
+
 * first network is created in given environment with `n_count` number
   of nodes and `comm_range` communication range
 * if `connected` is True it must be satisfied, if not satisfied initially:

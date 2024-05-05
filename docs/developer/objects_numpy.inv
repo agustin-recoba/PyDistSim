@@ -6017,4 +6017,3 @@ numpy.ma.masked_array.argmin np:method 1 reference/generated/numpy.ma.masked_arr
 numpy.ma.mask_cols np:function 1 reference/generated/numpy.ma.mask_cols.html#$ -
 numpy.matrix.flat np:attribute 1 reference/generated/numpy.matrix.flat.html#$ -
 numpy.doc.broadcasting np:module 1 user/basics.broadcasting.html#$ -
-

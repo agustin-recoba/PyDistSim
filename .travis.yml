@@ -1,24 +1,23 @@
+dist: jammy
+
 language: python
 python:
- - 2.7
-virtualenv:
-  system_site_packages: true
+  - "3.11"
+cache: pip
 
 before_install:
- - sudo apt-get update
- - sudo apt-get install libatlas-base-dev gfortran python-pip
- - sudo apt-get install python-pyside python-matplotlib
+  - sudo apt-get update
+  - sudo apt-get install libatlas-base-dev gfortran python-pip
 
 install:
- - pip install ipython==0.13.1 networkx==1.7 pypng==0.0.14 python-coveralls numpy scipy
+  - pip install -r requirements.txt
+  - pip install coverage coveralls
+  - pip install pytest pytest-cov
 
 script:
- - nosetests
-# - coverage run --source=pymote setup.py nosetests
+  - pytest
+  - coverage report --show-missing
+  - pip install .
 
 after_success:
- - coveralls
-
-# Force precise (Ubuntu 12.04) because of systemwide packages
-# like PySide http://ebanshi.cc/questions/1415911/how-can-i-install-pyside-on-travis
-dist: precise
+  - coveralls

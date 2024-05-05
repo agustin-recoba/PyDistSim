@@ -1,10 +1,12 @@
-# Readthedocs default blue theme  
+# Readthedocs default blue theme
 html_style = None
 
 # Mock modules that are not present on readthedocs
 # http://read-the-docs.readthedocs.org/en/latest/faq.html#i-get-import-errors-on-libraries-that-depend-on-c-modules
 import sys
-class Mock(object):
+
+
+class Mock:
     def __init__(self, *args, **kwargs):
         pass
 
@@ -13,8 +15,8 @@ class Mock(object):
 
     @classmethod
     def __getattr__(cls, name):
-        if name in ('__file__', '__path__'):
-            return '/dev/null'
+        if name in ("__file__", "__path__"):
+            return "/dev/null"
         elif name[0] == name[0].upper():
             mockType = type(name, (), {})
             mockType.__module__ = __name__
@@ -22,6 +24,15 @@ class Mock(object):
         else:
             return Mock()
 
-MOCK_MODULES = ['networkx','png','PySide','PySide.QtCore','PySide.QtGui']
+
+MOCK_MODULES = [
+    "networkx",
+    "png",
+    "PySide6",
+    "PySide6.QtCore",
+    "PySide6.QtGui",
+    "scipy",
+    "scipy.stats",
+]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()

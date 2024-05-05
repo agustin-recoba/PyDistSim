@@ -1,13 +1,27 @@
-from numpy import dot, concatenate, arctan2, nan, pi, mod, isnan, eye
-from numpy.lib.type_check import real, imag
-from pymote.utils.localization.stitchsubclusterselectors import \
-            MaxCommonNodeSelector, StitchSubclusterSelectorBase
+from numpy import (
+    arctan2,
+    array,
+    concatenate,
+    dot,
+    eye,
+    isnan,
+    mod,
+    nan,
+    outer,
+    pi,
+    sqrt,
+)
+from numpy.lib.type_check import imag, real
+from numpy.linalg import det, eig
+
 from pymote.logger import logger
-from numpy import array, sqrt, outer
-from numpy.linalg import eig, det
+from pymote.utils.localization.stitchsubclusterselectors import (
+    MaxCommonNodeSelector,
+    StitchSubclusterSelectorBase,
+)
 
 
-class BaseStitcher(object):
+class BaseStitcher:
     """
     Base class for stitching two clusters.
 
@@ -25,7 +39,7 @@ class BaseStitcher(object):
 
     def __init__(self, selector=None):
         self.selector = selector or MaxCommonNodeSelector()
-        assert(isinstance(self.selector, StitchSubclusterSelectorBase))
+        assert isinstance(self.selector, StitchSubclusterSelectorBase)
 
     def stitch(self, dst, src, do_intra=True):
         """
@@ -45,16 +59,16 @@ class BaseStitcher(object):
         stitched = self._stitch(dst, src)
 
         # First remove incomplete stitches from stitched
-        for k, v in stitched.items():
-            if None in v:
+        for k, v in list(stitched.items()):
+            if any(x is None for x in v):
                 stitched.pop(k)
         # Then using stitched dictionary keys find out which subclusters are
         # not stitched and append them to dst.subclusters
-        src_stitched = [s[1] for s in stitched.keys()]
+        src_stitched = [s[1] for s in list(stitched.keys())]
         for src_sc_index in range(len(src)):
             if src_sc_index not in src_stitched:
                 new_subcluster = {}
-                for node, pos in src[src_sc_index].items():
+                for node, pos in list(src[src_sc_index].items()):
                     new_subcluster[node] = pos
                 dst.subclusters.append(new_subcluster)
 
@@ -79,31 +93,31 @@ class BaseStitcher(object):
         """
         stitched = {}
         while True:
-            dstSubIndex, srcSubIndex = self.selector.select(dst, src, stitched,
-                                                            is_intra)
+            dstSubIndex, srcSubIndex = self.selector.select(
+                dst, src, stitched, is_intra
+            )
 
             if dstSubIndex is None and srcSubIndex is None:
                 break
 
             # stitch srcSub to dstSub using given method
-            R, s, t = self.stitch_subclusters(dst[dstSubIndex],
-                                              src[srcSubIndex])
-            if None in (R, s, t):  # skip unreliable stitches
+            R, s, t = self.stitch_subclusters(dst[dstSubIndex], src[srcSubIndex])
+            if any(x is None for x in (R, s, t)):  # skip unreliable stitches
                 stitched[(dstSubIndex, srcSubIndex)] = (R, s, t)
                 stitched[(srcSubIndex, dstSubIndex)] = (R, s, t)
                 continue
 
             # merge subclusters: append src nodes in dst
             # TODO: apply flip ambiguity condition for new subcluster
-            for node in src[srcSubIndex].keys():
-                if not node in dst[dstSubIndex]:  # append only new
+            for node in list(src[srcSubIndex].keys()):
+                if node not in dst[dstSubIndex]:  # append only new
                     pos = src[srcSubIndex][node][:2]
                     try:
                         ori = src[srcSubIndex][node][2]
                     except IndexError:
                         ori = nan
                     dst[dstSubIndex][node] = self.transform(R, s, t, pos, ori)
-                    assert isnan(dst[dstSubIndex][node][:2]).any()==False
+                    assert not isnan(dst[dstSubIndex][node][:2]).any()
 
             stitched[(dstSubIndex, srcSubIndex)] = (R, s, t)
 
@@ -114,23 +128,23 @@ class BaseStitcher(object):
         return stitched
 
     def align(self, dst, src):
-        """ Align (modify) src w.r.t. dst. """
+        """Align (modify) src w.r.t. dst."""
 
         for srcSubIndex in range(len(src)):
             R, s, t = self.stitch_subclusters(dst[0], src[srcSubIndex])
-            for node in src[srcSubIndex].keys():
+            for node in list(src[srcSubIndex].keys()):
                 src_pos = src[srcSubIndex][node][:2]
                 src[srcSubIndex][node] = self.transform(R, s, t, src_pos)
 
     def transform(self, R, s, t, pos, ori=nan):
-        """ Transform node position. """
-        assert None not in (R, s, t)
+        """Transform node position."""
+        assert all(x is not None for x in (R, s, t))
         assert not imag(R).any()
         R = real(R)
         if not isnan(ori):
             # angle of rotation matrix R in ccw
             Rtheta = arctan2(R[1, 0], R[0, 0])
-            ori = mod(ori - Rtheta, 2*pi)
+            ori = mod(ori - Rtheta, 2 * pi)
         return concatenate((t + dot(dot(s, R), pos), [ori]))
 
     # ------------------ generic helper methods -------------------------------
@@ -140,25 +154,33 @@ class BaseStitcher(object):
 
     def _get_centroids(self, commonNodes, dstSubPos, srcSubPos, w_d=None):
         if w_d is None:
-            w_d = {node: 1. / len(commonNodes) for node in commonNodes}
-        p_s = array([0., 0.])
-        p_d = array([0., 0.])
+            w_d = {node: 1.0 / len(commonNodes) for node in commonNodes}
+        p_s = array([0.0, 0.0])
+        p_d = array([0.0, 0.0])
         for cn in commonNodes:
             p_s += srcSubPos[cn][:2] * w_d[cn]
             p_d += dstSubPos[cn][:2] * w_d[cn]
         return (p_s, p_d, w_d)
 
-    def _get_rotation_matrix_horn(self, commonNodes, dstSubPos, srcSubPos,
-                                  p_d, p_s):
-        """ Horn method for calculating rotation matrix. """
-        M = sum([outer((dstSubPos[cn][:2] - p_d),
-               (srcSubPos[cn][:2] - p_s)) for cn in commonNodes])
+    def _get_rotation_matrix_horn(self, commonNodes, dstSubPos, srcSubPos, p_d, p_s):
+        """Horn method for calculating rotation matrix."""
+        M = sum(
+            [
+                outer((dstSubPos[cn][:2] - p_d), (srcSubPos[cn][:2] - p_s))
+                for cn in commonNodes
+            ]
+        )
         D, V = eig(dot(M.T, M))
-        R = dot(M, (1 / sqrt(D[0]) * outer(V[:, 0], V[:, 0].conj().T) +
-                    1 / sqrt(D[1]) * outer(V[:, 1], V[:, 1].conj().T)))
+        R = dot(
+            M,
+            (
+                1 / sqrt(D[0]) * outer(V[:, 0], V[:, 0].conj().T)
+                + 1 / sqrt(D[1]) * outer(V[:, 1], V[:, 1].conj().T)
+            ),
+        )
         # only rotation, if det(M)<0 it is reflection (Horn et.al)
         if det(M) < 0:
             # TODO: Umeyama
             assert det(R) < 0  # Umeyama1991
-        assert isnan(R).any()==False
+        assert not isnan(R).any()
         return R

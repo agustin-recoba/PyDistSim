@@ -1,8 +1,11 @@
-from numpy import dot, arctan2, sqrt, array, sin, cos
+from numpy import arctan2, array, cos, dot, sin, sqrt
 from numpy.linalg import det
-from pymote.utils.localization.stitchsubclusterselectors import \
-            MaxCommonNodeSelector, StitchSubclusterSelectorBase
+
 from pymote.utils.localization.basestitcher import BaseStitcher
+from pymote.utils.localization.stitchsubclusterselectors import (
+    MaxCommonNodeSelector,
+    StitchSubclusterSelectorBase,
+)
 
 
 class AoAStitcher(BaseStitcher):
@@ -19,25 +22,23 @@ class AoAStitcher(BaseStitcher):
     """
 
     def __new__(cls, *args, **kwargs):
-        """ Legacy: by default returns AoAStitcherHorn instance. """
+        """Legacy: by default returns AoAStitcherHorn instance."""
         if cls is not AoAStitcher:
-            return super(AoAStitcher, cls).__new__(cls)
+            return super().__new__(cls)
         return AoAStitcherHorn()
 
     def __init__(self, selector=None, **kwargs):
         self.selector = selector or MaxCommonNodeSelector(cn_count_treshold=2)
-        assert(isinstance(self.selector, StitchSubclusterSelectorBase))
+        assert isinstance(self.selector, StitchSubclusterSelectorBase)
 
-    def _get_scaling_factor(self, commonNodes, dstSubPos, srcSubPos, p_d, p_s,
-                            w_d):
-        s = sqrt(sum([sum((dstSubPos[cn][:2] - p_d) ** 2) * w_d[cn]
-              for cn in commonNodes]) /
-         sum([sum((srcSubPos[cn][:2] - p_s) ** 2) * w_d[cn]
-              for cn in commonNodes]))
+    def _get_scaling_factor(self, commonNodes, dstSubPos, srcSubPos, p_d, p_s, w_d):
+        s = sqrt(
+            sum([sum((dstSubPos[cn][:2] - p_d) ** 2) * w_d[cn] for cn in commonNodes])
+            / sum([sum((srcSubPos[cn][:2] - p_s) ** 2) * w_d[cn] for cn in commonNodes])
+        )
         return s
 
-    def _get_rotation_matrix_2_common_nodes(self, commonNodes, dstSubPos,
-                                            srcSubPos):
+    def _get_rotation_matrix_2_common_nodes(self, commonNodes, dstSubPos, srcSubPos):
         """
         Calculates rotation matrix based only on two common nodes
 
@@ -62,27 +63,25 @@ class AoAStitcherHorn(AoAStitcher):
         ``reflectable`` controls whether reflection is accepted when
         calculating rotation matrix.
         """
-        self.reflectable = kwargs.get('reflectable', False)
+        self.reflectable = kwargs.get("reflectable", False)
         self.get_rotation_matrix = self._get_rotation_matrix_horn
-        super(AoAStitcherHorn, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def stitch_subclusters(self, dstSubPos, srcSubPos):
         commonNodes = self._get_common_nodes(dstSubPos, srcSubPos)
         assert len(commonNodes) > 1
-        (p_s, p_d, w_d) = self._get_centroids(commonNodes, dstSubPos,
-                                              srcSubPos)
-        s = self._get_scaling_factor(commonNodes, dstSubPos, srcSubPos,
-                                     p_d, p_s, w_d)
+        (p_s, p_d, w_d) = self._get_centroids(commonNodes, dstSubPos, srcSubPos)
+        s = self._get_scaling_factor(commonNodes, dstSubPos, srcSubPos, p_d, p_s, w_d)
         if len(commonNodes) == 2:
-            R = self._get_rotation_matrix_2_common_nodes(commonNodes,
-                                                         dstSubPos, srcSubPos)
+            R = self._get_rotation_matrix_2_common_nodes(
+                commonNodes, dstSubPos, srcSubPos
+            )
         else:
-            R = self.get_rotation_matrix(commonNodes, dstSubPos, srcSubPos,
-                                         p_d, p_s)
+            R = self.get_rotation_matrix(commonNodes, dstSubPos, srcSubPos, p_d, p_s)
         t = p_d - dot(dot(s, R), p_s)
 
         # if rotation matrix reflects nodes then it is not reliable
-        if det(R)<0 and not self.reflectable:
+        if det(R) < 0 and not self.reflectable:
             return (None, None, None)
 
         return (R, s, t)

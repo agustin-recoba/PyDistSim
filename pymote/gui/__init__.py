@@ -1,3 +1,3 @@
-from dictionarytreemodel import *
-from simulationui import *
-from simulationgui import *
+from .dictionarytreemodel import *
+from .simulationgui import *
+from .simulationui import *

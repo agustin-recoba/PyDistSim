@@ -8,6 +8,7 @@ build
 docs/_build
 eggs
 parts
+env/
 
 var
 sdist
@@ -25,3 +26,5 @@ pip-log.txt
 .settings*
 coverage_html_report*
 docs/reference/generated*
+
+coverage.xml

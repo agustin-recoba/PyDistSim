@@ -1,19 +1,30 @@
-from networkx import is_connected
-from numpy.core.numeric import Inf
-from pymote.network import Network
-from pymote.logger import logger
-from pymote.conf import settings
-from numpy import sign, sqrt, array
-from pymote.node import Node
-from numpy.random import rand
 from itertools import product
 
+from networkx import is_connected
+from numpy import array, sign, sqrt
+from numpy.core.numeric import Inf
+from numpy.random import rand
 
-class NetworkGenerator(object):
+from pymote.conf import settings
+from pymote.logger import logger
+from pymote.network import Network
+from pymote.node import Node
 
-    def __init__(self, n_count=None, n_min=None, n_max=None, connected=True,
-                 degree=None, comm_range=None, method="random_network",
-                 **kwargs):
+
+class NetworkGenerator:
+
+    def __init__(
+        self,
+        n_count=None,
+        n_min=None,
+        n_max=None,
+        enforce_connected=True,
+        degree=None,
+        comm_range=None,
+        method="random_network",
+        degree_tolerance=0.5,
+        **kwargs,
+    ):
         """
         Arguments:
             n_count (int):
@@ -22,7 +33,7 @@ class NetworkGenerator(object):
                 minimum number of nodes, if not set it is equal to n_count
             n_max (int):
                 maximum number of nodes, if not set it is equal to n_count
-            connected (bool):
+            enforce_connected (bool):
                 if True network must be fully connected
             degree (int):
                 average number of neighbors per node
@@ -51,21 +62,26 @@ class NetworkGenerator(object):
         self.n_count = n_count or settings.N_COUNT
         self.n_min = self.n_count if n_min is None else n_min
         self.n_max = self.n_count if n_max is None else n_max
-        if self.n_count<self.n_min or self.n_count>self.n_max:
-            raise NetworkGeneratorException('Number of nodes must be between '
-                                            'n_min and n_max.')
-        if degree and degree>=n_max:
-            raise NetworkGeneratorException('Degree % d must be smaller than '
-                                            'maximum number of nodes %d.'
-                                            % (degree, n_max))
-        #TODO: optimize recalculation of edges on bigger commRanges
-        if degree and degree>16 and n_count!=Inf:
-            logger.warning("Generation could be slow for large degree"
-                           "parameter with bounded n_max.")
-        self.connected = connected
+        if self.n_count < self.n_min or self.n_count > self.n_max:
+            raise NetworkGeneratorException(
+                "Number of nodes must be between " "n_min and n_max."
+            )
+        if degree and degree >= n_max:
+            raise NetworkGeneratorException(
+                "Degree % d must be smaller than "
+                "maximum number of nodes %d." % (degree, n_max)
+            )
+        # TODO: optimize recalculation of edges on bigger commRanges
+        if degree and degree > 16 and n_count != Inf:
+            logger.warning(
+                "Generation could be slow for large degree"
+                "parameter with bounded n_max."
+            )
+        self.enforce_connected = enforce_connected
         self.degree = degree
-        self.comm_range = kwargs.pop('commRange', comm_range)
-        #TODO: use subclass based generators instead of method based
+        self.degree_tolerance = degree_tolerance
+        self.comm_range = kwargs.pop("commRange", comm_range)
+        # TODO: use subclass based generators instead of method based
         self.generate = self.__getattribute__("generate_" + method)
         self.kwargs = kwargs
 
@@ -85,48 +101,50 @@ class NetworkGenerator(object):
                 node = Node(commRange=self.comm_range, **self.kwargs)
                 net.add_node(node)
         else:
-            if step>0:
-                if len(net)<self.n_max:
+            if step > 0:
+                if len(net) < self.n_max:
                     node = Node(**self.kwargs)
                     net.add_node(node)
-                    logger.debug("Added node, number of nodes: %d"
-                                 % len(net))
+                    logger.debug("Added node, number of nodes: %d" % len(net))
                 elif not self.comm_range:
                     for node in net.nodes():
                         node.commRange += step
-                    logger.debug("Increased commRange to %d"
-                                 % node.commRange)
+                    logger.debug("Increased commRange to %d" % node.commRange)
                 else:
                     return None
             else:
-                if len(net)>self.n_min and len(net)>1:
-                    net.remove_node(net.nodes()[0])
-                    logger.debug("Removed node, nodes left: %d"
-                                 % len(net))
+                min_node = net.nodes_sorted()[0]
+                if len(net) > self.n_min and len(net) > 1:
+                    net.remove_node(min_node)
+                    logger.debug("Removed node, nodes left: %d" % len(net))
                 elif not self.comm_range:
                     for node in net:
                         node.commRange += step
-                    logger.debug("Decreased commRange to %d"
-                                 % net.nodes()[0].commRange)
+                    logger.debug("Decreased commRange to %d" % min_node.commRange)
                 else:
                     return None
         return net
 
     def _are_conditions_satisfied(self, net):
-        cr = net.nodes()[0].commRange
-        if self.connected and not is_connected(net):
+        cr = net.nodes_sorted()[0].commRange
+        if self.enforce_connected and not is_connected(net):
             logger.debug("Not connected")
-            return round(0.2*cr)
+            return round(0.2 * cr)
         elif self.degree:
-            logger.debug("Degree not satisfied %f" % net.avg_degree())
-            diff = self.degree-net.avg_degree()
-            diff = sign(diff)*min(abs(diff), 7)
-            return round((sign(diff)*(round(diff))**2)*cr/100)
+            diff = self.degree - net.avg_degree()
+            if abs(diff) > self.degree_tolerance:
+                logger.debug("Degree not satisfied: %f" % net.avg_degree())
+                diff = sign(diff) * min(
+                    max(abs(diff), 3), 7
+                )  # If diff is too big, it will be set to 7, if it is too small, it will be set to 3
+                condition_returned = round((sign(diff) * (round(diff)) ** 2) * cr / 100)
+                logger.debug("Degree condition returned: %d" % condition_returned)
+                return condition_returned
         return 0
 
     def generate_random_network(self, net=None):
         """Basic method: generates network with randomly positioned nodes."""
-        #TODO: try some more advanced algorithm for situation when
+        # TODO: try some more advanced algorithm for situation when
         # both connected network and too small degree are needed
         # that is agnostic to actual dimensions of the environment
         steps = [0]
@@ -135,14 +153,16 @@ class NetworkGenerator(object):
             if not net:
                 break
             steps.append(self._are_conditions_satisfied(net))
-            if len(steps)>1000:
+            if len(steps) > 1000:
                 break
-            if steps[-1]==0:
+            if steps[-1] == 0:
                 return net
 
-        logger.error("Could not generate connected network with given "
-                     "parameters. Try removing and/or modifying some of "
-                     "them.")
+        logger.error(
+            "Could not generate connected network with given "
+            "parameters. Try removing and/or modifying some of "
+            "them."
+        )
 
     def generate_neigborhood_network(self):
         """
@@ -152,17 +172,19 @@ class NetworkGenerator(object):
         Finds out node in the middle, that is the node with minimum maximum
         distance to all other nodes and sets that distance as new commRange.
 
+        This generator ignores all other parameters except comm_range and n counts.
         """
         net = self._create_modify_network()
 
         max_distances = []
         for node in net:
-            distances = [sqrt(sum((net.pos[node]-net.pos[neighbor])**2))\
-                                   for neighbor in net]
+            distances = [
+                sqrt(sum((net.pos[node] - net.pos[neighbor]) ** 2)) for neighbor in net
+            ]
             max_distances.append(max(distances))
         min_distance = min(max_distances)
         for node in net:
-            node.commRange = min_distance+1
+            node.commRange = min_distance + 1
         return net
 
     def generate_homogeneous_network(self, randomness=0.11):
@@ -176,17 +198,17 @@ class NetworkGenerator(object):
         net = self._create_modify_network()
         n = len(net)
         h, w = net.environment.im.shape
-        assert net.environment.dim==2  # works only for 2d environments
+        assert net.environment.dim == 2  # works only for 2d environments
         size = w
 
         positions = generate_mesh_positions(net.environment, n)
         for i in range(n):
             pos = array([-1, -1])  # some non space point
-            while(not net.environment.is_space(pos)):
-                pos = positions[i, :n] + (rand(2) - 0.5)*(size*randomness)
-            net.pos[net.nodes()[i]] = pos
+            while not net.environment.is_space(pos):
+                pos = positions[i, :n] + (rand(2) - 0.5) * (size * randomness)
+            net.pos[net.nodes_sorted()[i]] = pos
         net.recalculate_edges()
-        #TODO: this is not intuitive but generate_random network with net
+        # TODO: this is not intuitive but generate_random network with net
         # given as argument will check if conditions are satisfied and act
         # accordingly, to change only commRange set limits to number of nodes
         self.n_count = self.n_max = self.n_min = n
@@ -201,26 +223,36 @@ def generate_mesh_positions(env, n):
     """
     h, w = env.im.shape
     # initial d
-    d = sqrt(h*w/n)
+    d = sqrt(h * w / n)
 
     def get_mesh_pos(d, dx, dy, w, h):
-        return map(lambda (xi, yi): (xi*d+dx, yi*d+dy),
-                   product(range(int(round(w/d))), range(int(round(h/d)))))
+        return [
+            (xi_yi[0] * d + dx, xi_yi[1] * d + dy)
+            for xi_yi in product(
+                list(range(int(round(w / d)))), list(range(int(round(h / d))))
+            )
+        ]
+
     n_mesh = 0
     direction = []
     while True:
-        n_mesh = len([1 for pos in get_mesh_pos(d, 0.5*d, 0.5*d, w, h)
-                      if env.is_space(pos)])
-        direction.append(sign(n-n_mesh))
-        if n_mesh==n or \
-            (len(direction)>=10 and abs(sum(direction[-3:]))<3 and n_mesh>n):
+        n_mesh = len(
+            [1 for pos in get_mesh_pos(d, 0.5 * d, 0.5 * d, w, h) if env.is_space(pos)]
+        )
+        direction.append(sign(n - n_mesh))
+        if n_mesh == n or (
+            len(direction) >= 10 and abs(sum(direction[-3:])) < 3 and n_mesh > n
+        ):
             break
-        d *= sqrt(n_mesh/float(n))
-    return array(tuple(pos for pos in get_mesh_pos(d, 0.5*d, 0.5*d, w, h)
-                       if env.is_space(pos)))
-    #TODO: n_mesh could be brought closer to n with modification of dx and dy
-    #dx = 0.5*d
-    #dy = 0.5*d
+        d *= sqrt(n_mesh / float(n))
+    return array(
+        tuple(
+            pos for pos in get_mesh_pos(d, 0.5 * d, 0.5 * d, w, h) if env.is_space(pos)
+        )
+    )
+    # TODO: n_mesh could be brought closer to n with modification of dx and dy
+    # dx = 0.5*d
+    # dy = 0.5*d
 
 
 class NetworkGeneratorException(Exception):

@@ -1,7 +1,7 @@
-ipython==0.13.1
-matplotlib==1.2.0
-networkx==1.7
-numpy==1.6.2
-pypng==0.0.15
-pyside==1.1.2
-scipy==0.11.0
+ipython==8.24.0
+matplotlib==3.8.4
+networkx==3.3
+numpy==1.26.4
+pypng==0.20220715.0
+PySide6==6.7.0
+scipy==1.13.0

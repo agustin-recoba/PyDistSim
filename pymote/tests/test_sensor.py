@@ -1,8 +1,10 @@
 import unittest
-from pymote.node import Node
-from pymote.network import Network
-from pymote.sensor import NeighborsSensor, DistSensor
+
 import scipy.stats
+
+from pymote.network import Network
+from pymote.node import Node
+from pymote.sensor import DistSensor, NeighborsSensor
 
 
 class TestSensor(unittest.TestCase):
@@ -22,12 +24,14 @@ class TestSensor(unittest.TestCase):
         """Test setting compositeSensors on a node"""
         net = Network()
         node = net.add_node()
-        dist_sensor = DistSensor({'pf': scipy.stats.norm, 'scale': 10})
-        node.compositeSensor = (NeighborsSensor, 'AoASensor', dist_sensor)
+        dist_sensor = DistSensor({"pf": scipy.stats.norm, "scale": 10})
+        node.compositeSensor = (NeighborsSensor, "AoASensor", dist_sensor)
         self.assertTrue(len(node.compositeSensor.sensors) == 3)
         readings = node.compositeSensor.read()
-        self.assertTrue('Neighbors' in readings.keys() and
-                        'AoA' in readings.keys() and
-                        'Dist' in readings.keys())
+        self.assertTrue(
+            "Neighbors" in list(readings.keys())
+            and "AoA" in list(readings.keys())
+            and "Dist" in list(readings.keys())
+        )
 
-        #TODO: check normal distribution
+        # TODO: check normal distribution

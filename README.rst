@@ -1,8 +1,9 @@
-.. image:: https://api.travis-ci.org/darbula/pymote.png?branch=main
-  :target: http://travis-ci.org/darbula/pymote
+.. image:: https://app.travis-ci.com/agustin-recoba/pydistsim.svg?token=zk1hY6ZALwZTY3bjX2Aq&branch=main
+  :target: https://app.travis-ci.com/agustin-recoba/pydistsim
 
-.. image:: https://coveralls.io/repos/darbula/pymote/badge.png?branch=main
-  :target: https://coveralls.io/r/darbula/pymote?branch=master
+.. image:: https://coveralls.io/repos/github/agustin-recoba/pydistsim/badge.svg?branch=main
+  :target: https://coveralls.io/github/agustin-recoba/pydistsim?branch=main
+
 
 
 Pymote
@@ -16,7 +17,7 @@ Pymote's main goal is to provide framework for fast implementation and simulatio
 
 .. figure:: docs/install/_images/pymote_console_gui.png
    :align: center
-   
+
    Pymote is being developed on top of `NetworkX <https://github.com/networkx/networkx/>`_ and is ment to be used along other scientific packages such as SciPy, NumPy and matplotlib. Currently, gui runs on PySide (Qt bindings) and console is jazzy IPython.
 
 Installation

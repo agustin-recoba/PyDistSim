@@ -16,7 +16,7 @@ Real world sensors
 
    AoASensor
    DistSensor
-   
+
 Knowledge sensors
 -----------------
 
@@ -25,8 +25,8 @@ Knowledge sensors
 
    NeighborsSensor
    TruePosSensor
-   
+
 Composite sensor
 ----------------
 .. autoclass:: CompositeSensor
-    :members: 
+    :members:
