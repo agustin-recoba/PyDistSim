@@ -1,8 +1,7 @@
-import logging
 from collections.abc import Iterable
 
 from pymote.conf import settings
-from pymote.logger import logger
+from pymote.logger import LogLevels, logger
 from pymote.sensor import CompositeSensor
 
 
@@ -113,7 +112,7 @@ class Node:
             self.memory["log"] = []
         return self.memory["log"]
 
-    def log(self, message, level=logging.WARNING):
+    def log(self, message: str, level: LogLevels = LogLevels.WARNING):
         """Insert a log message in node memory."""
         assert isinstance(message, str)
         context = {
