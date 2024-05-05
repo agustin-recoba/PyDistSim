@@ -66,7 +66,7 @@ class Simulation(QThread):
             if self.stepsLeft >= 0:
                 break
 
-    def run_algorithm(self, algorithm):
+    def run_algorithm(self, algorithm: Algorithm):
         """
         Run given algorithm on given network.
 
@@ -116,7 +116,9 @@ class Simulation(QThread):
 
     def is_halted(self):
         """Check if distributed algorithm have come to end or deadlock
-        i.e. no messages to pass."""
+        i.e. no messages to pass.
+        An unstarted algorithm is considered halted.
+        """
         if (
             len(self._network.outbox) > 0
             or any([len(node.outbox) for node in self.network.nodes()])
@@ -131,7 +133,7 @@ class Simulation(QThread):
         return self._network
 
     @network.setter
-    def network(self, network):
+    def network(self, network: Network):
         self._network.simulation = None
         self._network = network
         self._network.simulation = self

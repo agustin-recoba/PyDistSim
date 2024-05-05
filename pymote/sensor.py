@@ -25,11 +25,13 @@ To manually set sensor parameters first make an sensor instance:
 """
 
 import inspect
+from collections.abc import Callable
 from functools import wraps
 
 from numpy import arctan2, pi, sqrt
+from scipy.stats import rv_continuous, rv_discrete
 
-from pymote.conf import settings
+import pymote.conf as s
 
 
 class Sensor:
@@ -45,7 +47,7 @@ class Sensor:
     pf_settings_key = ""
 
     def __init__(self, pf_params={}):
-        pf_params_final = getattr(settings, self.pf_settings_key, {})
+        pf_params_final = getattr(s.settings, self.pf_settings_key, {})
         pf_params_final.update(pf_params)
         if pf_params_final:
             self.probabilityFunction = ProbabilityFunction(**pf_params_final)
@@ -55,19 +57,19 @@ class Sensor:
     def name(self):
         return self.__class__.__name__
 
-    def read(self):
+    def read(self) -> dict:
         """This method should be overriden in subclass."""
         pass
 
 
-def node_in_network(fun):
+def node_in_network(fun: Callable):
     """Decorator function that checks if node is in network."""
 
     @wraps(fun)
-    def f(sensor, node):
+    def f(sensor: Sensor, node: "Node"):
         if not node.network:
-            raise Exception(
-                "Cannot take a sensor reading if node is" " outside of a network."
+            raise SensorError(
+                "Cannot take a sensor reading if node is outside of a network."
             )
         return fun(sensor, node)
 
@@ -78,7 +80,7 @@ class NeighborsSensor(Sensor):
     """Provides list of node's neighbors."""
 
     @node_in_network
-    def read(self, node):
+    def read(self, node: "Node"):
         return {"Neighbors": list(node.network.neighbors(node))}
 
 
@@ -88,7 +90,7 @@ class AoASensor(Sensor):
     pf_settings_key = "AOA_PF_PARAMS"
 
     @node_in_network
-    def read(self, node):
+    def read(self, node: "Node"):
         network = node.network
         measurements = {}
         p = network.pos[node]
@@ -107,7 +109,7 @@ class DistSensor(Sensor):
     pf_settings_key = "DIST_PF_PARAMS"
 
     @node_in_network
-    def read(self, node):
+    def read(self, node: "Node"):
         network = node.network
         measurements = {}
         p = network.pos[node]
@@ -123,7 +125,7 @@ class TruePosSensor(Sensor):
     """Provides node's true position."""
 
     @node_in_network
-    def read(self, node):
+    def read(self, node: "Node"):
         return {"TruePos": node.network.pos[node]}
 
 
@@ -137,7 +139,9 @@ class CompositeSensor:
 
     """
 
-    def __init__(self, node, componentSensors=None):
+    def __init__(
+        self, node: "Node", componentSensors: tuple[type[Sensor] | str, ...] = None
+    ):
         """
         Arguments:
             node (:class:`Node`):
@@ -151,12 +155,12 @@ class CompositeSensor:
         self.sensors = componentSensors or ()
 
     @property
-    def sensors(self):
+    def sensors(self) -> tuple[Sensor, ...]:
         return self._sensors
 
     @sensors.setter
-    def sensors(self, sensors):
-        self._sensors = ()
+    def sensors(self, sensors: tuple[type[Sensor] | str, ...]):
+        self._sensors: tuple[Sensor, ...] = ()
         # instantiate sensors passed by class name
         for cls in Sensor.__subclasses__():
             if cls.__name__ in sensors:
@@ -170,10 +174,10 @@ class CompositeSensor:
             if isinstance(sensor, Sensor):
                 self._sensors += (sensor,)
 
-    def get_sensor(self, name):
+    def get_sensor(self, name: str) -> Sensor:
         sensor = [s for s in self._sensors if s.name() == name]
         if len(sensor) != 1:
-            raise Exception("Multiple or no sensors found with name %s" % name)
+            raise SensorError("Multiple or no sensors found with name %s" % name)
         return sensor[0]
 
     def read(self):
@@ -186,7 +190,7 @@ class CompositeSensor:
 class ProbabilityFunction:
     """Provides a way to get noisy reading."""
 
-    def __init__(self, scale, pf):
+    def __init__(self, scale, pf: rv_continuous | rv_discrete):
         """
         pf: probability function (i.e. :py:data:`scipy.stats.norm`)
         scale: pf parameter
@@ -197,3 +201,7 @@ class ProbabilityFunction:
 
     def getNoisyReading(self, value):
         return self.pf.rvs(scale=self.scale, loc=value)
+
+
+class SensorError(Exception):
+    pass
