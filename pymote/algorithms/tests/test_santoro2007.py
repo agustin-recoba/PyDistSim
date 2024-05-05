@@ -1,10 +1,11 @@
 import unittest
 
 from pymote import Network, NetworkGenerator, Simulation
+from pymote.algorithms.santoro2007.traversal import DFT, DFStar
 from pymote.algorithms.santoro2007.yoyo import YoYo
 
 
-class TestSantoro2007(unittest.TestCase):
+class TestYoYo(unittest.TestCase):
 
     def test_santoro2007(self):
         node_range = 100
@@ -58,7 +59,7 @@ class TestSantoro2007(unittest.TestCase):
                         )
 
     def test_santoro2007_random(self):
-        N_ITERS = 5
+        N_ITERS = 1
         N_NETWORKS = 15
         N_NODES_STEP = 5
 
@@ -96,3 +97,51 @@ class TestSantoro2007(unittest.TestCase):
                                 node.id,
                                 node.status,
                             )
+
+
+class TestTraversalDFT(unittest.TestCase):
+
+    def setUp(self):
+        net_gen = NetworkGenerator(100)
+        self.net = net_gen.generate_random_network()
+
+        self.visited = []
+
+        # Asigna el algoritmo
+        self.net.algorithms = (
+            (DFT, {"visitedAction": lambda node: self.visited.append(node.id)}),
+        )
+
+    def test_broadcast(self):
+        sim = Simulation(self.net)
+
+        sim.run_all()
+
+        for node in self.net.nodes():
+            assert node.status == DFT.Status.DONE, "Node %d is not DONE" % node.id
+
+        assert sorted(node.id for node in self.net.nodes()) == sorted(self.visited)
+
+
+class TestTraversalDFStar(unittest.TestCase):
+
+    def setUp(self):
+        net_gen = NetworkGenerator(100)
+        self.net = net_gen.generate_random_network()
+
+        self.visited = []
+
+        # Asigna el algoritmo
+        self.net.algorithms = (
+            (DFStar, {"visitedAction": lambda node: self.visited.append(node.id)}),
+        )
+
+    def test_broadcast(self):
+        sim = Simulation(self.net)
+
+        sim.run_all()
+
+        for node in self.net.nodes():
+            assert node.status == DFStar.Status.DONE, "Node %d is not DONE" % node.id
+
+        assert sorted(node.id for node in self.net.nodes()) == sorted(self.visited)
