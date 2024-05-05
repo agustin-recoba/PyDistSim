@@ -39,11 +39,12 @@ class Network(Graph):
         self.pos = {}
         self.ori = {}
         self.labels = {}
-        Graph.__init__(self)
+        super().__init__()
         self.algorithms = algorithms or settings.ALGORITHMS
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self.outbox = []
         self.networkRouting = networkRouting
+        self.simulation = None
         logger.info("Instance of Network has been initialized.")
 
     def copy(self, as_view=False):
@@ -73,6 +74,7 @@ class Network(Graph):
         H.algorithms = deepcopy(self._algorithms_param) or settings.ALGORITHMS
         H.algorithmState = {"index": 0, "step": 1, "finished": False}
         H.outbox = []
+        H.simulation = None
 
         assert isinstance(H, Network)
         return H
@@ -254,8 +256,8 @@ class Network(Graph):
     ):
         try:
             from matplotlib import pyplot as plt
-        except ImportError:
-            raise ImportError("Matplotlib required for show()")
+        except ImportError as e:
+            raise ImportError("Matplotlib required for show()") from e
 
         # TODO: environment when positions defined
         fig_size = tuple(array(self._environment.im.shape) / dpi)
@@ -305,9 +307,9 @@ class Network(Graph):
             for n2 in self.nodes():
                 if n1 != n2:
                     if self.channelType.in_comm_range(self, n1, n2):
-                        self.add_edge(n1, n2)
+                        super().add_edge(n1, n2)
                     elif self.has_edge(n1, n2):
-                        self().remove_edge(self, n1, n2)
+                        self.remove_edge(n1, n2)
 
     def add_edge(self, u_of_edge, v_of_edge, **attr):
         logger.warning("Edges are auto-calculated from channelType and commRange")
