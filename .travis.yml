@@ -11,7 +11,7 @@ before_install:
 
 install:
   - pip install -r requirements.txt
-  - pip install coverage coveralls
+  - pip install coverage
   - pip install pytest pytest-cov
 
 script:
@@ -20,4 +20,4 @@ script:
   - pip install .
 
 after_success:
-  - coveralls
+  - curl -sL https://coveralls.io/coveralls-linux.tar.gz | tar -xz && ./coveralls
