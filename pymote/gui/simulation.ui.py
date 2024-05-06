@@ -1,5 +1,3 @@
-# Form implementation generated from reading ui file 'E:\Damir\FER\Postdiplomski\Doktorat\Istrazivanje\pymote\pymote\gui\simulation.ui'
-#
 # Created: Fri Sep 30 12:31:55 2011
 #      by: PyQt4 UI code generator 4.8.4
 #
