@@ -1,28 +1,36 @@
 Running tests
 =============
-To execute tests install nose ``pip install nose`` and run it inside pymote
-directory. All tests should be found recursively scanning directories.
+
+All python packages mencioned in this tutorial should already be installed in your environment if
+you followed the guide at ":ref:`installation`".
+
+To execute tests, pytest must be installed.
+All tests should be automatically found by recursively scanning directories.
+
 To run all tests run this from root pymote directory::
 
-    nosetests -v
+    pytest
 
 To run selected test module::
 
-    nosetests -v pymote.tests.test_algorithm
+    pytest pymote/tests/test_algorithm.py
 
+or selected test case::
+
+    pytest pymote/tests/test_algorithm.py::TestAlgorithmsSetter
 
 Tests coverage
 --------------
-For tests coverage install `Coverage <http://nedbatchelder.com/code/coverage/cmd.html>`_ package and run it::
+For tests coverage, ``pytest-cov`` and ``coverage`` are needed.
+By default, coverage is collected in all test runs. To get coverage report, run::
 
-    pip install coverage
-    coverage run --source=pymote setup.py nosetests
-
-`Configuration file <http://nedbatchelder.com/code/coverage/config.html#config>`_ is in ``.coveragerc``.
+    coverage report --show-missing
 
 Make report in console or html::
 
     coverage report -m
     coverage html
 
-For integration with `coveralls <https://coveralls.io>`_ refer to `coverall readme <https://github.com/coagulant/coveralls-python/blob/master/README.rst>`_.
+For integration with `coveralls <https://coveralls.io>`_ we use the `Universal Coverage Reporter <https://github.com/coverallsapp/coverage-reporter>`_. This is configured in file ``.travis.yml``.
+
+To change the described ``pytest`` behabiour, see section ``[tool.pytest.ini_options]`` at ``pyproject.toml``.

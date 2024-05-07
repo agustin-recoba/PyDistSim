@@ -5,11 +5,11 @@ This document assumes you are familiar with using command prompt or shell. It sh
 Requirements
 ************
 
-* `Python`_ 2.7
+* `Python`_ 3.11
 * `Setuptools`_
 * `NumPy`_
 * `SciPy`_
-* `Matplotlib`_ 1.2
+* `Matplotlib`_
 * `PySide6`_ (for gui)
 * `IPython`_
 * `NetworkX`_
@@ -65,7 +65,7 @@ Alternatively, installation can be done using :doc:`windows_virtualenv` but it i
 Linux (Ubuntu)
 **************
 
-Python 2.7 should already be installed on all new releases of Linux.
+Python 3 should already be installed on all new releases of Linux.
 
 Install packages required for getting and compiling the source::
 
