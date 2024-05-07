@@ -4,8 +4,8 @@ from datetime import datetime
 
 import networkx as nx
 import numpy
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.collections import LineCollection, PatchCollection
 from matplotlib.figure import Figure
 from matplotlib.patches import Circle
@@ -577,7 +577,3 @@ def create_window(window_class, **kwargs):
 def main():
     global simgui
     simgui = create_window(SimulationGui)
-
-
-if __name__ == "__main__":
-    main()
