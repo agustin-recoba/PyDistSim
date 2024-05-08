@@ -13,8 +13,8 @@ Basic usage:
 
 >>> node.compositeSensor = ('NeighborsSensor','AoASensor')
 >>> node.compositeSensor.sensors
-(<pymote.sensor.NeighborsSensor at 0x6d3fbb0>,
- <pymote.sensor.AoASensor at 0x6d3f950>)
+(<pydistsim.sensor.NeighborsSensor at 0x6d3fbb0>,
+ <pydistsim.sensor.AoASensor at 0x6d3f950>)
 
 To manually set sensor parameters first make an sensor instance:
 
@@ -28,10 +28,9 @@ import inspect
 from collections.abc import Callable
 from functools import wraps
 
+import pydistsim.conf as s
 from numpy import arctan2, pi, sqrt
 from scipy.stats import rv_continuous, rv_discrete
-
-import pymote.conf as s
 
 
 class Sensor:

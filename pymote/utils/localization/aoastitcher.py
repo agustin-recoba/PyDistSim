@@ -1,8 +1,7 @@
 from numpy import arctan2, array, cos, dot, sin, sqrt
 from numpy.linalg import det
-
-from pymote.utils.localization.basestitcher import BaseStitcher
-from pymote.utils.localization.stitchsubclusterselectors import (
+from pydistsim.utils.localization.basestitcher import BaseStitcher
+from pydistsim.utils.localization.stitchsubclusterselectors import (
     MaxCommonNodeSelector,
     StitchSubclusterSelectorBase,
 )

@@ -2,9 +2,9 @@ from collections.abc import Iterable
 from types import NoneType
 from typing import Optional, Tuple
 
-from pymote.conf import settings
-from pymote.logger import LogLevels, logger
-from pymote.sensor import CompositeSensor
+from pydistsim.conf import settings
+from pydistsim.logger import LogLevels, logger
+from pydistsim.sensor import CompositeSensor
 
 
 class Node:

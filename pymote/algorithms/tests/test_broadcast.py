@@ -1,8 +1,8 @@
 import unittest
 
-from pymote.algorithms.broadcast import Flood
-from pymote.networkgenerator import NetworkGenerator
-from pymote.simulation import Simulation
+from pydistsim.algorithms.broadcast import Flood
+from pydistsim.networkgenerator import NetworkGenerator
+from pydistsim.simulation import Simulation
 
 HELLO = "Hello distributed world"
 BYE = "Bye bye distributed world"

@@ -1,7 +1,7 @@
 <RCC>
   <qresource prefix="/">
     <file>icons/3floppy_unmount.png</file>
-    <file>icons/pymote.png</file>
+    <file>icons/pydistsim.png</file>
     <file>icons/fileopen.png</file>
     <file>icons/filesaveas.png</file>
     <file>icons/player_fwd.png</file>

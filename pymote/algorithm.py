@@ -2,11 +2,11 @@ from collections.abc import Callable
 from enum import StrEnum
 from inspect import getmembers
 
-import pymote.network as nt
-from pymote.logger import logger
-from pymote.message import Message
-from pymote.message import MetaHeader as MessageMetaHeader
-from pymote.node import Node
+import pydistsim.network as nt
+from pydistsim.logger import logger
+from pydistsim.message import Message
+from pydistsim.message import MetaHeader as MessageMetaHeader
+from pydistsim.node import Node
 
 
 class ActionEnum(StrEnum):
@@ -123,7 +123,7 @@ class Algorithm(metaclass=AlgorithmMeta):
 
         for required_param in self.required_params:
             if required_param not in list(kwargs.keys()):
-                raise PymoteAlgorithmException("Missing required param.")
+                raise PyDistSimAlgorithmException("Missing required param.")
 
         # set default params
         for dp, val in list(self.default_params.items()):
@@ -224,5 +224,5 @@ class NetworkAlgorithm(Algorithm):
         raise NotImplementedError
 
 
-class PymoteAlgorithmException(Exception):
+class PyDistSimAlgorithmException(Exception):
     pass

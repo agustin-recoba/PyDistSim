@@ -4,13 +4,12 @@ from inspect import isclass
 
 from networkx import is_connected
 from numpy.core.numeric import Inf
-
-from pymote.algorithms.readsensors import ReadSensors
-from pymote.channeltype import Udg
-from pymote.environment import Environment2D
-from pymote.logger import logger
-from pymote.networkgenerator import NetworkGenerator, NetworkGeneratorException
-from pymote.sensor import NeighborsSensor
+from pydistsim.algorithms.readsensors import ReadSensors
+from pydistsim.channeltype import Udg
+from pydistsim.environment import Environment2D
+from pydistsim.logger import logger
+from pydistsim.networkgenerator import NetworkGenerator, NetworkGeneratorException
+from pydistsim.sensor import NeighborsSensor
 
 
 class TestNetworkGeneration(unittest.TestCase):

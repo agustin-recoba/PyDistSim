@@ -1,6 +1,6 @@
 Installation
 ############
-This document assumes you are familiar with using command prompt or shell. It should outline the necessary steps to install software needed for using Pymote.
+This document assumes you are familiar with using command prompt or shell. It should outline the necessary steps to install software needed for using PyDistSim.
 
 Requirements
 ************
@@ -38,9 +38,9 @@ If you don't have all required packages already installed and/or want them insta
 
    Virtual environments *live* in a separate directories and they are independent form systemwide Python installation.
 
-Alternatively, if none of the above is your concern, although not recommended, all required packages can be installed systemwide using their respective instructions for appropriate OS and then Pymote can be installed by using::
+Alternatively, if none of the above is your concern, although not recommended, all required packages can be installed systemwide using their respective instructions for appropriate OS and then PyDistSim can be installed by using::
 
-    > pip install pymote
+    > pip install pydistsim
 
 
 Windows
@@ -49,15 +49,15 @@ Windows version can be installed in an isolated environment very easy:
 
 #. Install `WinPython <https://winpython.github.io/>`_ 2.7. WinPython has included python and all required packages inside simple exe installer and they are all installed one relocatable [*]_ directory.
 
-    .. [*] After directory reloacation change links in headers of ``Scripts/ipymote`` and ``Scripts/pymote-simgui`` and paths in ``Lib/site-packages/easy_install.pth`` and ``Lib/site-packages/Pymote.egg-link``.
+    .. [*] After directory reloacation change links in headers of ``Scripts/ipydistsim`` and ``Scripts/pydistsim-simgui`` and paths in ``Lib/site-packages/easy_install.pth`` and ``Lib/site-packages/PyDistSim.egg-link``.
 
-#. Run ``WinPython Command Prompt.exe`` located in WinPython installation dir and install latest official version of Pymote with ``pip install pymote``
+#. Run ``WinPython Command Prompt.exe`` located in WinPython installation dir and install latest official version of PyDistSim with ``pip install pydistsim``
 
 ..  note::
 
-    For latest development version instead of ``pip intall pymote`` use ``pip install -e git+https://github.com/darbula/pymote.git#egg=Pymote`` and for upgrade after git pull use run ``python setup.py develop`` inside pymote dir.
+    For latest development version instead of ``pip intall pydistsim`` use ``pip install -e git+https://github.com/agustin-recoba/PyDistSim#egg=PyDistrSim`` and for upgrade after git pull use run ``python setup.py develop`` inside pydistsim dir.
 
-For starting Pymote interactive console just run ``ipymote`` from the WinPython Command Prompt, and for simulation GUI run ``pymote-simgui``. For more details refer to :doc:`starting`.
+For starting PyDistSim interactive console just run ``ipydistsim`` from the WinPython Command Prompt, and for simulation GUI run ``pydistsim-simgui``. For more details refer to :doc:`starting`.
 
 Alternatively, installation can be done using :doc:`windows_virtualenv` but it is much more involved and not recommended.
 
@@ -80,7 +80,7 @@ Install pip and virtualenv::
 
 Create virtual environment::
 
-    $ virtualenv pymote_env --system-site-packages
+    $ virtualenv pydistsim_env --system-site-packages
 
 .. warning::
 
@@ -90,20 +90,20 @@ Create virtual environment::
 
 Activate virtual environment::
 
-    $ source pymote_env/bin/activate
+    $ source pydistsim_env/bin/activate
 
 
 Required packages
 =================
 Install required python packages into virtual environment::
 
-    (pymote_env)$ pip install numpy scipy ipython matplotlib networkx pypng
+    (pydistsim_env)$ pip install numpy scipy ipython matplotlib networkx pypng
 
 IPython notebook
 ----------------
 Optionally for IPython notebook install these::
 
-    (pymote_env)$ pip install tornado pyzmq pygments jinja2
+    (pydistsim_env)$ pip install tornado pyzmq pygments jinja2
 
 PySide
 ------
@@ -119,25 +119,25 @@ If you really want to install PySide into virtual environment quick option is to
 More time consuming option is to use pip. In this case you'll have to install packages needed for compilation using following commands::
 
     $ sudo apt-get install cmake qt4-qmake qt-sdk
-    (pymote_env)$ pip install pyside
+    (pydistsim_env)$ pip install pyside
 
 
-Pymote
+PyDistSim
 ======
-Finally, in order to download and install Pymote and all other required packages there are two aviliable options, use one of them:
+Finally, in order to download and install PyDistSim and all other required packages there are two aviliable options, use one of them:
 
 #. *Stable*: for latest stable version use package from PyPI::
 
-    (pymote_env)> pip install pymote
+    (pydistsim_env)> pip install pydistsim
 
-#. *Development*: to install latest development version of the Pymote use source from github repo::
+#. *Development*: to install latest development version of the PyDistSim use source from github repo::
 
-    (pymote_env)> pip install -e git+https://github.com/darbula/pymote.git#egg=Pymote
+    (pydistsim_env)> pip install -e git+https://github.com/agustin-recoba/PyDistSim#egg=PyDistrSim
 
-Starting Pymote
+Starting PyDistSim
 ===============
 
-Before starting, make sure that virtual environment is :ref:`activated <linux-venvact>` and run ``ipymote`` for interactive console or ``pymote-simgui`` for simulation GUI. For more details refer to :doc:`starting`.
+Before starting, make sure that virtual environment is :ref:`activated <linux-venvact>` and run ``ipydistsim`` for interactive console or ``pydistsim-simgui`` for simulation GUI. For more details refer to :doc:`starting`.
 
 ..
     Ubuntu

@@ -13,9 +13,8 @@ from numpy import (
 )
 from numpy.lib.type_check import imag, real
 from numpy.linalg import det, eig
-
-from pymote.logger import logger
-from pymote.utils.localization.stitchsubclusterselectors import (
+from pydistsim.logger import logger
+from pydistsim.utils.localization.stitchsubclusterselectors import (
     MaxCommonNodeSelector,
     StitchSubclusterSelectorBase,
 )
@@ -50,7 +49,7 @@ class BaseStitcher:
         3. If do_intra stitch subclusters internally.
 
         src and dst clusters are in format defined in
-        pymote.utils.memory.positions.Positions.subclusters:
+        pydistsim.utils.memory.positions.Positions.subclusters:
         [{node1: array(x1,y1), node2: array(x2,y2), ...}, ...]
 
         """

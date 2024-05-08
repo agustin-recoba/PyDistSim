@@ -1,7 +1,7 @@
 """
-Values are taken first from pymote.conf.global_settings as defaults.
+Values are taken first from pydistsim.conf.global_settings as defaults.
 To override default values
-- specify PYMOTE_SETTINGS_MODULE environment variable as module name to be used
+- specify PYDISTSIM_SETTINGS_MODULE environment variable as module name to be used
 
 or if settings are imported but not configured (accessed):
 - use settings.configure(SETTING1=value1, SETTING2=value2)
@@ -15,18 +15,18 @@ import importlib
 import os
 import sys
 
-from pymote.conf import global_settings
-from pymote.logger import logger
+from pydistsim.conf import global_settings
+from pydistsim.logger import logger
 
-ENVIRONMENT_VARIABLE = "PYMOTE_SETTINGS_MODULE"
+ENVIRONMENT_VARIABLE = "PYDISTSIM_SETTINGS_MODULE"
 
 
 class LazySettings:
     """
-    A lazy proxy for either global pymote settings or custom settings object.
+    A lazy proxy for either global pydistsim settings or custom settings object.
 
     The user can manually configure settings prior to using them. Otherwise,
-    pymote uses the settings module pointed to by PYMOTE_SETTINGS_MODULE.
+    pydistsim uses the settings module pointed to by PYDISTSIM_SETTINGS_MODULE.
 
     """
 
@@ -50,7 +50,7 @@ class LazySettings:
                 logger.error(
                     "For manual settings override use"
                     " settings.configure(SETTING1=value1,"
-                    " SETTING2=value2) or PYMOTE_SETTINGS_MODULE."
+                    " SETTING2=value2) or PYDISTSIM_SETTINGS_MODULE."
                 )
 
     def __delattr__(self, name):
@@ -63,7 +63,7 @@ class LazySettings:
             logger.error(
                 "For manual settings override use "
                 "settings.configure(SETTING1=val1, SETTING2=val2) "
-                "or PYMOTE_SETTINGS_MODULE."
+                "or PYDISTSIM_SETTINGS_MODULE."
             )
 
     # introspection support:

@@ -1,10 +1,10 @@
 import unittest
 
-from pymote.algorithms.niculescu2003.dvhop import DVHop
-from pymote.algorithms.niculescu2003.trilaterate import Trilaterate
-from pymote.networkgenerator import NetworkGenerator
-from pymote.sensor import TruePosSensor
-from pymote.simulation import Simulation
+from pydistsim.algorithms.niculescu2003.dvhop import DVHop
+from pydistsim.algorithms.niculescu2003.trilaterate import Trilaterate
+from pydistsim.networkgenerator import NetworkGenerator
+from pydistsim.sensor import TruePosSensor
+from pydistsim.simulation import Simulation
 
 
 class TestNiculescu2003(unittest.TestCase):

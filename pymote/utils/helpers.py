@@ -1,4 +1,4 @@
-def pymote_equal_objects(obj1, obj2):
+def pydistsim_equal_objects(obj1, obj2):
     """
     Compare two objects and their attributes, but allow for non immutable
     attributes to be equal up to their class.

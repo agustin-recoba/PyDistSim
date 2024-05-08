@@ -1,6 +1,6 @@
-from pymote.algorithm import NodeAlgorithm, StatusValues
-from pymote.message import Message
-from pymote.restrictions import Restrictions
+from pydistsim.algorithm import NodeAlgorithm, StatusValues
+from pydistsim.message import Message
+from pydistsim.restrictions import Restrictions
 
 
 class Flood(NodeAlgorithm):

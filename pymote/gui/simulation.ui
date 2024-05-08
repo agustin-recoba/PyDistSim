@@ -23,11 +23,11 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Pymote Simulation</string>
+   <string>PyDistSim Simulation</string>
   </property>
   <property name="windowIcon">
    <iconset resource="icons.qrc">
-    <normaloff>:/icons/pymote.png</normaloff>:/icons/pymote.png</iconset>
+    <normaloff>:/icons/pydistsim.png</normaloff>:/icons/pydistsim.png</iconset>
   </property>
   <property name="dockOptions">
    <set>QMainWindow::AllowTabbedDocks|QMainWindow::AnimatedDocks|QMainWindow::VerticalTabs</set>

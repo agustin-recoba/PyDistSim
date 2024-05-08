@@ -1,8 +1,8 @@
 import unittest
 
-from pymote.algorithm import NetworkAlgorithm, NodeAlgorithm
-from pymote.networkgenerator import NetworkGenerator
-from pymote.simulation import Simulation
+from pydistsim.algorithm import NetworkAlgorithm, NodeAlgorithm
+from pydistsim.networkgenerator import NetworkGenerator
+from pydistsim.simulation import Simulation
 
 
 class UnimplementedNodeAlgorithm(NodeAlgorithm): ...

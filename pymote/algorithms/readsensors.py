@@ -1,4 +1,4 @@
-from pymote.algorithm import NetworkAlgorithm
+from pydistsim.algorithm import NetworkAlgorithm
 
 
 class ReadSensors(NetworkAlgorithm):

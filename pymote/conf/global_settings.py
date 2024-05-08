@@ -1,7 +1,7 @@
-"""Default Pymote settings.
+"""Default PyDistSim settings.
 
 Override these with settings in the module pointed-to by the
-``PYMOTE_SETTINGS_MODULE`` environment variable or by using
+``PYDISTSIM_SETTINGS_MODULE`` environment variable or by using
 ``settings.configure(**settings)`` or ``settings.load('path.to.settings')``
 
 """
@@ -18,7 +18,7 @@ ENVIRONMENT = "Environment2D"
 ENVIRONMENT2D_SHAPE = (600, 600)
 
 #: default number of nodes, used in
-#: :class:`pymote.networkgenerator.NetworkGenerator`.
+#: :class:`pydistsim.networkgenerator.NetworkGenerator`.
 N_COUNT = 100
 
 #: No algorithms defined by default.
@@ -35,16 +35,16 @@ DEG_ATOL = 1
 #: Default communication range of nodes.
 COMM_RANGE = 100
 
-#: By default nodes have one sensor: :class:`pymote.sensor.NeighborsSensor`.
+#: By default nodes have one sensor: :class:`pydistsim.sensor.NeighborsSensor`.
 SENSORS = ("NeighborsSensor",)
 
 #: Not implemented yet
 ACTUATORS = ()
 
 #: Probability function (by default :py:data:`scipy.stats.norm`) and its
-#: parameters for :class:`pymote.sensor.AoASensor`
+#: parameters for :class:`pydistsim.sensor.AoASensor`
 AOA_PF_PARAMS = {"pf": scipy.stats.norm, "scale": 10 * pi / 180}  # in radians
 
 #: Probability function (by default :py:data:`scipy.stats.norm`) and its
-#: :class:`pymote.sensor.DistSensor`
+#: :class:`pydistsim.sensor.DistSensor`
 DIST_PF_PARAMS = {"pf": scipy.stats.norm, "scale": 10}

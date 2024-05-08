@@ -1,5 +1,5 @@
-import pymote.network as nt
-from pymote.utils.tree import get_root_node
+import pydistsim.network as nt
+from pydistsim.utils.tree import get_root_node
 
 
 def show_mst(net: nt.Network, treeKey="mst"):

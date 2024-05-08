@@ -1,6 +1,6 @@
 Writing documentation
 *********************
-This section describes certain not obvious details in writing documentation for Pymote in sphinx.
+This section describes certain not obvious details in writing documentation for PyDistSim in sphinx.
 
 
 Intersphinx

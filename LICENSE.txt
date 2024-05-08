@@ -1,7 +1,7 @@
 License
 =======
-XXXXXXX is a fork of Pymote, a project by originaly developed by Damir Arbula and distributed with the BSD license.
-XXXXXXX is distributed under the same license, now authored by Agustin Recoba.
+PyDistSim is a fork of Pymote, a project by originaly developed by Damir Arbula and distributed with the BSD license.
+PyDistSim is distributed under the same license, now authored by Agustin Recoba.
 
 ::
 

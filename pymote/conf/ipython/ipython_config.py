@@ -7,7 +7,7 @@ term_app = c.TerminalIPythonApp
 # and merge it into the current one.
 load_subconfig("ipython_config.py", profile="default")  # @UndefinedVariable
 lines = """
-from pymote import *
+from pydistsim import *
 %autoreload 2
 """
 

@@ -18,11 +18,10 @@ from numpy import (
 from numpy import sum as nsum
 from numpy import tile, zeros
 from numpy.linalg import inv, pinv
-
-from pymote.logger import logger
-from pymote.utils.localization.aoastitcher import AoAStitcher
-from pymote.utils.localization.diststitcher import DistStitcher
-from pymote.utils.memory.positions import Positions
+from pydistsim.logger import logger
+from pydistsim.utils.localization.aoastitcher import AoAStitcher
+from pydistsim.utils.localization.diststitcher import DistStitcher
+from pydistsim.utils.memory.positions import Positions
 
 
 def align_clusters(dst, src, scale):

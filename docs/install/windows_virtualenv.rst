@@ -53,7 +53,7 @@ To install ``virtualenv`` first install ``distribute`` and ``pip``:
     is not needed anymore so it can be closed. All subsequent commands should go in the regular
     Command prompt.
 
-Pymote virtual environment
+PyDistSim virtual environment
 --------------------------
 
 #.  To make a virtual environment in which all other packages are going to be installed first
@@ -61,59 +61,59 @@ Pymote virtual environment
     in the following steps we use ``C:\Users\user\Documents``::
 
         C:\Users\user> cd C:\Users\user\Documents
-        C:\Users\user\Documents> virtualenv pymote_env
-        New python executable in pymote_env\Scripts\python.exe
+        C:\Users\user\Documents> virtualenv pydistsim_env
+        New python executable in pydistsim_env\Scripts\python.exe
         Installing setuptools................done.
         Installing pip...................done.
 
-    This command has made a new directory ``pymote_env`` inside ``C:\Users\user\Documents`` with
+    This command has made a new directory ``pydistsim_env`` inside ``C:\Users\user\Documents`` with
     separate python interpreter and two necessary packages.
 
 .. _windows-venvact:
 
 #.  Activate environment::
 
-        C:\Users\user\Documents> pymote_env\Scripts\activate
-        (pymote_env) C:\Users\user\Documents>
+        C:\Users\user\Documents> pydistsim_env\Scripts\activate
+        (pydistsim_env) C:\Users\user\Documents>
 
     .. note::
 
-        The ``(pymote_env)`` prefix to prompt in the last line indicates that newly created environment
+        The ``(pydistsim_env)`` prefix to prompt in the last line indicates that newly created environment
         is activated. All subsequently installed packages from this modified command prompt end up in
         the activated environment. Environment can be deactivated with command ``deactivate``.
 
-#.  Set ``PYMOTE_ENV`` environment variable as path to ``pymote_env`` directory. This way all
+#.  Set ``PYDISTSIM_ENV`` environment variable as path to ``pydistsim_env`` directory. This way all
     executables that are not being started from the modified command prompt should know where
     to look for the environment and its packages.
 
     .. note::
 
-        In Windows Vista and later use command ``setx PYMOTE_ENV "C:\path\to\pymote_env"`` to save
+        In Windows Vista and later use command ``setx PYDISTSIM_ENV "C:\path\to\pydistsim_env"`` to save
         environment variable permanently. In XP use the normal way through Control Panel (`instructions <http://www.microsoft.com/resources/documentation/windows/xp/all/proddocs/en-us/sysdm_advancd_environmnt_addchange_variable.mspx?mfr=true>`_).
 
 #.  Launch text editor (use `Notepad++ <http://notepad-plus-plus.org/download>`_ or WordPad, do not
-    use plain Notepad) and open ``pymote_env\Scripts\activate.bat`` file. To display the ``.bat``
+    use plain Notepad) and open ``pydistsim_env\Scripts\activate.bat`` file. To display the ``.bat``
     files in open dialog you have to chose All Documents (\*.\*) from the file types dropdown.
 
 #.  Add line ``set IPYTHONDIR=%VIRTUAL_ENV%\.ipython`` *below* the line that sets ``VIRTUAL_ENV``
     environment variable, near the top. Save the document. This way IPython package which is not
     yet fully compatible with the virtualenv knows where to look for its conguration files.
 
-#.  Open ``pymote_env\Scripts\deactivate.bat`` in text editor and insert line ``set IPYTHONDIR=``
+#.  Open ``pydistsim_env\Scripts\deactivate.bat`` in text editor and insert line ``set IPYTHONDIR=``
     just below the line ``@echo off``, near the top of the document. Save the document.
 
 .. warning::
 
     After setting the environment variable and modifying ``activate.bat`` and ``deactivate.bat``
-    scripts you must restart the Command prompt and reenter/reactivate ``pymote_env``. If all goes
-    well commands ``echo %PYMOTE_ENV%`` and ``echo %IPYTHONDIR%`` should print environment paths.
+    scripts you must restart the Command prompt and reenter/reactivate ``pydistsim_env``. If all goes
+    well commands ``echo %PYDISTSIM_ENV%`` and ``echo %IPYTHONDIR%`` should print environment paths.
 
 Required packages
 =================
 
 All required packages are installed in the environment created in the previous section so before
 continuing ensure that the environment is activated. Active environment is indicated with prompt
-prefix i.e. ``(pymote_env)``.
+prefix i.e. ``(pydistsim_env)``.
 
 NumPy and SciPy
 ---------------
@@ -139,8 +139,8 @@ precompiled binaries and installing them into virtual environment using
     instructions (probably sse3, see the note below) install appropriate extracted ``.exe`` files
     (nosse|sse2|sse3) using ``easy_install`` command::
 
-        (pymote_env) C:\Users\user\Desktop> easy_install numpy-1.7.0-[nosse|sse2|sse3].exe
-        (pymote_env) C:\Users\user\Desktop> easy_install scipy-0.11.0-[nosse|sse2|sse3].exe
+        (pydistsim_env) C:\Users\user\Desktop> easy_install numpy-1.7.0-[nosse|sse2|sse3].exe
+        (pydistsim_env) C:\Users\user\Desktop> easy_install scipy-0.11.0-[nosse|sse2|sse3].exe
 
     .. note::
 
@@ -157,9 +157,9 @@ Matplotlib package
 is installed almost the same way as NumPy and SciPy packages in previous section using the
 appropriate binary `matplotlib-1.2.0.win32-py2.7.exe <https://github.com/downloads/matplotlib/matplotlib/matplotlib-1.2.0.win32-py2.7.exe>`_.
 The only difference is in the 3rd step where the extracted contents from directory
-``PLATLIB`` should be copied to ``pymote_env/Lib/site-packages/`` directory::
+``PLATLIB`` should be copied to ``pydistsim_env/Lib/site-packages/`` directory::
 
-    C:\Users\user\Desktop> xcopy /s matplotlib-1.2.0.win32-py2.7\PLATLIB\* %PYMOTE_ENV%\Lib\site-packages
+    C:\Users\user\Desktop> xcopy /s matplotlib-1.2.0.win32-py2.7\PLATLIB\* %PYDISTSIM_ENV%\Lib\site-packages
 
 
 Pyreadline
@@ -169,40 +169,40 @@ For Pyreadline package use ``easy_install`` as ``pip`` currently installs versio
 
 .. code-block:: bash
 
-    (pymote_env)> easy_install pyreadline
+    (pydistsim_env)> easy_install pyreadline
 
 
 PySide
 ------
-For Pymote GUI part of the library PySide Qt bindings for Python should be installed. This is
+For PyDistSim GUI part of the library PySide Qt bindings for Python should be installed. This is
 achieved `using this solution <http://stackoverflow.com/a/4673823/1247955>`__, that is, running
 following commands:
 
 .. code-block:: bash
 
-    (pymote_env)> easy_install PySide
-    (pymote_env)> python pymote_env\Scripts\pyside_postinstall.py -install
+    (pydistsim_env)> easy_install PySide
+    (pydistsim_env)> python pydistsim_env\Scripts\pyside_postinstall.py -install
 
-Pymote
+PyDistSim
 ======
-Finally, in order to download and install Pymote and all other required packages there are two
+Finally, in order to download and install PyDistSim and all other required packages there are two
 aviliable options, use one of them:
 
 #. Stable: for latest stable version use package from PyPI::
 
-    (pymote_env)> pip install pymote
+    (pydistsim_env)> pip install pydistsim
 
-#. Development: to install latest development version of the Pymote use source from github repo::
+#. Development: to install latest development version of the PyDistSim use source from github repo::
 
-    (pymote_env)> pip install -e git+https://github.com/darbula/pymote.git#egg=Pymote
+    (pydistsim_env)> pip install -e git+https://github.com/agustin-recoba/PyDistSim#egg=PyDistrSim
 
-.. _pymote-deps:
+.. _pydistsim-deps:
 
 To list all packages installed in the environment run ``pip freeze``. The output should look
 something like this::
 
-    (pymote_env)> pip freeze
-    Pymote==0.1.1
+    (pydistsim_env)> pip freeze
+    PyDistSim==0.1.1
     ipython==0.13.1
     matplotlib==1.2.0
     networkx==1.7
@@ -213,16 +213,16 @@ something like this::
     scipy==0.11.0
 
 
-Starting Pymote
+Starting PyDistSim
 ===============
 
-Before starting, make sure that virtual environment is activated :ref:`windows <windows-venvact>` and run ``ipymote`` for interactive console or ``pymote-simgui`` for simualtion GUI. For more details refer to :doc:`starting`.
+Before starting, make sure that virtual environment is activated :ref:`windows <windows-venvact>` and run ``ipydistsim`` for interactive console or ``pydistsim-simgui`` for simualtion GUI. For more details refer to :doc:`starting`.
 
 
 Additional customization
 ------------------------
 
-The recommended way to avoid starting command prompt, activating the virtual environment and running ``ipymote`` in it is to make a shortcut to the ``ipymote.exe`` file on the desktop, taskbar or start menu.
+The recommended way to avoid starting command prompt, activating the virtual environment and running ``ipydistsim`` in it is to make a shortcut to the ``ipydistsim.exe`` file on the desktop, taskbar or start menu.
 
 You can customize prompt can be additionaly customized by right clicking on the shortcut and selecting Properties from the menu. Highly recommended customizations are:
 
@@ -230,4 +230,4 @@ You can customize prompt can be additionaly customized by right clicking on the 
 * in Font tab change font to Consolas and size to 16
 * in Layout tab increase Screen buffer size Height from 300 to at least 3000
 
-The loading of the correct environment when shortcut is double clicked is possible via previously set ``PYMOTE_ENV`` environment variable which points to the environment location.
+The loading of the correct environment when shortcut is double clicked is possible via previously set ``PYDISTSIM_ENV`` environment variable which points to the environment location.

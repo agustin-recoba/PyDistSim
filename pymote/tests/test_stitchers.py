@@ -4,12 +4,11 @@ from numpy import array
 from numpy.core.numeric import concatenate, dot, nan
 from numpy.ma.core import cos, sin
 from numpy.random import rand
+from pydistsim.utils.localization.aoastitcher import AoAStitcher
+from pydistsim.utils.localization.diststitcher import DistStitcher
+from pydistsim.utils.localization.helpers import get_rms
+from pydistsim.utils.memory.positions import Positions
 from scipy.constants import pi
-
-from pymote.utils.localization.aoastitcher import AoAStitcher
-from pymote.utils.localization.diststitcher import DistStitcher
-from pymote.utils.localization.helpers import get_rms
-from pymote.utils.memory.positions import Positions
 
 
 class TestStitchers(unittest.TestCase):

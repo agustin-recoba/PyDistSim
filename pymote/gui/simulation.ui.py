@@ -79,7 +79,7 @@ class Ui_SimulationWindow:
         SimulationWindow.setSizePolicy(sizePolicy)
         SimulationWindow.setMinimumSize(QSize(1096, 800))
         icon = QIcon()
-        icon.addFile(":/icons/pymote.png", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(":/icons/pydistsim.png", QSize(), QIcon.Normal, QIcon.Off)
         SimulationWindow.setWindowIcon(icon)
         SimulationWindow.setDockOptions(
             QMainWindow.AllowTabbedDocks
@@ -437,7 +437,7 @@ class Ui_SimulationWindow:
 
     def retranslateUi(self, SimulationWindow):
         SimulationWindow.setWindowTitle(
-            QCoreApplication.translate("SimulationWindow", "Pymote Simulation", None)
+            QCoreApplication.translate("SimulationWindow", "PyDistSim Simulation", None)
         )
         self.actionRun.setText(
             QCoreApplication.translate("SimulationWindow", "Run", None)

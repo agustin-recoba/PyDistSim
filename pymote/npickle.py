@@ -6,7 +6,7 @@ import pickle as pickle
 from types import MethodType
 from typing import Any, Type
 
-from pymote.logger import logger
+from pydistsim.logger import logger
 
 
 def _get_fh(path: str, mode="r"):

@@ -1,10 +1,9 @@
 import unittest
 
 import scipy.stats
-
-from pymote.network import Network
-from pymote.node import Node
-from pymote.sensor import DistSensor, NeighborsSensor
+from pydistsim.network import Network
+from pydistsim.node import Node
+from pydistsim.sensor import DistSensor, NeighborsSensor
 
 
 class TestSensor(unittest.TestCase):

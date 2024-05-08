@@ -1,16 +1,16 @@
 import unittest
 
-from pymote import Node
-from pymote.algorithm import (
+from pydistsim import Node
+from pydistsim.algorithm import (
     ActionEnum,
     NetworkAlgorithm,
     NodeAlgorithm,
-    PymoteAlgorithmException,
+    PyDistSimAlgorithmException,
     StatusValues,
 )
-from pymote.network import PymoteNetworkError
-from pymote.networkgenerator import NetworkGenerator
-from pymote.simulation import Simulation
+from pydistsim.network import PyDistSimNetworkError
+from pydistsim.networkgenerator import NetworkGenerator
+from pydistsim.simulation import Simulation
 
 
 def set_algorithms(net, algorithms):
@@ -82,16 +82,16 @@ class TestAlgorithmsSetter(unittest.TestCase):
         self.check = [
             # wrong_format
             (
-                PymoteNetworkError,
+                PyDistSimNetworkError,
                 [
                     (SomeNodeAlgorithm, {"rp1": 1, "rp2": 2, "rp3": 3}),
                 ],
             ),
             # wrong_base_class
-            (PymoteNetworkError, ((Node, {}),)),
+            (PyDistSimNetworkError, ((Node, {}),)),
             # missing_req_params
             (
-                PymoteAlgorithmException,
+                PyDistSimAlgorithmException,
                 (
                     (
                         SomeNodeAlgorithm,
@@ -102,7 +102,7 @@ class TestAlgorithmsSetter(unittest.TestCase):
                 ),
             ),
             (
-                PymoteAlgorithmException,
+                PyDistSimAlgorithmException,
                 (
                     (
                         SomeAlgorithmWithInheritance,

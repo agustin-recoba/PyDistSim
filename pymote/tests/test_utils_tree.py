@@ -1,14 +1,13 @@
 import unittest
 
 from networkx import is_connected
-
-from pymote.algorithm import NodeAlgorithm
-from pymote.channeltype import ChannelType, Complete
-from pymote.conf import settings
-from pymote.environment import Environment2D
-from pymote.network import Network, PymoteNetworkError
-from pymote.node import Node
-from pymote.utils import tree, visualization
+from pydistsim.algorithm import NodeAlgorithm
+from pydistsim.channeltype import ChannelType, Complete
+from pydistsim.conf import settings
+from pydistsim.environment import Environment2D
+from pydistsim.network import Network, PyDistSimNetworkError
+from pydistsim.node import Node
+from pydistsim.utils import tree, visualization
 
 
 class TestNetwork(unittest.TestCase):

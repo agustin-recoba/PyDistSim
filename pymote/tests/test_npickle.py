@@ -1,10 +1,10 @@
 import os
 import unittest
 
-from pymote.algorithms.broadcast import Flood
-from pymote.network import Network
-from pymote.networkgenerator import NetworkGenerator
-from pymote.npickle import read_npickle, write_npickle
+from pydistsim.algorithms.broadcast import Flood
+from pydistsim.network import Network
+from pydistsim.networkgenerator import NetworkGenerator
+from pydistsim.npickle import read_npickle, write_npickle
 
 
 class TestPickle(unittest.TestCase):

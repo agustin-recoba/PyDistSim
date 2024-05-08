@@ -1,4 +1,4 @@
-load_subconfig("ipython_config.py", profile="pymote")
+load_subconfig("ipython_config.py", profile="pydistsim")
 # Configuration file for ipython-notebook.
 
 c = get_config()

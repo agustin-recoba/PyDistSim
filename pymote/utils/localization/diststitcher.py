@@ -1,7 +1,6 @@
 from numpy import dot
-
-from pymote.utils.localization.basestitcher import BaseStitcher
-from pymote.utils.localization.stitchsubclusterselectors import (
+from pydistsim.utils.localization.basestitcher import BaseStitcher
+from pydistsim.utils.localization.stitchsubclusterselectors import (
     MaxCommonNodeSelector,
     StitchSubclusterSelectorBase,
 )

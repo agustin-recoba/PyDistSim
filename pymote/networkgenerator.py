@@ -4,11 +4,10 @@ from networkx import is_connected
 from numpy import array, sign, sqrt
 from numpy.core.numeric import Inf
 from numpy.random import rand
-
-from pymote.conf import settings
-from pymote.logger import logger
-from pymote.network import Network
-from pymote.node import Node
+from pydistsim.conf import settings
+from pydistsim.logger import logger
+from pydistsim.network import Network
+from pydistsim.node import Node
 
 
 class NetworkGenerator:

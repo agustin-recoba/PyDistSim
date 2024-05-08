@@ -7,17 +7,17 @@ you followed the guide at ":ref:`installation`".
 To execute tests, pytest must be installed.
 All tests should be automatically found by recursively scanning directories.
 
-To run all tests run this from root pymote directory::
+To run all tests run this from root pydistsim directory::
 
     pytest
 
 To run selected test module::
 
-    pytest pymote/tests/test_algorithm.py
+    pytest pydistsim/tests/test_algorithm.py
 
 or selected test case::
 
-    pytest pymote/tests/test_algorithm.py::TestAlgorithmsSetter
+    pytest pydistsim/tests/test_algorithm.py::TestAlgorithmsSetter
 
 Tests coverage
 --------------

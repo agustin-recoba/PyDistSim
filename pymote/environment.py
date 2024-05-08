@@ -1,7 +1,6 @@
 import png
 from numpy import Inf, ones, sign, sqrt, uint8, vstack
-
-from pymote.conf import settings
+from pydistsim.conf import settings
 
 
 class Environment:

@@ -8,15 +8,14 @@ from numpy import array, max, min, pi, sign
 from numpy.core.numeric import Inf, allclose
 from numpy.lib.function_base import average
 from numpy.random import rand
-
-from pymote.algorithm import Algorithm
-from pymote.channeltype import ChannelType
-from pymote.conf import settings
-from pymote.environment import Environment
-from pymote.logger import logger
-from pymote.node import Node
-from pymote.sensor import CompositeSensor
-from pymote.utils.helpers import pymote_equal_objects
+from pydistsim.algorithm import Algorithm
+from pydistsim.channeltype import ChannelType
+from pydistsim.conf import settings
+from pydistsim.environment import Environment
+from pydistsim.logger import logger
+from pydistsim.node import Node
+from pydistsim.sensor import CompositeSensor
+from pydistsim.utils.helpers import pydistsim_equal_objects
 
 AlgorithmsParam = tuple[type[Algorithm] | tuple[type[Algorithm], dict]]
 
@@ -102,7 +101,7 @@ class Network(Graph):
         self.reset()
         self._algorithms = ()
         if not isinstance(algorithms, tuple):
-            raise PymoteNetworkError(NetwkErrorMsg.ALGORITHM)
+            raise PyDistSimNetworkError(NetwkErrorMsg.ALGORITHM)
         for algorithm in algorithms:
             if inspect.isclass(algorithm) and issubclass(algorithm, Algorithm):
                 self._algorithms += (algorithm(self),)
@@ -114,7 +113,7 @@ class Network(Graph):
             ):
                 self._algorithms += (algorithm[0](self, **algorithm[1]),)
             else:
-                raise PymoteNetworkError(NetwkErrorMsg.ALGORITHM)
+                raise PyDistSimNetworkError(NetwkErrorMsg.ALGORITHM)
 
         # If everything went ok, set algorithms param for coping
         self._algorithms_param = algorithms
@@ -138,7 +137,7 @@ class Network(Graph):
         """Remove node from network."""
         if node not in self.nodes():
             logger.error("Node not in network")
-            raise PymoteNetworkError(NetwkErrorMsg.NODE_NOT_IN_NET)
+            raise PyDistSimNetworkError(NetwkErrorMsg.NODE_NOT_IN_NET)
         super().remove_node(node)
         del self.pos[node]
         del self.labels[node]
@@ -162,7 +161,7 @@ class Network(Graph):
             node.network = self
         else:
             logger.exception("Node is already in another network, can't add.")
-            raise PymoteNetworkError(NetwkErrorMsg.NODE)
+            raise PyDistSimNetworkError(NetwkErrorMsg.NODE)
 
         pos = pos if pos is not None else self.find_random_pos(n=100)
         ori = ori if ori is not None else rand() * 2 * pi
@@ -177,7 +176,7 @@ class Network(Graph):
             self.recalculate_edges([node])
         else:
             logger.error("Given position is not free space.")
-            raise PymoteNetworkError(NetwkErrorMsg.NODE_SPACE)
+            raise PyDistSimNetworkError(NetwkErrorMsg.NODE_SPACE)
         return node
 
     def node_by_id(self, id_):
@@ -186,7 +185,7 @@ class Network(Graph):
             if n.id == id_:
                 return n
         logger.error("Network has no node with id %d." % id_)
-        raise PymoteNetworkError(NetwkErrorMsg.NODE_NOT_IN_NET)
+        raise PyDistSimNetworkError(NetwkErrorMsg.NODE_NOT_IN_NET)
 
     def avg_degree(self):
         return average(list(deg for n, deg in self.degree()))
@@ -222,7 +221,7 @@ class Network(Graph):
         """
         if len(self.algorithms) == 0:
             logger.error("There is no algorithm defined in the network.")
-            raise PymoteNetworkError(NetwkErrorMsg.ALGORITHM_NOT_FOUND)
+            raise PyDistSimNetworkError(NetwkErrorMsg.ALGORITHM_NOT_FOUND)
         if self.algorithmState["finished"]:
             if len(self.algorithms) > self.algorithmState["index"] + 1:
                 self.algorithmState["index"] += 1
@@ -349,7 +348,7 @@ class Network(Graph):
                 # Node routing
                 try:
                     self.send(message.nexthop, message)
-                except PymoteMessageUndeliverable as e:
+                except PyDistSimMessageUndeliverable as e:
                     print(e.message)
             elif message.destination is not None:
                 # Destination is neighbor
@@ -364,7 +363,9 @@ class Network(Graph):
                     #       in connected part of the network
                     self.send(message.destination, message)
                 else:
-                    raise PymoteMessageUndeliverable("Can't deliver message.", message)
+                    raise PyDistSimMessageUndeliverable(
+                        "Can't deliver message.", message
+                    )
 
     def broadcast(self, message):
         if message.source in self.nodes():
@@ -373,7 +374,7 @@ class Network(Graph):
                 neighbors_message.destination = neighbor
                 self.send(neighbor, neighbors_message)
         else:
-            raise PymoteMessageUndeliverable(
+            raise PyDistSimMessageUndeliverable(
                 "Source not in network. \
                                              Can't broadcast",
                 message,
@@ -384,7 +385,7 @@ class Network(Graph):
         if destination in self.nodes():
             destination.push_to_inbox(message)
         else:
-            raise PymoteMessageUndeliverable("Destination not in network.", message)
+            raise PyDistSimMessageUndeliverable("Destination not in network.", message)
 
     def get_size(self):
         """Returns network width and height based on nodes positions."""
@@ -492,7 +493,7 @@ class Network(Graph):
                 for node in self:
                     assert all(
                         map(
-                            lambda s1, s2: pymote_equal_objects(s1, s2),
+                            lambda s1, s2: pydistsim_equal_objects(s1, s2),
                             node.sensors,
                             compositeSensor.sensors,
                         )
@@ -512,14 +513,14 @@ class Network(Graph):
             elif param=='algorithms':
                 alg = self._algorithms
                 self.algorithms = value
-                assert(all(map(lambda a1, a2: pymote_equal_objects(a1, a2),
+                assert(all(map(lambda a1, a2: pydistsim_equal_objects(a1, a2),
                                alg, self.algorithms)))
                 #restore alg
                 self._algorithms = alg
             """
 
 
-class PymoteMessageUndeliverable(Exception):
+class PyDistSimMessageUndeliverable(Exception):
     def __init__(self, e, message):
         self.e = e
         self.message = message
@@ -540,7 +541,7 @@ class NetwkErrorMsg(StrEnum):
     ALGORITHM_NOT_FOUND = "Algorithm not found in network."
 
 
-class PymoteNetworkError(Exception):
+class PyDistSimNetworkError(Exception):
 
     def __init__(self, type_):
         if isinstance(type_, NetwkErrorMsg):

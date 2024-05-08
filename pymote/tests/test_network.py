@@ -2,14 +2,13 @@ import unittest
 
 import pytest
 from networkx import is_connected
-
-from pymote.algorithm import NodeAlgorithm
-from pymote.channeltype import ChannelType, Complete
-from pymote.conf import settings
-from pymote.environment import Environment2D
-from pymote.network import Network, PymoteNetworkError
-from pymote.node import Node
-from pymote.utils.tree import check_tree_key
+from pydistsim.algorithm import NodeAlgorithm
+from pydistsim.channeltype import ChannelType, Complete
+from pydistsim.conf import settings
+from pydistsim.environment import Environment2D
+from pydistsim.network import Network, PyDistSimNetworkError
+from pydistsim.node import Node
+from pydistsim.utils.tree import check_tree_key
 
 
 class TestNetwork(unittest.TestCase):
@@ -96,14 +95,14 @@ class TestNetwork(unittest.TestCase):
         assert self.node1 not in self.net.nodes()
 
         with self.assertLogs(level="ERROR"):
-            with self.assertRaises(PymoteNetworkError):
+            with self.assertRaises(PyDistSimNetworkError):
                 self.net.remove_node(self.node1)
 
         self.net.add_node(self.node1, pos=pos)
 
     def test_add_node_error_in_other_net(self):
         """Test adding node to network."""
-        with self.assertRaises(PymoteNetworkError):
+        with self.assertRaises(PyDistSimNetworkError):
             self.net.add_node(self.node_in_other_net)
 
     def test_get_current_algorithm(self):
@@ -113,7 +112,7 @@ class TestNetwork(unittest.TestCase):
         self.net.algorithms = ()
 
         with self.assertLogs(level="ERROR"):
-            with self.assertRaises(PymoteNetworkError):
+            with self.assertRaises(PyDistSimNetworkError):
                 self.net.get_current_algorithm()
 
         self.net.algorithms = (NodeAlgorithm,)

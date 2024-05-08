@@ -1,7 +1,6 @@
 from numpy import sqrt
 from numpy.random import random
-
-from pymote.conf import settings
+from pydistsim.conf import settings
 
 
 class ChannelType:

@@ -1,6 +1,6 @@
-from pymote.algorithm import NodeAlgorithm, StatusValues
-from pymote.logger import logger
-from pymote.message import Message
+from pydistsim.algorithm import NodeAlgorithm, StatusValues
+from pydistsim.logger import logger
+from pydistsim.message import Message
 
 
 class YoYo(NodeAlgorithm):

@@ -1,3 +1,3 @@
 @echo off
-if NOT "%PYMOTE_ENV%" == "" ( call %PYMOTE_ENV%\Scripts\activate.bat )
-ipython --pylab=qt --profile=pymote
+if NOT "%PYDISTSIM_ENV%" == "" ( call %PYDISTSIM_ENV%\Scripts\activate.bat )
+ipython --pylab=qt --profile=pydistsim

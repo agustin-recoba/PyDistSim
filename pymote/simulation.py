@@ -1,10 +1,9 @@
 import logging
 
+from pydistsim.algorithm import Algorithm, NetworkAlgorithm, NodeAlgorithm
+from pydistsim.logger import LogLevels
+from pydistsim.network import Network
 from PySide6.QtCore import SIGNAL, QThread
-
-from pymote.algorithm import Algorithm, NetworkAlgorithm, NodeAlgorithm
-from pymote.logger import LogLevels
-from pymote.network import Network
 
 
 class Simulation(QThread):
@@ -18,7 +17,7 @@ class Simulation(QThread):
         self._network = network
         self._network.simulation = self
         self.stepsLeft = 0
-        self.logger = logging.getLogger("pymote.simulation")
+        self.logger = logging.getLogger("pydistsim.simulation")
         self.logger.setLevel(logLevel)
         self.logger.debug("Simulation %s created successfully." % (hex(id(self))))
         QThread.__init__(self)

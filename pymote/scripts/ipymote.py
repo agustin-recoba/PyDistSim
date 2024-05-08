@@ -1,12 +1,12 @@
-def start_ipymote():
+def start_ipydistsim():
     import os
     import sys
 
     if sys.platform.startswith("win32") or sys.platform.startswith("linux2"):
         try:
-            os.environ["VIRTUAL_ENV"] = os.environ["PYMOTE_ENV"]
+            os.environ["VIRTUAL_ENV"] = os.environ["PYDISTSIM_ENV"]
             os.environ["IPYTHONDIR"] = os.path.join(
-                os.environ["PYMOTE_ENV"], ".ipython"
+                os.environ["PYDISTSIM_ENV"], ".ipython"
             )
         except KeyError:
             pass
@@ -14,7 +14,7 @@ def start_ipymote():
         from IPython.frontend.terminal.ipapp import TerminalIPythonApp
 
         app = TerminalIPythonApp.instance()
-        app.initialize(argv=["--profile=pymote"])
+        app.initialize(argv=["--profile=pydistsim"])
         app.start()
 
     # TODO: support other platforms

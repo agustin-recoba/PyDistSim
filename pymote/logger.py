@@ -14,11 +14,11 @@ class LogLevels(IntEnum):
 LOG_CONFIG = {
     "version": 1,
     "loggers": {
-        "pymote": {
+        "pydistsim": {
             "level": LogLevels.WARNING,
             "handlers": ["fileHandler", "consoleHandler"],
         },
-        "pymote.simulation": {
+        "pydistsim.simulation": {
             "level": LogLevels.DEBUG,
             "handlers": ["simFileHandler"],
             "propagate": 1,
@@ -29,7 +29,7 @@ LOG_CONFIG = {
             "class": "logging.FileHandler",
             "level": LogLevels.DEBUG,
             "formatter": "fileFormatter",
-            "filename": "pymote.log",
+            "filename": "pydistsim.log",
         },
         "consoleHandler": {
             "class": "logging.StreamHandler",
@@ -56,4 +56,4 @@ LOG_CONFIG = {
 }
 
 logging.config.dictConfig(LOG_CONFIG)
-logger = logging.getLogger("pymote")
+logger = logging.getLogger("pydistsim")
