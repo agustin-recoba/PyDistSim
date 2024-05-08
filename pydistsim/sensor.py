@@ -27,26 +27,39 @@ To manually set sensor parameters first make an sensor instance:
 import inspect
 from collections.abc import Callable
 from functools import wraps
+from typing import TYPE_CHECKING
 
 from numpy import arctan2, pi, sqrt
 from scipy.stats import rv_continuous, rv_discrete
 
 import pydistsim.conf as s
 
+if TYPE_CHECKING:
+    from pydistsim.node import Node
+
 
 class Sensor:
     """
     Abstract base class for all Sensors.
 
-    Sensor provides a certain capability for a node, information about the
-    outside world. It could could be a capability to detect neighbors, distance
-    to them or to get the environment temperature.
+    Sensor provides a certain capability for a node, providing information about
+    the outside world. It could be a capability to detect neighbors, measure
+    distance to them, or retrieve the environment temperature.
 
+    :cvar pf_settings_key: The key used to retrieve the probability function
+                           settings from the settings module.
+    :vartype pf_settings_key: str
     """
 
     pf_settings_key = ""
 
     def __init__(self, pf_params={}):
+        """
+        Initialize the Sensor object.
+
+        :param pf_params: Additional parameters for the probability function.
+        :type pf_params: dict
+        """
         pf_params_final = getattr(s.settings, self.pf_settings_key, {})
         pf_params_final.update(pf_params)
         if pf_params_final:
@@ -55,15 +68,34 @@ class Sensor:
             self.probabilityFunction = None
 
     def name(self):
+        """
+        Get the name of the Sensor class.
+
+        :return: The name of the Sensor class.
+        :rtype: str
+        """
         return self.__class__.__name__
 
     def read(self) -> dict:
-        """This method should be overriden in subclass."""
+        """
+        Read the sensor data.
+
+        This method should be overridden in a subclass.
+
+        :return: The sensor data.
+        :rtype: dict
+        """
         pass
 
 
 def node_in_network(fun: Callable):
-    """Decorator function that checks if node is in network."""
+    """Decorator function that checks if node is in network.
+
+    :param fun: The function to be decorated.
+    :type fun: Callable
+    :return: The decorated function.
+    :rtype: Callable
+    """
 
     @wraps(fun)
     def f(sensor: Sensor, node: "Node"):
@@ -77,20 +109,44 @@ def node_in_network(fun: Callable):
 
 
 class NeighborsSensor(Sensor):
-    """Provides list of node's neighbors."""
+    """Provides a list of a node's neighbors.
+
+    This sensor class is used to retrieve the list of neighbors for a given node in a network.
+    """
 
     @node_in_network
     def read(self, node: "Node"):
+        """
+        Retrieve the list of neighbors for a given node.
+
+        :param node: The node for which to retrieve the neighbors.
+        :type node: Node
+        :return: A dictionary containing the list of neighbors.
+        :rtype: dict
+        """
         return {"Neighbors": list(node.network.neighbors(node))}
 
 
 class AoASensor(Sensor):
-    """Provides azimuth between node and its neighbors."""
+    """
+    Provides azimuth between node and its neighbors.
+
+    This sensor calculates the azimuth angle between a node and its neighbors in a network.
+    It uses the position and orientation information of the nodes to calculate the azimuth angle.
+    """
 
     pf_settings_key = "AOA_PF_PARAMS"
 
     @node_in_network
     def read(self, node: "Node"):
+        """
+        Reads the azimuth angle between a node and its neighbors.
+
+        :param node: The node for which to calculate the azimuth angle.
+        :type node: Node
+        :return: A dictionary containing the azimuth angle measurements between the node and its neighbors.
+        :rtype: dict
+        """
         network = node.network
         measurements = {}
         p = network.pos[node]
@@ -110,6 +166,14 @@ class DistSensor(Sensor):
 
     @node_in_network
     def read(self, node: "Node"):
+        """
+        Read the distances from the current node to its neighbors.
+
+        :param node: The current node.
+        :type node: Node
+        :return: A dictionary containing the distances to the neighbors.
+        :rtype: dict
+        """
         network = node.network
         measurements = {}
         p = network.pos[node]
@@ -126,6 +190,15 @@ class TruePosSensor(Sensor):
 
     @node_in_network
     def read(self, node: "Node"):
+        """
+        Read the sensor data from the given node.
+
+        :param node: The node from which to read the sensor data.
+        :type node: Node
+
+        :return: A dictionary containing the sensor data.
+        :rtype: dict
+        """
         return {"TruePos": node.network.pos[node]}
 
 
@@ -143,12 +216,12 @@ class CompositeSensor:
         self, node: "Node", componentSensors: tuple[type[Sensor] | str, ...] = None
     ):
         """
-        Arguments:
-            node (:class:`Node`):
-                Node that has this composite sensor is attached to.
-            componentSensors (tuple):
-                Tuple of :class:`Sensor` subclasses or their class names.
+        Initialize the Sensor object.
 
+        :param node: The Node that has this composite sensor attached to.
+        :type node: Node
+        :param componentSensors: Tuple of Sensor subclasses or their class names.
+        :type componentSensors: tuple[type[Sensor] | str, ...]
         """
         self.node = node
         self._sensors = ()
@@ -156,6 +229,11 @@ class CompositeSensor:
 
     @property
     def sensors(self) -> tuple[Sensor, ...]:
+        """
+        Get the sensors associated with the object.
+
+        :return: A tuple of Sensor objects.
+        """
         return self._sensors
 
     @sensors.setter
@@ -175,12 +253,27 @@ class CompositeSensor:
                 self._sensors += (sensor,)
 
     def get_sensor(self, name: str) -> Sensor:
+        """
+        Get a sensor by its name.
+
+        :param name: The name of the sensor.
+        :type name: str
+        :return: The sensor object.
+        :rtype: Sensor
+        :raises SensorError: If multiple or no sensors are found with the given name.
+        """
         sensor = [s for s in self._sensors if s.name() == name]
         if len(sensor) != 1:
             raise SensorError("Multiple or no sensors found with name %s" % name)
         return sensor[0]
 
     def read(self):
+        """
+        Read measurements from all sensors.
+
+        :return: A dictionary containing the measurements from all sensors.
+        :rtype: dict
+        """
         measurements = {}
         for sensor in self._sensors:
             measurements.update(sensor.read(self.node))
@@ -192,8 +285,13 @@ class ProbabilityFunction:
 
     def __init__(self, scale, pf: rv_continuous | rv_discrete):
         """
-        pf: probability function (i.e. :py:data:`scipy.stats.norm`)
-        scale: pf parameter
+        Initialize the Sensor object.
+
+        :param scale: The scale parameter for the probability function.
+        :type scale: float
+
+        :param pf: The probability function (e.g. :py:data:`scipy.stats.norm`).
+        :type pf: rv_continuous or rv_discrete
         """
         self.pf = pf  # class or gen object
         self.name = self.pf.__class__.__name__

@@ -4,6 +4,10 @@ from enum import IntEnum
 
 
 class LogLevels(IntEnum):
+    """
+    Enum class representing different log levels.
+    """
+
     DEBUG = logging.DEBUG
     INFO = logging.INFO
     WARNING = logging.WARNING

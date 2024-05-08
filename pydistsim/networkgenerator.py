@@ -12,6 +12,9 @@ from pydistsim.node import Node
 
 
 class NetworkGenerator:
+    """
+    Class for generating networks with specified properties.
+    """
 
     def __init__(
         self,
@@ -26,32 +29,22 @@ class NetworkGenerator:
         **kwargs,
     ):
         """
-        Arguments:
-            n_count (int):
-                number of nodes, if None settings.N_COUNT is used
-            n_min (int):
-                minimum number of nodes, if not set it is equal to n_count
-            n_max (int):
-                maximum number of nodes, if not set it is equal to n_count
-            enforce_connected (bool):
-                if True network must be fully connected
-            degree (int):
-                average number of neighbors per node
-            comm_range (int):
-                nodes communication range, if None settings.COMM_RANGE is used
-                and it is a signal that this value can be changed if needed to
-                satisfy other wanted properties (connected and degree)
-            method (str):
-                sufix of the name of the method used to generate network
-        kwargs can be network and node __init__ kwargs i.e.:
-            environment (:class:`Environment`):
-                environment in which the network should be created, if None
-                settings.ENVIRONMENT is used
-            channelType (:class:`ChannelType`)
-            algorithms (tuple)
-            commRange (int):
-                overrides `comm_range`
-            sensors (tuple)
+        :param n_count: int, number of nodes, if None settings.N_COUNT is used
+        :param n_min: int, minimum number of nodes, if not set it is equal to n_count
+        :param n_max: int, maximum number of nodes, if not set it is equal to n_count
+        :param enforce_connected: bool, if True network must be fully connected
+        :param degree: int, average number of neighbors per node
+        :param comm_range: int, nodes communication range, if None settings.COMM_RANGE is used
+            and it is a signal that this value can be changed if needed to
+            satisfy other wanted properties (connected and degree)
+        :param method: str, sufix of the name of the method used to generate network
+        :param kwargs: network and node __init__ kwargs i.e.:
+            - environment: Environment, environment in which the network should be created, if None
+            settings.ENVIRONMENT is used
+            - channelType: ChannelType
+            - algorithms: tuple
+            - commRange: int, overrides `comm_range`
+            - sensors: tuple
 
         Basic usage:
 
@@ -86,14 +79,16 @@ class NetworkGenerator:
         self.kwargs = kwargs
 
     def _create_modify_network(self, net=None, step=1):
-        """Helper method for creating new or modifying given network.
+        """
+        Helper method for creating a new network or modifying a given network.
 
-        Arguments:
-            net (int):
-                network to modify, if None create from scratch
-            step:
-                if >0 new network should be more dense for <0 less dense
+        :param net: Network object, optional
+            The network to modify. If None, create a new network from scratch.
+        :param step: int, optional
+            If step > 0, the new network should be more dense. If step < 0, the new network should be less dense.
 
+        :return: Network object or None
+            The modified network if successful, None otherwise.
         """
         if net is None:
             net = Network(**self.kwargs)
@@ -126,6 +121,14 @@ class NetworkGenerator:
         return net
 
     def _are_conditions_satisfied(self, net):
+        """
+        Check if the conditions for the network are satisfied.
+
+        :param net: The network to check the conditions for.
+        :type net: Network
+        :return: The condition value.
+        :rtype: int
+        """
         cr = net.nodes_sorted()[0].commRange
         if self.enforce_connected and not is_connected(net):
             logger.debug("Not connected")
@@ -143,7 +146,14 @@ class NetworkGenerator:
         return 0
 
     def generate_random_network(self, net=None):
-        """Basic method: generates network with randomly positioned nodes."""
+        """
+        Generates a random network with randomly positioned nodes.
+
+        :param net: The network to modify. If not provided, a new network will be created.
+        :type net: Network, optional
+        :return: The generated network.
+        :rtype: Network
+        """
         # TODO: try some more advanced algorithm for situation when
         # both connected network and too small degree are needed
         # that is agnostic to actual dimensions of the environment
@@ -166,13 +176,16 @@ class NetworkGenerator:
 
     def generate_neigborhood_network(self):
         """
-        Generates network where all nodes are in one hop neighborhood of
+        Generates a network where all nodes are in one hop neighborhood of
         at least one node.
 
-        Finds out node in the middle, that is the node with minimum maximum
-        distance to all other nodes and sets that distance as new commRange.
+        Finds out the node in the middle, which is the node with the minimum maximum
+        distance to all other nodes, and sets that distance as the new commRange.
 
         This generator ignores all other parameters except comm_range and n counts.
+
+        :return: The generated network.
+        :rtype: Network
         """
         net = self._create_modify_network()
 
@@ -189,11 +202,13 @@ class NetworkGenerator:
 
     def generate_homogeneous_network(self, randomness=0.11):
         """
-        Generates network where nodes are located approximately homogeneous.
+        Generates a network where nodes are located approximately homogeneous.
 
-        Parameter randomness controls random perturbation of the nodes, it is
-        given as a part of the environment size.
+        :param randomness: Controls random perturbation of the nodes. It is given as a part of the environment size.
+        :type randomness: float
 
+        :return: The generated random network.
+        :rtype: Network
         """
         net = self._create_modify_network()
         n = len(net)
@@ -217,9 +232,14 @@ class NetworkGenerator:
 
 def generate_mesh_positions(env, n):
     """
-    Strategy: put rectangle mesh with intersections distance d above
-    environment image and try to minimize difference between number of
-    intersections in environment's free space and n by varying d.
+    Generate mesh positions for the given environment and number of intersections.
+
+    :param env: The environment object.
+    :type env: Environment
+    :param n: The desired number of intersections.
+    :type n: int
+    :return: An array of mesh positions.
+    :rtype: numpy.ndarray
     """
     h, w = env.im.shape
     # initial d
