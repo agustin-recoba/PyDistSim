@@ -40,86 +40,42 @@ If you don't have all required packages already installed and/or want them insta
 
 Alternatively, if none of the above is your concern, although not recommended, all required packages can be installed systemwide using their respective instructions for appropriate OS and then PyDistSim can be installed by using::
 
-    > pip install pydistsim
+    $ pip install pydistsim
 
 
 Windows
 *******
-Windows version can be installed in an isolated environment very easy:
+Windows version should be as simple as installing `Python 3.11 for windows <https://www.python.org/downloads/release/python-3110/>`_ and running ``pip install pydistsim``.
 
-#. Install `WinPython <https://winpython.github.io/>`_ 2.7. WinPython has included python and all required packages inside simple exe installer and they are all installed one relocatable [*]_ directory.
-
-    .. [*] After directory reloacation change links in headers of ``Scripts/ipydistsim`` and ``Scripts/pydistsim-simgui`` and paths in ``Lib/site-packages/easy_install.pth`` and ``Lib/site-packages/PyDistSim.egg-link``.
-
-#. Run ``WinPython Command Prompt.exe`` located in WinPython installation dir and install latest official version of PyDistSim with ``pip install pydistsim``
-
-..  note::
-
-    For latest development version instead of ``pip intall pydistsim`` use ``pip install -e git+https://github.com/agustin-recoba/PyDistSim#egg=PyDistrSim`` and for upgrade after git pull use run ``python setup.py develop`` inside pydistsim dir.
-
-For starting PyDistSim interactive console just run ``ipydistsim`` from the WinPython Command Prompt, and for simulation GUI run ``pydistsim-simgui``. For more details refer to :doc:`starting`.
-
-Alternatively, installation can be done using :doc:`windows_virtualenv` but it is much more involved and not recommended.
-
-
-Linux (Ubuntu)
+Linux (tested only on Ubuntu)
 **************
 
-Python 3 should already be installed on all new releases of Linux.
+To install Python 3.11, run::
 
-Install packages required for getting and compiling the source::
+    $ sudo apt install python3.11
 
-    $ sudo apt-get install git libatlas-dev libpng12-dev libfreetype6 libfreetype6-dev g++ libzmq-dev liblapack-dev gfortran python-dev build-essential
+Depending of the version of Ubuntu, some packages are required for getting and compiling the source::
+
+    $ sudo apt-get install libxkbcommon-x11-0 libegl1 opencv-python-headless libgl1-mesa-glx
 
 Virtualenv
 ==========
 
-Install pip and virtualenv::
+pip and virtualenv (venv) are included in Python 3.11. To create a new virtual environment run::
 
-    $ sudo apt-get install python-pip python-virtualenv
-
-Create virtual environment::
-
-    $ virtualenv pydistsim_env --system-site-packages
-
-.. warning::
-
-    If you want to avoid using `--system-site-packages` then PySide package has to be installed in virtualenv which is slightly involved or time and disk-space consuming. Both procedures are described below in PySide section.
+    $ python3.11 -m venv pydistsim_env
 
 .. _linux-venvact:
 
-Activate virtual environment::
+Activate virtual environment on Linux::
 
     $ source pydistsim_env/bin/activate
 
+.. _windows-venvact:
 
-Required packages
-=================
-Install required python packages into virtual environment::
+Activate virtual environment on Windows::
 
-    (pydistsim_env)$ pip install numpy scipy ipython matplotlib networkx pypng
-
-IPython notebook
-----------------
-Optionally for IPython notebook install these::
-
-    (pydistsim_env)$ pip install tornado pyzmq pygments jinja2
-
-PySide
-------
-Installing PySide into virtual environment can take some skill or time and disk space. To avoid this, it can be installed systemwide (if `--system-site-packages` option is used when creating virtualenv, as noted above) using `these instructions <http://qt-project.org/wiki/PySide_Binaries_Linux>`_ or simply like this::
-
-    $ sudo add-apt-repository ppa:pyside
-    $ sudo apt-get update
-    $ sudo apt-get install python-pyside
-
-
-If you really want to install PySide into virtual environment quick option is to follow `this solution <http://stackoverflow.com/a/1962076>`_ or simmilar and even better `solution <http://stackoverflow.com/a/8160111>`_
-
-More time consuming option is to use pip. In this case you'll have to install packages needed for compilation using following commands::
-
-    $ sudo apt-get install cmake qt4-qmake qt-sdk
-    (pydistsim_env)$ pip install pyside
+    $ pydistsim_env\Scripts\activate
 
 
 PyDistSim
@@ -138,20 +94,5 @@ Starting PyDistSim
 ===============
 
 Before starting, make sure that virtual environment is :ref:`activated <linux-venvact>` and run ``ipydistsim`` for interactive console or ``pydistsim-simgui`` for simulation GUI. For more details refer to :doc:`starting`.
-
-..
-    Ubuntu
-    ******
-    http://cysec.org/content/installing-matplotlib-and-numpy-virtualenv
-    **TODO**.
-
-    curl -O http://python-distribute.org/distribute_setup.py
-    python distribute_setup.py
-    easy_install pip
-
-    Mac OSX
-    *******
-
-    **TODO**
 
 .. _virtualenv: http://www.virtualenv.org/
