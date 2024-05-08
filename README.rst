@@ -13,6 +13,10 @@ PyDistSim
     :target: https://pydistsim.readthedocs.io/?badge=main
     :alt: Documentation Status
 
+.. image:: https://www.codefactor.io/repository/github/agustin-recoba/pydistsim/badge
+   :target: https://www.codefactor.io/repository/github/agustin-recoba/pydistsim
+   :alt: CodeFactor
+
 
 PyDistSim is a Python package for event-based simulation and evaluation of distributed algorithms. It is a fork of the deprecated `Pymote <https://github.com/darbula/pymote>`_.
 
