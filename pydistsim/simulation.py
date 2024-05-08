@@ -1,9 +1,10 @@
 import logging
 
+from PySide6.QtCore import SIGNAL, QThread
+
 from pydistsim.algorithm import Algorithm, NetworkAlgorithm, NodeAlgorithm
 from pydistsim.logger import LogLevels
 from pydistsim.network import Network
-from PySide6.QtCore import SIGNAL, QThread
 
 
 class Simulation(QThread):

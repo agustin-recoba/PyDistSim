@@ -1,5 +1,6 @@
 from numpy import sqrt
 from numpy.random import random
+
 from pydistsim.conf import settings
 
 

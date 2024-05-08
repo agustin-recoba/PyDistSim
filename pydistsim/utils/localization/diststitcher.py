@@ -1,4 +1,5 @@
 from numpy import dot
+
 from pydistsim.utils.localization.basestitcher import BaseStitcher
 from pydistsim.utils.localization.stitchsubclusterselectors import (
     MaxCommonNodeSelector,

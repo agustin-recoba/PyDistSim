@@ -13,6 +13,7 @@ from numpy import (
 )
 from numpy.lib.type_check import imag, real
 from numpy.linalg import det, eig
+
 from pydistsim.logger import logger
 from pydistsim.utils.localization.stitchsubclusterselectors import (
     MaxCommonNodeSelector,

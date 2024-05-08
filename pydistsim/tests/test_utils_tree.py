@@ -1,6 +1,7 @@
 import unittest
 
 from networkx import is_connected
+
 from pydistsim.algorithm import NodeAlgorithm
 from pydistsim.channeltype import ChannelType, Complete
 from pydistsim.conf import settings

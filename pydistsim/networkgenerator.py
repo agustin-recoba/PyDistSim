@@ -4,6 +4,7 @@ from networkx import is_connected
 from numpy import array, sign, sqrt
 from numpy.core.numeric import Inf
 from numpy.random import rand
+
 from pydistsim.conf import settings
 from pydistsim.logger import logger
 from pydistsim.network import Network

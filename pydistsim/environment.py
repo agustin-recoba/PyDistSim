@@ -1,5 +1,6 @@
 import png
 from numpy import Inf, ones, sign, sqrt, uint8, vstack
+
 from pydistsim.conf import settings
 
 

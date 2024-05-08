@@ -1,4 +1,5 @@
 from numpy import array, concatenate, dot, sqrt
+
 from pydistsim.algorithms.niculescu2003.floodingupdate import FloodingUpdate
 
 

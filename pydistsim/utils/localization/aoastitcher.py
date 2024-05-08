@@ -1,5 +1,6 @@
 from numpy import arctan2, array, cos, dot, sin, sqrt
 from numpy.linalg import det
+
 from pydistsim.utils.localization.basestitcher import BaseStitcher
 from pydistsim.utils.localization.stitchsubclusterselectors import (
     MaxCommonNodeSelector,

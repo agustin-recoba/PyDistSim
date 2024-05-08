@@ -4,6 +4,7 @@ from inspect import isclass
 
 from networkx import is_connected
 from numpy.core.numeric import Inf
+
 from pydistsim.algorithms.readsensors import ReadSensors
 from pydistsim.channeltype import Udg
 from pydistsim.environment import Environment2D

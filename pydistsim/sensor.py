@@ -28,9 +28,10 @@ import inspect
 from collections.abc import Callable
 from functools import wraps
 
-import pydistsim.conf as s
 from numpy import arctan2, pi, sqrt
 from scipy.stats import rv_continuous, rv_discrete
+
+import pydistsim.conf as s
 
 
 class Sensor:

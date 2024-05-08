@@ -18,6 +18,7 @@ from numpy import (
 from numpy import sum as nsum
 from numpy import tile, zeros
 from numpy.linalg import inv, pinv
+
 from pydistsim.logger import logger
 from pydistsim.utils.localization.aoastitcher import AoAStitcher
 from pydistsim.utils.localization.diststitcher import DistStitcher

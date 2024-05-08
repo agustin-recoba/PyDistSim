@@ -10,11 +10,12 @@ from matplotlib.collections import LineCollection, PatchCollection
 from matplotlib.figure import Figure
 from matplotlib.patches import Circle
 from networkx.drawing.nx_pylab import draw_networkx_edges
-from pydistsim import *  # @UnusedWildImport
-from pydistsim.algorithm import NodeAlgorithm
 from PySide6.QtCore import SIGNAL, QEvent, QRect, QSize
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QFileDialog, QMainWindow, QMenu, QMessageBox
+
+from pydistsim import *  # @UnusedWildImport
+from pydistsim.algorithm import NodeAlgorithm
 
 try:
     from .dictionarytreemodel import DictionaryTreeModel

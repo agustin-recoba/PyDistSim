@@ -8,6 +8,7 @@ from numpy import array, max, min, pi, sign
 from numpy.core.numeric import Inf, allclose
 from numpy.lib.function_base import average
 from numpy.random import rand
+
 from pydistsim.algorithm import Algorithm
 from pydistsim.channeltype import ChannelType
 from pydistsim.conf import settings

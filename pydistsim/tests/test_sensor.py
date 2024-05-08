@@ -1,6 +1,7 @@
 import unittest
 
 import scipy.stats
+
 from pydistsim.network import Network
 from pydistsim.node import Node
 from pydistsim.sensor import DistSensor, NeighborsSensor
