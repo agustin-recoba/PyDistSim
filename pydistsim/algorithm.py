@@ -18,7 +18,7 @@ class ActionEnum(StrEnum):
 
 MSG_META_HEADER_MAP = {
     MessageMetaHeader.NORMAL_MESSAGE: ActionEnum.receiving,
-    MessageMetaHeader.INITALIZATION_MESSAGE: ActionEnum.spontaneously,
+    MessageMetaHeader.INITIALIZATION_MESSAGE: ActionEnum.spontaneously,
     MessageMetaHeader.ALARM_MESSAGE: ActionEnum.alarm,
 }
 
@@ -160,7 +160,7 @@ class NodeAlgorithm(Algorithm):
 
     """
 
-    INI = MessageMetaHeader.INITALIZATION_MESSAGE
+    INI = MessageMetaHeader.INITIALIZATION_MESSAGE
 
     class Status(StatusValues):
         IDLE = "IDLE"
