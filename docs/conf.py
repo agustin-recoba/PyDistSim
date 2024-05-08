@@ -65,7 +65,7 @@ source_suffix = ".rst"
 master_doc = "index"
 
 # General information about the project.
-project = "XXXXXXX"
+project = "PyDistSim"
 copyright = "2024, Agustin Recoba"
 
 # The version info for the project you're documenting, acts as replacement for
