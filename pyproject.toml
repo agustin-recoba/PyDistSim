@@ -6,8 +6,8 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "Pymote"
-version = "1.0.0.dev" # Should match version at pymote/docs/conf.py
+name = "PyDistSim"
+version = "1.0.0.dev" # Should match version at pydistsim/docs/conf.py
 authors = [
   { name="Agustin Recoba", email="agustin.recoba@outlook.com" }, # Fork author
   { name="Damir Arbula", email="damir.arbula@gmail.com" }, # Original author
@@ -39,10 +39,10 @@ Repository = "https://github.com/agustin-recoba/pydistsim.git"
 "Test Coverage" = "https://coveralls.io/github/agustin-recoba/pydistsim"
 
 [project.scripts]
-ipymote = "pymote.scripts.ipymote:start_ipymote"
+ipydistsim = "pydistsim.scripts.ipydistsim:start_ipydistsim"
 
 [project.gui-scripts]
-pymote-simgui = "pymote.gui.simulationgui:main"
+pydistsim-simgui = "pydistsim.gui.simulationgui:main"
 
 [tool.setuptools]
 license-files = [
@@ -54,15 +54,15 @@ dependencies = {file = ["requirements.txt"]}
 optional-dependencies = {dev = { file = ["requirements.dev.txt"] }}
 
 [tool.pytest.ini_options]
-addopts = "--cov=pymote --cov-report=xml --cov-append"
+addopts = "--cov=pydistsim --cov-report=xml --cov-append"
 
 [tool.coverage.run]
-source = ["pymote"]
+source = ["pydistsim"]
 branch = true
 omit = [
-    "pymote/conf/ipython/ipython_config.py",
-    "pymote/release.py",
-    "pymote/gui/*",
+    "pydistsim/conf/ipython/ipython_config.py",
+    "pydistsim/release.py",
+    "pydistsim/gui/*",
 ]
 
 [tool.coverage.report]

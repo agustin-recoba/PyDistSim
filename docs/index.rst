@@ -1,9 +1,9 @@
 .. _contents:
 
-Pymote documentation
+PyDistSim documentation
 ====================
 
-This document refers to the Pymote version |release|
+This document refers to the PyDistSim version |release|
 
 .. only:: html
 
@@ -37,7 +37,7 @@ Indices and tables
 
 
 ..
-    Extending Pymote
+    Extending PyDistSim
     ****************
 
     .. toctree::
@@ -58,7 +58,7 @@ Indices and tables
 
 
 
-    Contributing to Pymote
+    Contributing to PyDistSim
     **********************
 
     .. toctree::

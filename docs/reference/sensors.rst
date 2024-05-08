@@ -3,8 +3,8 @@
 Sensors
 =======
 
-.. currentmodule:: pymote.sensor
-.. automodule:: pymote.sensor
+.. currentmodule:: pydistsim.sensor
+.. automodule:: pydistsim.sensor
 .. autoclass:: Sensor
     :members:
 
