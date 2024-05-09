@@ -22,7 +22,7 @@ if os.environ.get("READTHEDOCS", None) == "True":
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath("../"))
+sys.path.insert(0, os.path.abspath(".."))  # Source code dir relative to this file
 
 # -- General configuration -----------------------------------------------------
 
@@ -41,6 +41,8 @@ extensions = [
     "sphinx.ext.imgmath",
     "sphinx.ext.ifconfig",
     "sphinx.ext.viewcode",
+    "nbsphinx",  # Integrate Jupyter Notebooks and Sphinx
+    "IPython.sphinxext.ipython_console_highlighting",
 ]
 
 # generate autosummary pages
@@ -99,9 +101,6 @@ exclude_patterns = ["_build"]
 # If true, '()' will be appended to :func: etc. cross-reference text.
 # add_function_parentheses = True
 
-# If true, the current module name will be prepended to all description
-# unit titles (such as .. function::).
-# add_module_names = True
 
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
@@ -174,7 +173,15 @@ html_static_path = ["static"]
 # html_split_index = False
 
 # If true, links to the reST sources are added to the pages.
-# html_show_sourcelink = True
+html_show_sourcelink = True
+
+autodoc_inherit_docstrings = True  # If no docstring, inherit from base class
+
+set_type_checking_flag = True  # Enable 'expensive' imports for sphinx_autodoc_typehints
+
+nbsphinx_allow_errors = True  # Continue through Jupyter errors
+
+add_module_names = False  # Remove namespaces from class/method signatures
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
 # html_show_sphinx = True

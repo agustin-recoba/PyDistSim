@@ -28,3 +28,5 @@ coverage_html_report*
 docs/reference/generated*
 
 coverage.xml
+
+docs/reference/_autosummary/

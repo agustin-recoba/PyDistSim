@@ -13,4 +13,5 @@ Reference
    sensors
    networkgenerator
    conf
+   modules
 .. introduction
