@@ -1,19 +1,18 @@
 PyDistSim
 =========
 
-.. image:: https://app.travis-ci.com/agustin-recoba/pydistsim.svg?token=zk1hY6ZALwZTY3bjX2Aq&branch=main
+|travis| |readthedocs| |codefactor| |coveralls|
+
+.. |travis| image:: https://app.travis-ci.com/agustin-recoba/pydistsim.svg?token=zk1hY6ZALwZTY3bjX2Aq&branch=main
     :target: https://app.travis-ci.com/agustin-recoba/pydistsim
     :alt: Build Status
-
-.. image:: https://coveralls.io/repos/github/agustin-recoba/pydistsim/badge.svg
+.. |coveralls| image:: https://coveralls.io/repos/github/agustin-recoba/pydistsim/badge.svg
     :target: https://coveralls.io/github/agustin-recoba/pydistsim
     :alt: Coverage Status
-
-.. image:: https://readthedocs.org/projects/pydistsim/badge/?version=main
+.. |readthedocs| image:: https://readthedocs.org/projects/pydistsim/badge/?version=main
     :target: https://pydistsim.readthedocs.io/?badge=main
     :alt: Documentation Status
-
-.. image:: https://www.codefactor.io/repository/github/agustin-recoba/pydistsim/badge
+.. |codefactor| image:: https://www.codefactor.io/repository/github/agustin-recoba/pydistsim/badge
    :target: https://www.codefactor.io/repository/github/agustin-recoba/pydistsim
    :alt: CodeFactor
 
@@ -26,8 +25,12 @@ Definition of the distributed environment, entities and actions used for making 
 
 PyDistSim's main goal is to provide a framework for fast implementation, easy simulation and data-driven algorithmic analysis of distributed algorithms.
 
-.. figure::  _images/pydistsim_console_gui.png
+.. image:: ../docs/install/_images/pydistsim_console_gui.png
    :align: center
+   :alt: PyDistSim console and gui
+.. image:: docs/install/_images/pydistsim_console_gui.png
+   :align: center
+   :alt: PyDistSim console and gui
 
 \
 
