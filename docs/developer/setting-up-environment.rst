@@ -15,4 +15,4 @@ Setting up the development environment
     * ``pip install -r requirements.txt``
 4. Install the required development packages by running:
 
-    * ``pip install -r requirements.dev.txt``
+    * ``pip install -r requirements-dev.txt``
