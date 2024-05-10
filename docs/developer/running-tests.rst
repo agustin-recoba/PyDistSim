@@ -34,3 +34,24 @@ Make report in console or html::
 For integration with `coveralls <https://coveralls.io>`_ we use the `Universal Coverage Reporter <https://github.com/coverallsapp/coverage-reporter>`_. This is configured in file ``.travis.yml``.
 
 To change the described ``pytest`` behabiour, see section ``[tool.pytest.ini_options]`` at ``pyproject.toml``.
+
+
+Testing memory usage
+--------------------
+
+For this task, we use the `memray <https://bloomberg.github.io/memray/>`_ tool.
+It should be installed in your environment if you followed the guide at ":ref:`installation`".
+
+To test memory usage, run::
+
+    memray run SCRIPT_NAME
+
+To use check memory usage of pytest tests, run::
+
+    memray run --output  memray_output.bin -m pytest
+
+To generate a flamegraph report, run::
+
+    memray flamegraph memray_output.bin --temporal --force --output memray_flamegraph.html
+
+For other types of reports, see `memray documentation <https://bloomberg.github.io/memray/getting_started.html>`_.
