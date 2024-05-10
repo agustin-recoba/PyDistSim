@@ -1,7 +1,7 @@
 Running tests
 =============
 
-All python packages mencioned in this tutorial should already be installed in your environment if
+All python packages mentioned in this tutorial should already be installed in your environment if
 you followed the guide at ":ref:`installation`".
 
 To execute tests, pytest must be installed.
@@ -33,7 +33,7 @@ Make report in console or html::
 
 For integration with `coveralls <https://coveralls.io>`_ we use the `Universal Coverage Reporter <https://github.com/coverallsapp/coverage-reporter>`_. This is configured in file ``.travis.yml``.
 
-To change the described ``pytest`` behabiour, see section ``[tool.pytest.ini_options]`` at ``pyproject.toml``.
+To change the described ``pytest`` behavior, see section ``[tool.pytest.ini_options]`` at ``pyproject.toml``.
 
 
 Testing memory usage

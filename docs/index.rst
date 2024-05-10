@@ -4,7 +4,7 @@
 
 
 Explore the documentation
-.......................
+.........................
 
 
 .. toctree::

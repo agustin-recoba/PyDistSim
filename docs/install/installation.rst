@@ -31,14 +31,14 @@ If you don't have all required packages already installed and/or want them insta
 
 ..  note::
 
-    Since there can be only one version of any package installed systemwide in some cases this can result in situation where two programs need different versions of the same package. This is resolved by using isolated virtual environments.
+    Since there can be only one version of any package installed system-wide in some cases this can result in situation where two programs need different versions of the same package. This is resolved by using isolated virtual environments.
 
 .. figure:: _images/virtualenv_system.png
    :align: center
 
-   Virtual environments *live* in a separate directories and they are independent form systemwide Python installation.
+   Virtual environments *live* in a separate directories and they are independent form system-wide Python installation.
 
-Alternatively, if none of the above is your concern, although not recommended, all required packages can be installed systemwide using their respective instructions for appropriate OS and then PyDistSim can be installed by using::
+Alternatively, if none of the above is your concern, although not recommended, all required packages can be installed system-wide using their respective instructions for appropriate OS and then PyDistSim can be installed by using::
 
     $ pip install pydistsim
 
@@ -48,7 +48,7 @@ Windows
 Windows version should be as simple as installing `Python 3.11 for windows <https://www.python.org/downloads/release/python-3110/>`_ and running ``pip install pydistsim``.
 
 Linux (tested only on Ubuntu)
-**************
+*****************************
 
 To install Python 3.11, run::
 
@@ -79,8 +79,8 @@ Activate virtual environment on Windows::
 
 
 PyDistSim
-======
-Finally, in order to download and install PyDistSim and all other required packages there are two aviliable options, use one of them:
+=========
+Finally, in order to download and install PyDistSim and all other required packages there are two available options, use one of them:
 
 #. *Stable*: for latest stable version use package from PyPI::
 
@@ -91,7 +91,7 @@ Finally, in order to download and install PyDistSim and all other required packa
     (pydistsim_env)> pip install -e git+https://github.com/agustin-recoba/PyDistSim#egg=PyDistrSim
 
 Starting PyDistSim
-===============
+==================
 
 Before starting, make sure that virtual environment is :ref:`activated <linux-venvact>` and run ``ipydistsim`` for interactive console or ``pydistsim-simgui`` for simulation GUI. For more details refer to :doc:`starting`.
 

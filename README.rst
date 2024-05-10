@@ -34,7 +34,7 @@ PyDistSim's main goal is to provide a framework for fast implementation, easy si
 
 \
 
-PyDistSim is being developed on top of `NetworkX <https://github.com/networkx/networkx/>`_ and is ment to be used along other scientific packages such as SciPy, NumPy and matplotlib. Currently, gui runs on PySide (Qt bindings) and console is jazzy IPython.
+PyDistSim is being developed on top of `NetworkX <https://github.com/networkx/networkx/>`_ and is meant to be used along other scientific packages such as SciPy, NumPy and matplotlib. Currently, gui runs on PySide (Qt bindings) and console is jazzy IPython.
 
 Installation
 ------------
