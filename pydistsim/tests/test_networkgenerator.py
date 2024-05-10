@@ -283,8 +283,6 @@ class TestNetworkGeneration(unittest.TestCase):
 
 class TestNotConnectedNetworkGeneration(unittest.TestCase):
     def setUp(self) -> None:
-        logger.setLevel("DEBUG")
-
         self.gen = NetworkGenerator(
             n_count=10,
             n_min=10,

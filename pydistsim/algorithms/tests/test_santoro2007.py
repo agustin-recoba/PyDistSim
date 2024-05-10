@@ -34,7 +34,7 @@ class TestYoYo(unittest.TestCase):
                 name = "Special %d" % i
 
                 net.algorithms = (YoYo,)
-                sim = Simulation(net, logLevel="WARNING")
+                sim = Simulation(net)
                 sim.run()
 
                 min_id = min(sim.network.nodes(), key=lambda node: node.id).id
@@ -74,7 +74,7 @@ class TestYoYo(unittest.TestCase):
                     name = "Random %d, %d nodes" % (i, n_nodes)
 
                     net.algorithms = (YoYo,)
-                    sim = Simulation(net, logLevel="WARNING")
+                    sim = Simulation(net)
                     sim.run()
 
                     min_id = min(sim.network.nodes(), key=lambda node: node.id).id

@@ -100,22 +100,22 @@ class NetworkGenerator:
                 if len(net) < self.n_max:
                     node = Node(**self.kwargs)
                     net.add_node(node)
-                    logger.debug("Added node, number of nodes: %d" % len(net))
+                    logger.debug("Added node, number of nodes: {}", len(net))
                 elif not self.comm_range:
                     for node in net.nodes():
                         node.commRange += step
-                    logger.debug("Increased commRange to %d" % node.commRange)
+                    logger.debug("Increased commRange to {}", node.commRange)
                 else:
                     return None
             else:
                 min_node = net.nodes_sorted()[0]
                 if len(net) > self.n_min and len(net) > 1:
                     net.remove_node(min_node)
-                    logger.debug("Removed node, nodes left: %d" % len(net))
+                    logger.debug("Removed node, nodes left: {}", len(net))
                 elif not self.comm_range:
                     for node in net:
                         node.commRange += step
-                    logger.debug("Decreased commRange to %d" % min_node.commRange)
+                    logger.debug("Decreased commRange to {}", min_node.commRange)
                 else:
                     return None
         return net
@@ -136,12 +136,12 @@ class NetworkGenerator:
         elif self.degree:
             diff = self.degree - net.avg_degree()
             if abs(diff) > self.degree_tolerance:
-                logger.debug("Degree not satisfied: %f" % net.avg_degree())
+                logger.debug("Degree not satisfied: {}", net.avg_degree())
                 diff = sign(diff) * min(
                     max(abs(diff), 3), 7
                 )  # If diff is too big, it will be set to 7, if it is too small, it will be set to 3
                 condition_returned = round((sign(diff) * (round(diff)) ** 2) * cr / 100)
-                logger.debug("Degree condition returned: %d" % condition_returned)
+                logger.debug("Degree condition returned: {}", condition_returned)
                 return condition_returned
         return 0
 

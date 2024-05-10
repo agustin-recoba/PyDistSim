@@ -2,6 +2,7 @@ import png
 from numpy import Inf, ones, sign, sqrt, uint8, vstack
 
 from pydistsim.conf import settings
+from pydistsim.logger import logger
 
 
 class Environment:
@@ -75,7 +76,9 @@ class Environment2D(Environment):
                 self.im = self.im[::-1, :]  # flip-up-down
                 assert (r.height, r.width) == self.im.shape
             except OSError:
-                print("Can't open %s creating new default environment." % path)
+                logger.exception(
+                    "Can't open {} creating new default environment.", path
+                )
 
                 self.im = uint8(ones(shape) * 255)
         else:
@@ -176,7 +179,7 @@ class Environment2D(Environment):
                 x = x + cy * incrE
                 y = round(y + sign(incrN) * dy)  # spread on N
 
-            # logger.debug('x = %s, y = %s' % (str(x),str(y)))
+            # logger.debug('x = {}, y = {}', str(x), str(y))
             if not self.is_space([x, y]):
                 return False
         return True

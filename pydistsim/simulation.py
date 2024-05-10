@@ -1,9 +1,7 @@
-import logging
-
 from PySide6.QtCore import SIGNAL, QThread
 
 from pydistsim.algorithm import Algorithm, NetworkAlgorithm, NodeAlgorithm
-from pydistsim.logger import LogLevels
+from pydistsim.logger import LogLevels, logger
 from pydistsim.network import Network
 
 
@@ -13,9 +11,7 @@ class Simulation(QThread):
     It is responsible for visualization and logging, also.
     """
 
-    def __init__(
-        self, network: Network, logLevel: LogLevels = LogLevels.DEBUG, **kwargs
-    ):
+    def __init__(self, network: Network, **kwargs):
         """
         Initialize a Simulation object.
 
@@ -29,9 +25,8 @@ class Simulation(QThread):
         self._network = network
         self._network.simulation = self
         self.stepsLeft = 0
-        self.logger = logging.getLogger("pydistsim.simulation")
-        self.logger.setLevel(logLevel)
-        self.logger.debug("Simulation %s created successfully." % (hex(id(self))))
+        self.logger = logger
+        self.logger.debug("Simulation {} created successfully.", hex(id(self)))
         QThread.__init__(self)
 
     def __del__(self):
@@ -49,7 +44,7 @@ class Simulation(QThread):
         :return: None
         """
         self.reset()
-        self.logger.info("Simulation %s starts running." % hex(id(self)))
+        self.logger.info("Simulation {} starts running.", hex(id(self)))
         if stepping:
             self.run(1)
             self.logger.info(
@@ -112,12 +107,14 @@ class Simulation(QThread):
                     nodeTerminated = algorithm.step(node)
                 self.emit(
                     SIGNAL("updateLog(QString)"),
-                    "[%s] Step %d finished"
-                    % (algorithm.name, self.network.algorithmState["step"]),
+                    "[{}] Step {} finished",
+                    algorithm.name,
+                    self.network.algorithmState["step"],
                 )
                 self.logger.debug(
-                    "[%s] Step %d finished"
-                    % (algorithm.name, self.network.algorithmState["step"])
+                    "[{}] Step {} finished",
+                    algorithm.name,
+                    self.network.algorithmState["step"],
                 )
                 self.network.algorithmState["step"] += 1
                 if nodeTerminated:
@@ -127,7 +124,7 @@ class Simulation(QThread):
         self.emit(
             SIGNAL("updateLog(QString)"), "[%s] Algorithm finished" % (algorithm.name)
         )
-        self.logger.debug("[%s] Algorithm finished" % (algorithm.name))
+        self.logger.debug("[{}] Algorithm finished", algorithm.name)
         self.network.algorithmState["finished"] = True
         return
 

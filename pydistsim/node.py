@@ -78,7 +78,7 @@ class Node:
         if not isinstance(message.destination, Iterable):
             message.destination = [message.destination]
         for destination in message.destination:
-            logger.debug("Node %d sent message %s." % (self.id, message.__repr__()))
+            logger.debug("Node {} sent message {}.", self.id, message.__repr__())
             m = message.copy()
             m.destination = destination
             self.outbox.insert(0, m)
@@ -100,7 +100,7 @@ class Node:
         """
         if self._inbox and not self._inboxDelay:
             message = self._inbox.pop()
-            logger.debug("Node %d received message %s" % (self.id, message.__repr__()))
+            logger.debug("Node {} received message {}", self.id, message.__repr__())
         else:
             message = None
         self._inboxDelay = False

@@ -189,7 +189,7 @@ class Network(Graph):
         del self.pos[node]
         del self.labels[node]
         node.network = None
-        logger.debug("Node with id %d is removed." % node.id)
+        logger.debug("Node with id {} is removed.", node.id)
 
     def add_node(self, node=None, pos=None, ori=None, commRange=None):
         """
@@ -228,7 +228,7 @@ class Network(Graph):
             self.pos[node] = array(pos)
             self.ori[node] = ori
             self.labels[node] = str(node.id)
-            logger.debug("Node %d is placed on position %s." % (node.id, pos))
+            logger.debug("Node {} is placed on position {}.", node.id, pos)
             self.recalculate_edges([node])
         else:
             logger.error("Given position is not free space.")
@@ -248,7 +248,7 @@ class Network(Graph):
         for n in self.nodes():
             if n.id == id_:
                 return n
-        logger.error("Network has no node with id %d." % id_)
+        logger.error("Network has no node with id {}.", id_)
         raise PyDistSimNetworkError(NetwkErrorMsg.NODE_NOT_IN_NET)
 
     def avg_degree(self):
@@ -305,7 +305,7 @@ class Network(Graph):
             # variable step_factor for step size for over/undershoot cases
             if len(steps) > 2 and sign(steps[-2]) != sign(steps[-1]):
                 step_factor /= 2
-        logger.debug("Modified degree to %f" % self.avg_degree())
+        logger.debug("Modified degree to {}", self.avg_degree())
 
     def get_current_algorithm(self):
         """
@@ -462,7 +462,7 @@ class Network(Graph):
             if self._environment.is_space(pos):
                 break
             n -= 1
-        logger.debug("Random position found in %d iterations." % (n_init - n))
+        logger.debug("Random position found in {} iterations.", (n_init - n))
         return pos
 
     def reset_all_nodes(self):
@@ -501,7 +501,7 @@ class Network(Graph):
                 try:
                     self.send(message.nexthop, message)
                 except PyDistSimMessageUndeliverable as e:
-                    print(e.message)
+                    logger.exception("Message Undeliverable: {}", e.message)
             elif message.destination is not None:
                 # Destination is neighbor
                 if (
@@ -548,7 +548,9 @@ class Network(Graph):
         :type message: Message
         :raises PyDistSimMessageUndeliverable: If the destination is not in the network.
         """
-        logger.debug(f"Sending message from {repr(message.source)} to {destination}.")
+        logger.debug(
+            "Sending message from {} to {}.", repr(message.source), destination
+        )
         if destination in self.nodes():
             destination.push_to_inbox(message)
         else:
