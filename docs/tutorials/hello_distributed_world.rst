@@ -1,28 +1,8 @@
-Tutorials
-*********
-Tutorials assume that the PyDistrSim and all required packages are installed. If not, please refer to
-the :doc:`../install/installation` section of this documentation.
-
+.. _hello world:
 
 Hello distributed world
 =======================
 This tutorial demonstrates a distributed version of the classic *Hello world* example.
-Tutorial is currently available in form of IPython notebook which can be found in # TODO
-pydistsim
+Basic usage of the library is described in this demo, just `follow the example`_.
 
-..
-    Add nodes
-
-    Set up environment
-
-    Add sensors
-
-    Config
-
-    Start gui inspection
-
-    Create simple algorithm
-
-    Simulate through console
-
-    Simulate trough gui
+.. _follow the example: ../notebooks/hello_distributed_world.ipynb

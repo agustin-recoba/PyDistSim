@@ -12,7 +12,7 @@ Explore the documentation
 
    install/installation
    install/starting
-   tutorials/hello_distributed_world
+   tutorials/index
    reference/index
    developer/index
 .. extending/algorithms

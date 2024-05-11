@@ -146,7 +146,7 @@ html_theme = "sphinx_rtd_theme"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["static"]
+# html_static_path = ["static"]
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -278,7 +278,10 @@ texinfo_documents = [
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
-    "python": ("http://docs.python.org/", None),
-    "numpy": ("http://docs.scipy.org/doc/numpy/", None),
     "scipy": ("http://docs.scipy.org/doc/scipy/reference/", None),
+    "IPython": ("https://ipython.readthedocs.io/en/stable/", None),
+    "matplotlib": ("https://matplotlib.org/", None),
+    "numpy": ("https://docs.scipy.org/doc/numpy/", None),
+    "pandas": ("https://pandas.pydata.org/docs/", None),
+    "python": ("https://docs.python.org/3/", None),
 }
