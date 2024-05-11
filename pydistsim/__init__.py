@@ -17,6 +17,7 @@ from pkgutil import extend_path  # @Reimport
 
 from pydistsim.conf import settings
 from pydistsim.environment import Environment
+from pydistsim.logger import set_log_level
 from pydistsim.network import Network
 from pydistsim.networkgenerator import NetworkGenerator
 from pydistsim.node import Node

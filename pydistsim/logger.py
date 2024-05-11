@@ -1,3 +1,4 @@
+import sys
 from enum import StrEnum
 
 import loguru
@@ -15,3 +16,26 @@ class LogLevels(StrEnum):
     WARNING = "WARNING"
     ERROR = "ERROR"
     CRITICAL = "CRITICAL"
+
+
+class LevelFilter:
+
+    def __init__(self, level: LogLevels):
+        self.level = level
+
+    def __call__(self, record):
+        level_no = logger.level(self.level).no
+        return record["level"].no >= level_no
+
+
+main_filter = LevelFilter("WARNING")
+
+logger.remove()
+
+logger.add(sys.stdout, filter=main_filter, level=0)
+
+logger.disable("pydistsim")
+
+
+def set_log_level(level: StrEnum) -> None:
+    main_filter.level = level
