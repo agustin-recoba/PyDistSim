@@ -18,7 +18,7 @@ class ActionEnum(StrEnum):
 
 MSG_META_HEADER_MAP = {
     MessageMetaHeader.NORMAL_MESSAGE: ActionEnum.receiving,
-    MessageMetaHeader.INITALIZATION_MESSAGE: ActionEnum.spontaneously,
+    MessageMetaHeader.INITIALIZATION_MESSAGE: ActionEnum.spontaneously,
     MessageMetaHeader.ALARM_MESSAGE: ActionEnum.alarm,
 }
 
@@ -119,7 +119,7 @@ class Algorithm(metaclass=AlgorithmMeta):
     def __init__(self, network, **kwargs):
         self.network: nt.Network = network
         self.name = self.__class__.__name__
-        logger.debug("Instance of %s class has been initialized." % self.name)
+        logger.debug("Instance of {} class has been initialized.", self.name)
 
         for required_param in self.required_params:
             if required_param not in list(kwargs.keys()):
@@ -160,7 +160,7 @@ class NodeAlgorithm(Algorithm):
 
     """
 
-    INI = MessageMetaHeader.INITALIZATION_MESSAGE
+    INI = MessageMetaHeader.INITIALIZATION_MESSAGE
 
     class Status(StatusValues):
         IDLE = "IDLE"
@@ -194,7 +194,7 @@ class NodeAlgorithm(Algorithm):
 
     def _process_message(self, node: Node, message: Message):
         status = getattr(self.Status, node.status.value)
-        print(message)
+        logger.debug("Processing message: 0x%x" % id(message))
         method_name = MSG_META_HEADER_MAP[message.meta_header]
 
         if status.implements(method_name):

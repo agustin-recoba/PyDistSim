@@ -1,59 +1,41 @@
-import logging
-import logging.config
-from enum import IntEnum
+import sys
+from enum import StrEnum
+
+import loguru
+
+logger = loguru.logger
 
 
-class LogLevels(IntEnum):
-    DEBUG = logging.DEBUG
-    INFO = logging.INFO
-    WARNING = logging.WARNING
-    ERROR = logging.ERROR
-    CRITICAL = logging.CRITICAL
+class LogLevels(StrEnum):
+    """
+    Enum class representing different log levels.
+    """
+
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    CRITICAL = "CRITICAL"
 
 
-LOG_CONFIG = {
-    "version": 1,
-    "loggers": {
-        "pydistsim": {
-            "level": LogLevels.WARNING,
-            "handlers": ["fileHandler", "consoleHandler"],
-        },
-        "pydistsim.simulation": {
-            "level": LogLevels.DEBUG,
-            "handlers": ["simFileHandler"],
-            "propagate": 1,
-        },
-    },
-    "handlers": {
-        "fileHandler": {
-            "class": "logging.FileHandler",
-            "level": LogLevels.DEBUG,
-            "formatter": "fileFormatter",
-            "filename": "pydistsim.log",
-        },
-        "consoleHandler": {
-            "class": "logging.StreamHandler",
-            "formatter": "consoleFormatter",
-            "stream": "ext://sys.stdout",
-        },
-        "simFileHandler": {
-            "class": "logging.FileHandler",
-            "level": LogLevels.DEBUG,
-            "formatter": "fileFormatter",
-            "filename": "simulation.log",
-        },
-    },
-    "formatters": {
-        "fileFormatter": {
-            "format": ("%(asctime)s - %(levelname)s:" "[%(filename)s] %(message)s"),
-            "datefmt": "%Y-%m-%d %H:%M:%S",
-        },
-        "consoleFormatter": {
-            "format": ("%(levelname)-8s" "[%(filename)s]: %(message)s"),
-            "datefmt": "%Y-%m-%d %H:%M:%S",
-        },
-    },
-}
+class LevelFilter:
 
-logging.config.dictConfig(LOG_CONFIG)
-logger = logging.getLogger("pydistsim")
+    def __init__(self, level: LogLevels):
+        self.level = level
+
+    def __call__(self, record):
+        level_no = logger.level(self.level).no
+        return record["level"].no >= level_no
+
+
+main_filter = LevelFilter("WARNING")
+
+logger.remove()
+
+logger.add(sys.stdout, filter=main_filter, level=0)
+
+logger.disable("pydistsim")
+
+
+def set_log_level(level: StrEnum) -> None:
+    main_filter.level = level

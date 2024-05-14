@@ -1,5 +1,5 @@
 Starting PyDistSim
-===============
+==================
 PyDistSim features interactive console based on IPython and simulation GUI.
 
 

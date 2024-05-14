@@ -1,13 +1,10 @@
 .. _contents:
 
-PyDistSim documentation
-====================
+.. include:: ../README.rst
 
-This document refers to the PyDistSim version |release|
 
-.. only:: html
-
-    :Date: |today|
+Explore the documentation
+.........................
 
 
 .. toctree::
@@ -15,7 +12,7 @@ This document refers to the PyDistSim version |release|
 
    install/installation
    install/starting
-   tutorials/hello_distributed_world
+   tutorials/index
    reference/index
    developer/index
 .. extending/algorithms
@@ -32,37 +29,7 @@ Indices and tables
 
 
 
-..    faq/common_issues
+This document refers to the PyDistSim version |release|.
 
 
-
-..
-    Extending PyDistSim
-    ****************
-
-    .. toctree::
-        :maxdepth: 2
-        :numbered:
-
-        extending/extending_examples
-
-
-    Concepts
-    ********
-
-    .. toctree::
-        :maxdepth: 2
-        :numbered:
-
-        concepts/introduction
-
-
-
-    Contributing to PyDistSim
-    **********************
-
-    .. toctree::
-        :maxdepth: 2
-        :numbered:
-
-        contribution
+Build date: |today|

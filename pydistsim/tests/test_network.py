@@ -95,9 +95,8 @@ class TestNetwork(unittest.TestCase):
         assert len(self.net.nodes()) == 2
         assert self.node1 not in self.net.nodes()
 
-        with self.assertLogs(level="ERROR"):
-            with self.assertRaises(PyDistSimNetworkError):
-                self.net.remove_node(self.node1)
+        with self.assertRaises(PyDistSimNetworkError):
+            self.net.remove_node(self.node1)
 
         self.net.add_node(self.node1, pos=pos)
 
@@ -112,9 +111,8 @@ class TestNetwork(unittest.TestCase):
 
         self.net.algorithms = ()
 
-        with self.assertLogs(level="ERROR"):
-            with self.assertRaises(PyDistSimNetworkError):
-                self.net.get_current_algorithm()
+        with self.assertRaises(PyDistSimNetworkError):
+            self.net.get_current_algorithm()
 
         self.net.algorithms = (NodeAlgorithm,)
 

@@ -5,3 +5,4 @@ numpy==1.26.4
 pypng==0.20220715.0
 PySide6==6.7.0
 scipy==1.13.0
+loguru==0.7.2

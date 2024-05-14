@@ -36,6 +36,7 @@ MOCK_MODULES = [
     "PySide6.QtGui",
     "scipy",
     "scipy.stats",
+    "loguru",
 ]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()

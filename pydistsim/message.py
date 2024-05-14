@@ -4,7 +4,7 @@ from enum import StrEnum
 
 class MetaHeader(StrEnum):
     NORMAL_MESSAGE = "NORMAL_MESSAGE"
-    INITALIZATION_MESSAGE = "INITALIZATION_MESSAGE"
+    INITIALIZATION_MESSAGE = "INITIALIZATION_MESSAGE"
     ALARM_MESSAGE = "ALARM_MESSAGE"
 
 
@@ -19,6 +19,22 @@ class Message:
         meta_header=MetaHeader.NORMAL_MESSAGE,
         data={},
     ):
+        """
+        Initialize a Message object.
+
+        :param source: The source of the message.
+        :type source: Any
+        :param destination: The destination of the message.
+        :type destination: Any
+        :param nexthop: The next hop for the message.
+        :type nexthop: Any
+        :param header: The header of the message.
+        :type header: str
+        :param meta_header: The meta header of the message.
+        :type meta_header: MetaHeader
+        :param data: The data associated with the message.
+        :type data: dict
+        """
         self.source = source
         self.destination = destination
         self.nexthop = nexthop
@@ -42,6 +58,9 @@ class Message:
         ) % (self.meta_header, self.source, destination, self.header, id(self))
 
     def copy(self):
+        """
+        Create a copy of the Message object.
+        """
         # nodes are protected from copying by __deepcopy__()
         self.data = deepcopy(self.data)
         return copy(self)

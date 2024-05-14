@@ -3,14 +3,17 @@
 Reference
 *********
 
-   :Release: |release|
-   :Date: |today|
-
-
 .. toctree::
    :maxdepth: 2
 
    sensors
    networkgenerator
    conf
+   modules
 .. introduction
+
+
+Build date: |today|
+
+
+Release version: |release|

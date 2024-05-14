@@ -23,7 +23,7 @@ class TestRunBaseNodeAlgorithm(unittest.TestCase):
         self.net.algorithms = (UnimplementedNodeAlgorithm,)
 
     def test_run_base_algorithm(self):
-        sim = Simulation(self.net, "DEBUG")
+        sim = Simulation(self.net)
 
         for node in self.net.nodes():
             with self.subTest(node=node):
@@ -61,7 +61,7 @@ class TestRunNetworkAlgorithm(unittest.TestCase):
         self.net.algorithms = (ImplementedNetworkAlgorithm,)
 
     def test_run_base_algorithm(self):
-        sim = Simulation(self.net, "DEBUG")
+        sim = Simulation(self.net)
 
         for node in self.net.nodes():
             with self.subTest(node=node):
@@ -86,7 +86,7 @@ class TestRunNotImplementedNetworkAlgorithm(unittest.TestCase):
         self.net.algorithms = (NetworkAlgorithm,)
 
     def test_run_base_algorithm(self):
-        sim = Simulation(self.net, "DEBUG")
+        sim = Simulation(self.net)
 
         with self.assertRaises(NotImplementedError):
             sim.run_all(False)
@@ -104,7 +104,7 @@ class TestResetNetwork(unittest.TestCase):
         self.net2 = net_gen.generate_random_network()
         self.net2.algorithms = (ImplementedNetworkAlgorithm,)
 
-        self.sim = Simulation(self.net1, "DEBUG")
+        self.sim = Simulation(self.net1)
 
     def test_set_network(self):
         assert isinstance(self.net1.get_current_algorithm(), UnimplementedNodeAlgorithm)

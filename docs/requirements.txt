@@ -1,2 +1,9 @@
 numpy
 sphinx_rtd_theme
+pydata-sphinx-theme
+nbsphinx
+ipython
+jupytext
+jupyter
+matplotlib
+numpy

@@ -2,13 +2,24 @@ import png
 from numpy import Inf, ones, sign, sqrt, uint8, vstack
 
 from pydistsim.conf import settings
+from pydistsim.logger import logger
 
 
 class Environment:
-    """Environment abstract base class"""
+    """
+    Environment abstract base class.
+
+    This class represents an abstract base class for environments in the PyDistSim framework.
+    """
 
     def __new__(self, **kwargs):
-        """return instance of default Environment"""
+        """Return an instance of the default Environment.
+
+        This method returns an instance of the default Environment subclass specified in the settings.
+
+        :param kwargs: Additional keyword arguments to be passed to the subclass constructor.
+        :return: An instance of the default Environment subclass.
+        """
         for cls in self.__subclasses__():
             if cls.__name__ == settings.ENVIRONMENT:
                 return super().__new__(cls, **kwargs)
@@ -17,9 +28,28 @@ class Environment:
         return super().__new__(self)
 
     def is_space(self, xy):
+        """Check if the given coordinates represent a valid space in the environment.
+
+        This method should be implemented by subclasses to determine whether the given coordinates
+        represent a valid space in the environment.
+
+        :param xy: The coordinates to check.
+        :return: True if the coordinates represent a valid space, False otherwise.
+        :rtype: bool
+        """
         raise NotImplementedError
 
     def are_visible(self, xy1, xy2):
+        """Check if two coordinates are visible to each other in the environment.
+
+        This method should be implemented by subclasses to determine whether the two given coordinates
+        are visible to each other in the environment.
+
+        :param xy1: The first set of coordinates.
+        :param xy2: The second set of coordinates.
+        :return: True if the coordinates are visible to each other, False otherwise.
+        :rtype: bool
+        """
         raise NotImplementedError
 
 
@@ -30,6 +60,13 @@ class Environment2D(Environment):
     """
 
     def __init__(self, path="", scale=None, shape=None):
+        """
+        Initialize the Environment object.
+
+        :param path: Optional. The path to an image file to load as the environment. If not provided, a default environment will be created.
+        :param scale: Optional. The scale factor for the environment image. If not provided, the default scale factor will be used.
+        :param shape: Optional. The shape of the environment. If not provided, the default shape will be used.
+        """
         shape = shape if shape else settings.ENVIRONMENT2D_SHAPE
         if path:
             try:
@@ -39,7 +76,9 @@ class Environment2D(Environment):
                 self.im = self.im[::-1, :]  # flip-up-down
                 assert (r.height, r.width) == self.im.shape
             except OSError:
-                print("Can't open %s creating new default environment." % path)
+                logger.exception(
+                    "Can't open {} creating new default environment.", path
+                )
 
                 self.im = uint8(ones(shape) * 255)
         else:
@@ -56,8 +95,15 @@ class Environment2D(Environment):
         return dup
 
     def is_space(self, xy):
-        """Returns true if selected space (x,y) is space. If point xy
-        is exactly on the edge or crossing check surrounding pixels."""
+        """
+        Returns true if selected space (x,y) is space. If point xy
+        is exactly on the edge or crossing check surrounding pixels.
+
+        :param xy: A tuple representing the coordinates (x, y) of the space to check.
+        :type xy: tuple
+        :return: True if the selected space is a space, False otherwise.
+        :rtype: bool
+        """
         x, y = xy
         h, w = self.im.shape
         if x < 0 or x > w or y < 0 or y > h:
@@ -82,9 +128,14 @@ class Environment2D(Environment):
         Returns true if there is line of sight between source (x0,y0) and
         destination (x1,y1).
 
-        This is floating point version of Bresenham algorithm that does
-        not spread on diagonal pixels.
+        :param xy0: Tuple representing the coordinates of the source point (x0, y0).
+        :type xy0: tuple
+        :param xy1: Tuple representing the coordinates of the destination point (x1, y1).
+        :type xy1: tuple
+        :return: True if there is line of sight between the source and destination points, False otherwise.
+        :rtype: bool
 
+        This is a floating point version of the Bresenham algorithm that does not spread on diagonal pixels.
         """
         x = x0 = xy0[0]
         y = y0 = xy0[1]
@@ -128,7 +179,7 @@ class Environment2D(Environment):
                 x = x + cy * incrE
                 y = round(y + sign(incrN) * dy)  # spread on N
 
-            # logger.debug('x = %s, y = %s' % (str(x),str(y)))
+            # logger.debug('x = {}, y = {}', str(x), str(y))
             if not self.is_space([x, y]):
                 return False
         return True

@@ -90,19 +90,17 @@ class LazySettings:
             except KeyError:
                 settings_module = None
                 logger.warning(
-                    "Environment variable %s is undefined, using "
-                    "global_settings." % ENVIRONMENT_VARIABLE
+                    "Environment variable {} is undefined, using global_settings.",
+                    ENVIRONMENT_VARIABLE,
                 )
             else:
                 logger.info(
-                    "Settings module is specified in environment"
-                    "variable %s." % (ENVIRONMENT_VARIABLE)
+                    "Settings module is specified in environment variable {}.",
+                    ENVIRONMENT_VARIABLE,
                 )
 
         if settings_module is not None:
-            logger.info(
-                "Using module %s to override global_settings." % (settings_module)
-            )
+            logger.info("Using module {} to override global_settings.", settings_module)
 
         self._wrapped = Settings(settings_module)
 
@@ -131,11 +129,10 @@ class LazySettings:
         """
         self._setup(module)
 
+    @property
     def configured(self):
         """Returns True if the settings have already been configured."""
         return bool(self._wrapped)
-
-    configured = property(configured)
 
 
 class Settings:
@@ -145,8 +142,9 @@ class Settings:
         for setting in dir(global_settings):
             if setting == setting.upper():
                 logger.info(
-                    "Setting %s on global value: %s"
-                    % (setting, str(getattr(global_settings, setting)))
+                    "Setting {} on global value: {}",
+                    setting,
+                    str(getattr(global_settings, setting)),
                 )
                 setattr(self, setting, getattr(global_settings, setting))
 
@@ -158,16 +156,18 @@ class Settings:
                 mod = import_module(self.SETTINGS_MODULE)
             except ImportError as e:
                 raise ImportError(
-                    "Could not import settings '%s' (Is it on "
-                    "sys.path? Does it have syntax errors?): %s"
-                    % (self.SETTINGS_MODULE, e)
+                    "Could not import settings '{}' (Is it on "
+                    "sys.path? Does it have syntax errors?): {}",
+                    self.SETTINGS_MODULE,
+                    e,
                 )
 
             for setting in dir(mod):
                 if setting == setting.upper():
                     logger.info(
-                        "Override %s on value in module: %s"
-                        % (setting, str(getattr(mod, setting)))
+                        "Override {} on value in module: {}",
+                        setting,
+                        str(getattr(mod, setting)),
                     )
                     setattr(self, setting, getattr(mod, setting))
 

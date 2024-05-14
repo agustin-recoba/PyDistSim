@@ -34,12 +34,12 @@ In python::
     import zlib
     with open("objects.inv","r") as f:
         inv_lines = f.readlines()
-    lista = zlib.decompress(''.join(inv_lines[4:])).split('\n')
+    line_list = zlib.decompress(''.join(inv_lines[4:])).split('\n')
     with open('objects_numpy.inv','w') as f:
-        for line in lista:
+        for line in line_list:
             f.write(line+'\n')
 
-To find reference for ``numpy.poly1d`` serach for it in decoded file ``objects_numpy.inv``.
+To find reference for ``numpy.poly1d`` search for it in decoded file ``objects_numpy.inv``.
 
 The line should include word ``class``
 
