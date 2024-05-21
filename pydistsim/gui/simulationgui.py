@@ -373,7 +373,7 @@ class SimulationGui(QMainWindow):
         self.ui.logListWidget.clear()
         print("running ...", end=" ")
         self.sim.stepping = True
-        self.sim.run_all()
+        self.sim.run()
 
     def on_actionStep_triggered(self):
         print("next step ...", end=" ")

@@ -32,34 +32,12 @@ class Simulation(QThread):
         self.exiting = True
         self.wait()
 
-    def run_all(self, stepping=False):
-        """
-        Run simulation from the beginning.
-
-        :param stepping: A boolean indicating whether to run the simulation in stepping mode.
-                         If True, the simulation will pause after running one step.
-                         If False, the simulation will run continuously without pausing.
-
-        :return: None
-        """
-        self.reset()
-        self.logger.info("Simulation {} starts running.", hex(id(self)))
-        if stepping:
-            self.run(1)
-            self.logger.info(
-                "Simulation pause. Use sim.run(n) to continue n "
-                "steps or sim.run() to continue without "
-                "stepping."
-            )
-        else:
-            self.run()
-            self.logger.info("Simulation end.")
-
     def run(self, steps=0):
         """
         Run simulation from the current state.
 
-        :param steps: Number of steps to run the simulation. If steps = 0, it runs until all algorithms are finished.
+        :param steps: Number of steps to run the simulation.
+                      If steps = 0, it runs until all algorithms are finished.
                       If steps > 0, the simulation is in stepping mode.
                       If steps > number of steps to finish the current algorithm, it finishes it.
         :type steps: int
@@ -77,12 +55,22 @@ class Simulation(QThread):
                 )
                 self.emit(SIGNAL("redraw()"))
                 break
-            self.run_algorithm(algorithm)
+            self._run_algorithm(algorithm)
             self.emit(SIGNAL("redraw()"))
             if self.stepsLeft >= 0:
                 break
 
-    def run_algorithm(self, algorithm: Algorithm):
+    def run_step(self):
+        """
+        Run a single step of the simulation.
+
+        This is equivalent to calling sim.run(1).
+
+        :return: None
+        """
+        self.run(1)
+
+    def _run_algorithm(self, algorithm: Algorithm):
         """
         Run the given algorithm on the given network.
 
@@ -126,14 +114,6 @@ class Simulation(QThread):
         self.logger.debug("[{}] Algorithm finished", algorithm.name)
         self.network.algorithmState["finished"] = True
         return
-
-    def run_step(self):
-        """
-        Run a single step of the simulation.
-
-        :return: None
-        """
-        self.run(1)
 
     def reset(self):
         """

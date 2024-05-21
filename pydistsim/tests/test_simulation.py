@@ -68,7 +68,7 @@ class TestRunNetworkAlgorithm(unittest.TestCase):
                 print(f"{node.id=}, {node.status=}, {node.outbox=}, {node.inbox=}")
                 assert "test" not in node.memory
 
-        sim.run_all(True)
+        sim.run(1)
 
         for node in self.net.nodes():
             with self.subTest(node=node):
@@ -89,7 +89,7 @@ class TestRunNotImplementedNetworkAlgorithm(unittest.TestCase):
         sim = Simulation(self.net)
 
         with self.assertRaises(NotImplementedError):
-            sim.run_all(False)
+            sim.run()
 
         assert sim.is_halted()
 
