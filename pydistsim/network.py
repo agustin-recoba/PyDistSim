@@ -29,9 +29,9 @@ AlgorithmsParam = tuple[type[Algorithm] | tuple[type[Algorithm], dict]]
 
 class NetworkMixin(with_typehint(Graph)):
     """
-    Mixin to expend Graph and DiGraph. The result represents a network in a distributed simulation.
+    Mixin to extend Graph and DiGraph. The result represents a network in a distributed simulation.
 
-    The Network classes (Network and BidirectionalNetwork) extend the Graph class and provides additional functionality
+    The Network classes (:class:`.Network` and :class:`.BidirectionalNetwork`) extend the Graph class and provides additional functionality
     for managing nodes, algorithms, and network properties.
     """
 
@@ -45,8 +45,6 @@ class NetworkMixin(with_typehint(Graph)):
         **kwargs,
     ):
         """
-        Initialize a Network instance.
-
         :param environment: The environment in which the network operates. If not provided, a new Environment instance will be created.
         :type environment: Environment, optional
         :param channelType: The type of channel to be used for communication. If not provided, a new ChannelType instance will be created using the environment.
@@ -731,10 +729,16 @@ class NetworkMixin(with_typehint(Graph)):
                 """
 
 
-class Network(NetworkMixin, DiGraph): ...
+class Network(NetworkMixin, DiGraph):
+    """
+    A directed graph representing a network in a distributed simulation.
+    """
 
 
-class BidirectionalNetwork(NetworkMixin, Graph): ...
+class BidirectionalNetwork(NetworkMixin, Graph):
+    """
+    An undirected graph representing a bidirectional network in a distributed simulation.
+    """
 
 
 class PyDistSimMessageUndeliverable(Exception):

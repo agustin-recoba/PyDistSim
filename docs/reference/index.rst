@@ -8,6 +8,7 @@ Reference
 
    sensors
    networkgenerator
+   networkmixin
    conf
    modules
 .. introduction
