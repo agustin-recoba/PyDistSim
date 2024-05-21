@@ -4,6 +4,7 @@ pytest-sugar==1.0.0
 memray==1.12.0
 Sphinx==7.3.7
 sphinx-rtd-theme==2.0.0
-virtualenv==20.26.0
-coverage==7.5
-pre-commit==3.7.0
+virtualenv==20.26.2
+coverage==7.5.1
+pre-commit==3.7.1
+pytest-xdist==3.6.1
