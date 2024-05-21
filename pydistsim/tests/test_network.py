@@ -1,30 +1,31 @@
 import unittest
 
 import pytest
-from networkx import is_connected
+from networkx import is_directed_acyclic_graph, is_weakly_connected
 
 from pydistsim.algorithm import NodeAlgorithm
 from pydistsim.channeltype import ChannelType, Complete
 from pydistsim.conf import settings
 from pydistsim.environment import Environment2D
-from pydistsim.network import Network, PyDistSimNetworkError
+from pydistsim.network import BidirectionalNetwork, Network, PyDistSimNetworkError
 from pydistsim.node import Node
 from pydistsim.utils.tree import check_tree_key
 
 
-class TestNetwork(unittest.TestCase):
+class TestDirectedNetwork(unittest.TestCase):
+    nw_class = Network
 
     def setUp(self):
         env = Environment2D()
-        self.net = Network(channelType=Complete(env))
-        self.net.environment.im[22, 22] = 0
+        self.net = self.nw_class(channelType=Complete(env))
+        self.net.environment.image[22, 22] = 0
         self.node1 = self.net.add_node(pos=[22.8, 21.8])
         self.node2 = self.net.add_node(pos=[21.9, 22.9])
         self.node3 = self.net.add_node(pos=[21.7, 21.7])
 
         self.net.algorithms = (NodeAlgorithm,)
 
-        self.other_net = Network(channelType=Complete(env))
+        self.other_net = self.nw_class(channelType=Complete(env))
         self.node_in_other_net = self.other_net.add_node()
 
     def test_nodes(self):
@@ -33,7 +34,7 @@ class TestNetwork(unittest.TestCase):
         assert len(self.net.nodes()) == 3
         if isinstance(self.net.environment, Environment2D):
             assert (
-                self.net.environment.im.shape == settings.ENVIRONMENT2D_SHAPE
+                self.net.environment.image.shape == settings.ENVIRONMENT2D_SHAPE
             ), "incorrect default size"
 
         assert isinstance(self.net.channelType, ChannelType)
@@ -126,22 +127,34 @@ class TestNetwork(unittest.TestCase):
     def test_get_tree_net(self):
         """Test getting tree representation of the network."""
         treeKey = "T_KEY"
+        keepMemKey = "TEST_KEEP_MEM"
 
         self.node1.memory[treeKey] = {
             "parent": None,
             "children": [self.node2, self.node3],
         }
         self.node2.memory[treeKey] = {"parent": self.node1, "children": []}
+        self.node2.memory[keepMemKey] = {"test": 1}
         self.node3.memory[treeKey] = {"parent": self.node1, "children": []}
-
-        check_tree_key(self.net, treeKey)
 
         tree = self.net.get_tree_net(treeKey)
 
-        assert isinstance(tree, Network)
+        assert isinstance(tree, self.nw_class)
         assert len(tree.nodes()) == 3
-        assert is_connected(tree)
+        assert len(self.net.nodes()) == 3
+        assert tree.is_connected()
         assert (node.network == tree for node in tree.nodes())
+
+        assert keepMemKey in self.node2.memory, "Memory should be kept"
+        check_tree_key(self.net, treeKey)
+
+        tree2 = self.net.get_tree_net(treeKey, downstream_only=True)
+
+        assert isinstance(tree2, Network)  # downstream_only returns directed Network
+        assert len(tree2.nodes()) == 3
+        assert is_directed_acyclic_graph(tree2)
+        assert is_weakly_connected(tree2)
+        assert (node.network == tree2 for node in tree2.nodes())
 
     @pytest.mark.filterwarnings("ignore:No data for colormapping.*")
     def test_get_fig_runs(self):
@@ -149,3 +162,7 @@ class TestNetwork(unittest.TestCase):
         assert self.net.get_fig() is not None
 
         assert self.other_net.get_fig() is not None
+
+
+class TestUnDirectedNetwork(TestDirectedNetwork):
+    nw_class = BidirectionalNetwork

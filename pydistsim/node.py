@@ -17,7 +17,7 @@ class Node:
     Represents a node in a network.
     """
 
-    cid = 1
+    next_node_id = 1
 
     def __init__(
         self,
@@ -40,16 +40,17 @@ class Node:
         self._compositeSensor = CompositeSensor(self, sensors or settings.SENSORS)
         self.network = network
         self._commRange = commRange or settings.COMM_RANGE
-        self.id = self.__class__.cid
-        self.__class__.cid += 1
+        self.id = self.__class__.next_node_id
+        self.__class__.next_node_id += 1
         self._inboxDelay = True
         self.reset()
 
     def __repr__(self):
         return "<Node id=%s>" % self.id
 
-    def __deepcopy__(self, memo):
-        return self
+    # TODO: Implement __deepcopy__ method, increment id
+    # def __deepcopy__(self, memo):
+    #     return self
 
     def reset(self):
         """

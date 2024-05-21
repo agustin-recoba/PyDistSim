@@ -10,7 +10,7 @@ from pydistsim.simulation import Simulation
 class TestNiculescu2003(unittest.TestCase):
 
     def setUp(self):
-        net_gen = NetworkGenerator(100)
+        net_gen = NetworkGenerator(100, directed=False)
         self.net = net_gen.generate_random_network()
         self.net.algorithms = (
             (DVHop, {"truePositionKey": "tp", "hopsizeKey": "hs", "dataKey": "I"}),

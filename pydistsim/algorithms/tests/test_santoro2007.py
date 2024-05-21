@@ -126,7 +126,7 @@ class TestTraversalDFT(unittest.TestCase):
 class TestTraversalDFStar(unittest.TestCase):
 
     def setUp(self):
-        net_gen = NetworkGenerator(100)
+        net_gen = NetworkGenerator(100, directed=False)
         self.net = net_gen.generate_random_network()
 
         self.visited = []

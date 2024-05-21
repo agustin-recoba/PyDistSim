@@ -1,13 +1,12 @@
 from itertools import product
 
-from networkx import is_connected
 from numpy import array, sign, sqrt
 from numpy.core.numeric import Inf
 from numpy.random import rand
 
 from pydistsim.conf import settings
 from pydistsim.logger import logger
-from pydistsim.network import Network
+from pydistsim.network import BidirectionalNetwork, Network
 from pydistsim.node import Node
 
 
@@ -26,6 +25,7 @@ class NetworkGenerator:
         comm_range=None,
         method="random_network",
         degree_tolerance=0.5,
+        directed=settings.DIRECTED,
         **kwargs,
     ):
         """
@@ -57,22 +57,22 @@ class NetworkGenerator:
         self.n_max = self.n_count if n_max is None else n_max
         if self.n_count < self.n_min or self.n_count > self.n_max:
             raise NetworkGeneratorException(
-                "Number of nodes must be between " "n_min and n_max."
+                "Number of nodes must be between n_min and n_max."
             )
-        if degree and degree >= n_max:
+        if degree and degree >= self.n_max:
             raise NetworkGeneratorException(
                 "Degree % d must be smaller than "
-                "maximum number of nodes %d." % (degree, n_max)
+                "maximum number of nodes %d." % (degree, self.n_max)
             )
         # TODO: optimize recalculation of edges on bigger commRanges
-        if degree and degree > 16 and n_count != Inf:
+        if degree:
             logger.warning(
-                "Generation could be slow for large degree"
-                "parameter with bounded n_max."
+                "Generation could be slow for large degree parameter with bounded n_max."
             )
         self.enforce_connected = enforce_connected
         self.degree = degree
         self.degree_tolerance = degree_tolerance
+        self.directed = directed
         self.comm_range = kwargs.pop("commRange", comm_range)
         # TODO: use subclass based generators instead of method based
         self.generate = self.__getattribute__("generate_" + method)
@@ -91,7 +91,8 @@ class NetworkGenerator:
             The modified network if successful, None otherwise.
         """
         if net is None:
-            net = Network(**self.kwargs)
+            net_class = Network if self.directed else BidirectionalNetwork
+            net = net_class(**self.kwargs)
             for _n in range(self.n_count):
                 node = Node(commRange=self.comm_range, **self.kwargs)
                 net.add_node(node)
@@ -115,12 +116,12 @@ class NetworkGenerator:
                 elif not self.comm_range:
                     for node in net:
                         node.commRange += step
-                    logger.debug("Decreased commRange to {}", min_node.commRange)
+                    logger.debug("Decreased commRange to {}", node.commRange)
                 else:
                     return None
         return net
 
-    def _are_conditions_satisfied(self, net):
+    def _are_conditions_satisfied(self, net: Network):
         """
         Check if the conditions for the network are satisfied.
 
@@ -130,13 +131,15 @@ class NetworkGenerator:
         :rtype: int
         """
         cr = net.nodes_sorted()[0].commRange
-        if self.enforce_connected and not is_connected(net):
+        if self.enforce_connected and not net.is_connected():
             logger.debug("Not connected")
             return round(0.2 * cr)
         elif self.degree:
             diff = self.degree - net.avg_degree()
             if abs(diff) > self.degree_tolerance:
-                logger.debug("Degree not satisfied: {}", net.avg_degree())
+                logger.debug(
+                    "Degree not satisfied: {} with {} nodes", net.avg_degree(), len(net)
+                )
                 diff = sign(diff) * min(
                     max(abs(diff), 3), 7
                 )  # If diff is too big, it will be set to 7, if it is too small, it will be set to 3
@@ -145,12 +148,14 @@ class NetworkGenerator:
                 return condition_returned
         return 0
 
-    def generate_random_network(self, net=None):
+    def generate_random_network(self, net=None, max_steps=1000):
         """
         Generates a random network with randomly positioned nodes.
 
         :param net: The network to modify. If not provided, a new network will be created.
         :type net: Network, optional
+        :param max_steps: The maximum number of steps to take.
+        :type max_steps: int
         :return: The generated network.
         :rtype: Network
         """
@@ -163,7 +168,7 @@ class NetworkGenerator:
             if not net:
                 break
             steps.append(self._are_conditions_satisfied(net))
-            if len(steps) > 1000:
+            if len(steps) > max_steps:
                 break
             if steps[-1] == 0:
                 return net
@@ -212,7 +217,7 @@ class NetworkGenerator:
         """
         net = self._create_modify_network()
         n = len(net)
-        h, w = net.environment.im.shape
+        h, w = net.environment.image.shape
         assert net.environment.dim == 2  # works only for 2d environments
         size = w
 
@@ -241,7 +246,7 @@ def generate_mesh_positions(env, n):
     :return: An array of mesh positions.
     :rtype: numpy.ndarray
     """
-    h, w = env.im.shape
+    h, w = env.image.shape
     # initial d
     d = sqrt(h * w / n)
 

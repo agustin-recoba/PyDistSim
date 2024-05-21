@@ -1,3 +1,6 @@
+from typing import TYPE_CHECKING, TypeVar
+
+
 def pydistsim_equal_objects(obj1, obj2):
     """
     Compare two objects and their attributes, but allow for non immutable
@@ -16,3 +19,15 @@ def pydistsim_equal_objects(obj1, obj2):
             attr_values = False
             break
     return classes and attr_names and attr_values
+
+
+T = TypeVar("T")
+
+
+def with_typehint(baseclass: type[T]) -> type[T]:
+    """
+    Useful function to make mixins with baseclass typehint without actually inheriting from it.
+    """
+    if TYPE_CHECKING:
+        return baseclass
+    return object

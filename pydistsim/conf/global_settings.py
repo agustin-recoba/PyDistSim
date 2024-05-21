@@ -24,6 +24,9 @@ N_COUNT = 100
 #: No algorithms defined by default.
 ALGORITHMS = ()
 
+#: Default edge type
+DIRECTED = True
+
 #: Unit disc graph is the default channel type.
 CHANNEL_TYPE = "Udg"
 

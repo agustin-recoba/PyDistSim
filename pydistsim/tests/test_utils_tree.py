@@ -1,13 +1,9 @@
 import unittest
 
-from networkx import is_connected
-
 from pydistsim.algorithm import NodeAlgorithm
-from pydistsim.channeltype import ChannelType, Complete
-from pydistsim.conf import settings
+from pydistsim.channeltype import Complete
 from pydistsim.environment import Environment2D
-from pydistsim.network import Network, PyDistSimNetworkError
-from pydistsim.node import Node
+from pydistsim.network import Network
 from pydistsim.utils import tree, visualization
 
 
@@ -17,7 +13,7 @@ class TestNetwork(unittest.TestCase):
     def setUp(self):
         env = Environment2D()
         self.net = Network(channelType=Complete(env))
-        self.net.environment.im[22, 22] = 0
+        self.net.environment.image[22, 22] = 0
         self.node1 = self.net.add_node(pos=[22.8, 21.8])
         self.node2 = self.net.add_node(pos=[21.9, 22.9])
         self.node3 = self.net.add_node(pos=[21.7, 21.7])
@@ -71,7 +67,7 @@ class TestNetwork(unittest.TestCase):
         with self.assertRaises(tree.TreeNetworkException):
             tree.check_tree_key(net, self.treeKey)
 
-        net.environment.im[22, 22] = 0
+        net.environment.image[22, 22] = 0
         node1 = net.add_node(pos=[22.8, 21.8])
         node2 = net.add_node(pos=[21.9, 22.9])
         node3 = net.add_node(pos=[21.7, 21.7])

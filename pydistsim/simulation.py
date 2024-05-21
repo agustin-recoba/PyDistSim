@@ -21,7 +21,6 @@ class Simulation(QThread):
         :type logLevel: LogLevels
         :param kwargs: Additional keyword arguments.
         """
-        assert isinstance(network, Network)
         self._network = network
         self._network.simulation = self
         self.stepsLeft = 0

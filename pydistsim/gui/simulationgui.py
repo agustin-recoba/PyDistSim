@@ -130,7 +130,7 @@ class SimulationGui(QMainWindow):
         currentAlgorithm = self.net.get_current_algorithm()
         if clear:
             self.axes.clear()
-        self.axes.imshow(net.environment.im, vmin=0, cmap="binary_r", origin="lower")
+        self.axes.imshow(net.environment.image, vmin=0, cmap="binary_r", origin="lower")
 
         self.draw_tree(str(self.ui.treeKey.text()), net)
         self.draw_edges(net)
@@ -353,8 +353,8 @@ class SimulationGui(QMainWindow):
         )
 
     def reset_zoom(self):
-        self.axes.set_xlim((0, self.net.environment.im.shape[1]))
-        self.axes.set_ylim((0, self.net.environment.im.shape[0]))
+        self.axes.set_xlim((0, self.net.environment.image.shape[1]))
+        self.axes.set_ylim((0, self.net.environment.image.shape[0]))
 
     def set_title(self, fname):
         new = " - ".join([str(self.windowTitle()).split(" - ")[0], str(fname)])

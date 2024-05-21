@@ -37,5 +37,13 @@ logger.add(sys.stdout, filter=main_filter, level=0)
 logger.disable("pydistsim")
 
 
-def set_log_level(level: StrEnum) -> None:
+def set_log_level(level: StrEnum):
     main_filter.level = level
+
+
+def enable_logger():
+    logger.enable("pydistsim")
+
+
+def disable_logger():
+    logger.disable("pydistsim")

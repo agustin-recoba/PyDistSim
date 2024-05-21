@@ -1,10 +1,11 @@
 import inspect
+from collections.abc import Iterable
 from copy import deepcopy
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
 import networkx as nx
-from networkx import Graph, is_connected
+from networkx import DiGraph, Graph, is_connected, is_strongly_connected
 from numpy import array, max, min, pi, sign
 from numpy.core.numeric import Inf, allclose
 from numpy.lib.function_base import average
@@ -17,7 +18,7 @@ from pydistsim.environment import Environment
 from pydistsim.logger import logger
 from pydistsim.node import Node
 from pydistsim.sensor import CompositeSensor
-from pydistsim.utils.helpers import pydistsim_equal_objects
+from pydistsim.utils.helpers import pydistsim_equal_objects, with_typehint
 
 if TYPE_CHECKING:
     from pydistsim.algorithm import Algorithm
@@ -26,25 +27,24 @@ if TYPE_CHECKING:
 AlgorithmsParam = tuple[type[Algorithm] | tuple[type[Algorithm], dict]]
 
 
-class Network(Graph):
+class NetworkMixin(with_typehint(Graph)):
     """
-    Represents a network in a distributed simulation.
+    Mixin to extend Graph and DiGraph. The result represents a network in a distributed simulation.
 
-    The Network class extends the Graph class and provides additional functionality for managing nodes, algorithms, and network properties.
+    The Network classes (:class:`.Network` and :class:`.BidirectionalNetwork`) extend the Graph class and provides additional functionality
+    for managing nodes, algorithms, and network properties.
     """
 
     def __init__(
         self,
+        incoming_graph_data=None,  # Correct subclassing of Graph
         environment=None,
         channelType=None,
         algorithms: AlgorithmsParam = (),
         networkRouting=True,
-        graph=None,
         **kwargs,
     ):
         """
-        Initialize a Network instance.
-
         :param environment: The environment in which the network operates. If not provided, a new Environment instance will be created.
         :type environment: Environment, optional
         :param channelType: The type of channel to be used for communication. If not provided, a new ChannelType instance will be created using the environment.
@@ -63,7 +63,7 @@ class Network(Graph):
         self.pos = {}
         self.ori = {}
         self.labels = {}
-        super().__init__(graph)
+        super().__init__(incoming_graph_data)
         self.algorithms = algorithms or settings.ALGORITHMS
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self.outbox = []
@@ -71,9 +71,20 @@ class Network(Graph):
         self.simulation = None
         logger.info("Instance of Network has been initialized.")
 
+    def to_directed_class(self):
+        return Network
+
+    def to_undirected_class(self):
+        return BidirectionalNetwork
+
     def copy(self, as_view=False):
         """Return a copy of the graph."""
         return deepcopy(self)
+
+    def is_connected(self):
+        if self.is_directed():
+            return is_strongly_connected(self)
+        return is_connected(self)
 
     def subnetwork(self, nbunch, pos=None):
         """
@@ -109,7 +120,7 @@ class Network(Graph):
         H.outbox = []
         H.simulation = None
 
-        assert isinstance(H, Network)
+        assert isinstance(H, NetworkMixin)
         return H
 
     def nodes_sorted(self):
@@ -142,7 +153,7 @@ class Network(Graph):
         self.reset()
         self._algorithms = ()
         if not isinstance(algorithms, tuple):
-            raise PyDistSimNetworkError(NetwkErrorMsg.ALGORITHM)
+            raise PyDistSimNetworkError(NetworkErrorMsg.ALGORITHM)
         for algorithm in algorithms:
             if inspect.isclass(algorithm) and issubclass(algorithm, Algorithm):
                 self._algorithms += (algorithm(self),)
@@ -154,7 +165,7 @@ class Network(Graph):
             ):
                 self._algorithms += (algorithm[0](self, **algorithm[1]),)
             else:
-                raise PyDistSimNetworkError(NetwkErrorMsg.ALGORITHM)
+                raise PyDistSimNetworkError(NetworkErrorMsg.ALGORITHM)
 
         # If everything went ok, set algorithms param for coping
         self._algorithms_param = algorithms
@@ -170,11 +181,11 @@ class Network(Graph):
         self._environment = environment
         self.channelType.environment = environment
         for node in self.nodes_sorted():
-            self.remove_node(node)
+            self.remove_node(node, skip_check=True)
             self.add_node(node)
         logger.warning("All nodes are moved into new environment.")
 
-    def remove_node(self, node):
+    def remove_node(self, node, skip_check=False):
         """
         Remove a node from the network.
 
@@ -182,9 +193,9 @@ class Network(Graph):
         :type node: Node
         :raises PyDistSimNetworkError: If the node is not in the network.
         """
-        if node not in self.nodes():
+        if not skip_check and node not in self.nodes():
             logger.error("Node not in network")
-            raise PyDistSimNetworkError(NetwkErrorMsg.NODE_NOT_IN_NET)
+            raise PyDistSimNetworkError(NetworkErrorMsg.NODE_NOT_IN_NET)
         super().remove_node(node)
         del self.pos[node]
         del self.labels[node]
@@ -217,9 +228,9 @@ class Network(Graph):
             node.network = self
         else:
             logger.exception("Node is already in another network, can't add.")
-            raise PyDistSimNetworkError(NetwkErrorMsg.NODE)
+            raise PyDistSimNetworkError(NetworkErrorMsg.NODE)
 
-        pos = pos if pos is not None else self.find_random_pos(n=100)
+        pos = pos if pos is not None else self._environment.find_random_pos(n=100)
         ori = ori if ori is not None else rand() * 2 * pi
         ori = ori % (2 * pi)
 
@@ -232,7 +243,7 @@ class Network(Graph):
             self.recalculate_edges([node])
         else:
             logger.error("Given position is not free space.")
-            raise PyDistSimNetworkError(NetwkErrorMsg.NODE_SPACE)
+            raise PyDistSimNetworkError(NetworkErrorMsg.NODE_SPACE)
         return node
 
     def node_by_id(self, id_):
@@ -248,17 +259,20 @@ class Network(Graph):
         for n in self.nodes():
             if n.id == id_:
                 return n
+
         logger.error("Network has no node with id {}.", id_)
-        raise PyDistSimNetworkError(NetwkErrorMsg.NODE_NOT_IN_NET)
+        raise PyDistSimNetworkError(NetworkErrorMsg.NODE_NOT_IN_NET)
 
     def avg_degree(self):
         """
         Calculate the average degree of the network.
+        Uses out_degree for directed networks (amount of outgoing edges) and degree for undirected networks.
 
         :return: The average degree of the network.
         :rtype: float
         """
-        return average(list(deg for _, deg in self.degree()))
+        degree_iter = self.out_degree() if self.is_directed() else self.degree()
+        return average(tuple(map(lambda x: x[1], tuple(degree_iter))))
 
     def modify_avg_degree(self, value):
         """
@@ -318,7 +332,7 @@ class Network(Graph):
         """
         if len(self.algorithms) == 0:
             logger.error("There is no algorithm defined in the network.")
-            raise PyDistSimNetworkError(NetwkErrorMsg.ALGORITHM_NOT_FOUND)
+            raise PyDistSimNetworkError(NetworkErrorMsg.ALGORITHM_NOT_FOUND)
 
         if self.algorithmState["finished"]:
             if len(self.algorithms) > self.algorithmState["index"] + 1:
@@ -378,12 +392,12 @@ class Network(Graph):
             raise ImportError("Matplotlib required for show()") from e
 
         # TODO: environment when positions defined
-        fig_size = tuple(array(self._environment.im.shape) / dpi)
+        fig_size = tuple(array(self._environment.image.shape) / dpi)
 
         # figsize in inches
         # default matplotlibrc is dpi=80 for plt and dpi=100 for savefig
         fig = plt.figure(figsize=fig_size, dpi=dpi, frameon=False)
-        plt.imshow(self._environment.im, cmap="binary_r", vmin=0, origin="lower")
+        plt.imshow(self._environment.image, cmap="binary_r", vmin=0, origin="lower")
         if positions:
             # truncate positions to [x, y], i.e. lose theta
             for k, v in list(positions.items()):
@@ -415,7 +429,7 @@ class Network(Graph):
         # plt.axis('off')
         return fig
 
-    def recalculate_edges(self, nodes=[]):
+    def recalculate_edges(self, nodes: Iterable | None = None):
         """
         Recalculate edges for given nodes or for all self.nodes().
 
@@ -429,10 +443,11 @@ class Network(Graph):
         for n1 in nodes:
             for n2 in self.nodes():
                 if n1 != n2:
-                    if self.channelType.in_comm_range(self, n1, n2):
-                        super().add_edge(n1, n2)
-                    elif self.has_edge(n1, n2):
-                        self.remove_edge(n1, n2)
+                    for x, y in ((n1, n2), (n2, n1)):
+                        if self.channelType.in_comm_range(self, x, y):
+                            super().add_edge(x, y)
+                        elif self.has_edge(x, y):
+                            self.remove_edge(x, y)
 
     def add_edge(self, u_of_edge, v_of_edge, **attr):
         """
@@ -445,26 +460,6 @@ class Network(Graph):
         logger.warning("Edges are auto-calculated from channelType and commRange")
         super().add_edge(u_of_edge, v_of_edge, **attr)
 
-    def find_random_pos(self, n=100):
-        """
-        Returns a random position in the environment.
-
-        :param n: The maximum number of iterations to find a free space.
-        :type n: int
-        :return: The random position found.
-        :rtype: tuple
-        """
-        n_init = n
-        while n > 0:
-            pos = rand(self._environment.dim) * tuple(
-                reversed(self._environment.im.shape)
-            )
-            if self._environment.is_space(pos):
-                break
-            n -= 1
-        logger.debug("Random position found in {} iterations.", (n_init - n))
-        return pos
-
     def reset_all_nodes(self):
         """
         Reset all nodes in the network.
@@ -472,6 +467,7 @@ class Network(Graph):
         :return: None
         """
         for node in self.nodes():
+            node: "Node"
             node.reset()
         logger.info("Resetting all nodes.")
 
@@ -488,7 +484,7 @@ class Network(Graph):
         :return: None
         """
         # Collect messages
-        for node in self.nodes_sorted():
+        for node in self.nodes():
             self.outbox.extend(node.outbox)
             node.outbox = []
         while self.outbox:
@@ -501,12 +497,15 @@ class Network(Graph):
                 try:
                     self.send(message.nexthop, message)
                 except PyDistSimMessageUndeliverable as e:
-                    logger.exception("Message Undeliverable: {}", e.message)
+                    logger.warning("Routing Message Undeliverable: {}", e.message)
             elif message.destination is not None:
                 # Destination is neighbor
                 if (
                     message.source in self.nodes()
-                    and message.destination in self.neighbors(message.source)
+                    and message.destination
+                    in self.neighbors(
+                        message.source
+                    )  # for DiGraph, these are the out-neighbors
                 ):
                     self.send(message.destination, message)
                 elif self.networkRouting:
@@ -581,8 +580,10 @@ class Network(Graph):
             % (self.pos[n][0], self.pos[n][1], self.ori[n] * 180.0 / pi)
             for n in self.nodes_sorted()
         }
+        edges = [(x.id, y.id) for x, y in self.edges()]
         return {
-            "nodes": pos,  # A dictionary mapping node IDs to their positions in the network.
+            "nodes": pos,  # A dictionary mapping nodes to their positions in the network.
+            "edges": edges,  # A list of pairs (id1, id2) representing the edges by node id.
             "algorithms": algorithms,  # A dictionary mapping algorithm names to their status (active or not).
             "algorithmState": {
                 "name": (  # The name of the current algorithm.
@@ -599,54 +600,67 @@ class Network(Graph):
             },
         }
 
-    def get_tree_net(self, treeKey):
+    def get_tree_net(self, treeKey, downstream_only=False):
         """
         Returns a new network with edges that are not in a tree removed.
 
         :param treeKey: The key in the nodes' memory that defines the tree. It can be a list of tree neighbors or a dictionary with 'parent' (node) and 'children' (list) keys.
         :type treeKey: str
+        :param downstream_only: A flag indicating whether to include only downstream edges in the tree. Defaults to False. Downstream edges are edges from parent to children.
+        :type downstream_only: bool
 
-        :return: A new network object with only the edges that are part of the tree.
-        :rtype: Network
+        :return: A new network object with only the edges that are part of the tree. If downstream_only is True, the network is directed.
+        :rtype: NetworkMixin
 
         The tree is defined in the nodes' memory under the specified treeKey. The method iterates over all nodes in the network and checks if the treeKey is present in their memory. If it is, it retrieves the tree neighbors or children and adds the corresponding edges to the tree_edges_ids list. It also adds the tree nodes to the tree_nodes list.
 
         After iterating over all nodes, a subnetwork is created using the tree_nodes. Then, the method removes any edges from the subnetwork that are not present in the tree_edges_ids list.
 
         Finally, the resulting subnetwork, representing the tree, is returned.
+
         """
         tree_edges_ids = []
         tree_nodes = []
-        for node in self.nodes_sorted():
+        for node in self.nodes():
+            print(f"{node.memory=}")
             neighbors_in_tree = []
             if treeKey not in node.memory:
                 continue
             if isinstance(node.memory[treeKey], list):
+                if downstream_only:
+                    raise PyDistSimNetworkError(
+                        NetworkErrorMsg.LIST_TREE_DOWNSTREAM_ONLY
+                    )
                 neighbors_in_tree = node.memory[treeKey]
             elif (
                 isinstance(node.memory[treeKey], dict)
                 and "children" in node.memory[treeKey]
             ):
-                neighbors_in_tree = node.memory[treeKey]["children"]
+                neighbors_in_tree += node.memory[treeKey]["children"]
+                if not downstream_only and "parent" in node.memory[treeKey]:
+                    neighbors_in_tree.append(node.memory[treeKey]["parent"])
+
             tree_edges_ids.extend(
                 [
                     (node.id, neighbor.id)
                     for neighbor in neighbors_in_tree
-                    if neighbor in self.nodes()
+                    if neighbor in self.neighbors(node)
                 ]
             )
             tree_nodes.extend(
-                neighbor for neighbor in neighbors_in_tree if neighbor in self.nodes()
+                neighbor
+                for neighbor in neighbors_in_tree
+                if neighbor in self.neighbors(node)
             )
             if tree_nodes:
+                print(f"{node}, {tree_edges_ids=}")
                 tree_nodes.append(node)
 
         treeNet = self.subnetwork(tree_nodes)
-        for u, v in treeNet.edges():
-            if (u.id, v.id) not in tree_edges_ids and (
-                v.id,
-                u.id,
-            ) not in tree_edges_ids:
+        if downstream_only:
+            treeNet = treeNet.to_directed()
+        for u, v in tuple(treeNet.edges()):
+            if (u.id, v.id) not in tree_edges_ids:
                 treeNet.remove_edge(u, v)
         return treeNet
 
@@ -663,15 +677,17 @@ class Network(Graph):
         count = params.get("count", None)  #  for unit tests
         if count:
             if isinstance(count, list):
-                assert len(self) in count
+                assert len(self) in count, f"{len(self)=} not in {count=}"
             else:
-                assert len(self) == count
+                assert len(self) == count, f"{len(self)=} != {count=}"
         n_min = params.get("n_min", 0)
         n_max = params.get("n_max", Inf)
         assert len(self) >= n_min and len(self) <= n_max
         for param, value in list(params.items()):
             if param == "connected":
-                assert not value or is_connected(self)
+                assert (
+                    not value or self.is_connected()
+                ), f"{value=}, {self.is_connected()=}"
             elif param == "degree":
                 assert allclose(self.avg_degree(), value, atol=settings.DEG_ATOL)
             elif param == "environment":
@@ -713,6 +729,18 @@ class Network(Graph):
                 """
 
 
+class Network(NetworkMixin, DiGraph):
+    """
+    A directed graph representing a network in a distributed simulation.
+    """
+
+
+class BidirectionalNetwork(NetworkMixin, Graph):
+    """
+    An undirected graph representing a bidirectional network in a distributed simulation.
+    """
+
+
 class PyDistSimMessageUndeliverable(Exception):
     def __init__(self, e, message):
         self.e = e
@@ -722,7 +750,7 @@ class PyDistSimMessageUndeliverable(Exception):
         return self.e + repr(self.message)
 
 
-class NetwkErrorMsg(StrEnum):
+class NetworkErrorMsg(StrEnum):
     ALGORITHM = (
         "Algorithms must be in tuple (AlgorithmClass,)"
         " or in form: ((AlgorithmClass, params_dict),)."
@@ -732,12 +760,13 @@ class NetwkErrorMsg(StrEnum):
     NODE_SPACE = "Given position is not free space."
     NODE_NOT_IN_NET = "Node not in network."
     ALGORITHM_NOT_FOUND = "Algorithm not found in network."
+    LIST_TREE_DOWNSTREAM_ONLY = "Downstream only is not supported for list tree. It's impossible to determine direction."
 
 
 class PyDistSimNetworkError(Exception):
 
     def __init__(self, type_):
-        if isinstance(type_, NetwkErrorMsg):
+        if isinstance(type_, NetworkErrorMsg):
             self.message = type_.value
         else:
             self.message = "Unknown error."
