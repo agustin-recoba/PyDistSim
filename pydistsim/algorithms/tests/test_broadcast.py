@@ -11,7 +11,7 @@ BYE = "Bye bye distributed world"
 class TestBroadcastSimple(unittest.TestCase):
 
     def setUp(self):
-        net_gen = NetworkGenerator(100)
+        net_gen = NetworkGenerator(100, directed=False)
         self.net = net_gen.generate_random_network()
 
         # Asigna el algoritmo
@@ -39,7 +39,7 @@ class TestBroadcastSimple(unittest.TestCase):
 class TestBroadcastConcatenated(unittest.TestCase):
 
     def setUp(self):
-        net_gen = NetworkGenerator(100)
+        net_gen = NetworkGenerator(100, directed=False)
         self.net = net_gen.generate_random_network()
 
         # Asigna el algoritmo

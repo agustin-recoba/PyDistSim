@@ -1,5 +1,6 @@
 import png
 from numpy import Inf, ones, sign, sqrt, uint8, vstack
+from numpy.random import rand
 
 from pydistsim.conf import settings
 from pydistsim.logger import logger
@@ -52,6 +53,17 @@ class Environment:
         """
         raise NotImplementedError
 
+    def find_random_pos(self, n=100):
+        """
+        Returns a random position in the environment.
+
+        :param n: The maximum number of iterations to find a free space.
+        :type n: int
+        :return: The random position found.
+        :rtype: tuple
+        """
+        raise NotImplementedError
+
 
 class Environment2D(Environment):
     """
@@ -72,17 +84,17 @@ class Environment2D(Environment):
             try:
                 r = png.Reader(path)
                 planes = r.read()[3]["planes"]
-                self.im = vstack(map(uint8, r.asDirect()[2]))[:, ::planes]
-                self.im = self.im[::-1, :]  # flip-up-down
-                assert (r.height, r.width) == self.im.shape
+                self.image = vstack(map(uint8, r.asDirect()[2]))[:, ::planes]
+                self.image = self.image[::-1, :]  # flip-up-down
+                assert (r.height, r.width) == self.image.shape
             except OSError:
                 logger.exception(
                     "Can't open {} creating new default environment.", path
                 )
 
-                self.im = uint8(ones(shape) * 255)
+                self.image = uint8(ones(shape) * 255)
         else:
-            self.im = uint8(ones(shape) * 255)
+            self.image = uint8(ones(shape) * 255)
 
         self.dim = 2
         scale = not scale and 1 or int(scale)
@@ -91,7 +103,7 @@ class Environment2D(Environment):
 
     def __deepcopy__(self, memo):
         dup = Environment2D()
-        dup.im = self.im.copy()
+        dup.image = self.image.copy()
         return dup
 
     def is_space(self, xy):
@@ -105,7 +117,7 @@ class Environment2D(Environment):
         :rtype: bool
         """
         x, y = xy
-        h, w = self.im.shape
+        h, w = self.image.shape
         if x < 0 or x > w or y < 0 or y > h:
             return False
         check = True
@@ -118,7 +130,7 @@ class Environment2D(Environment):
             points.append([xy[0] - 1, xy[1] - 1])
         try:
             for p in points:
-                check = check and self.im[int(p[1]), int(p[0])] != 0
+                check = check and self.image[int(p[1]), int(p[0])] != 0
         except IndexError:
             check = False
         return check
@@ -183,3 +195,21 @@ class Environment2D(Environment):
             if not self.is_space([x, y]):
                 return False
         return True
+
+    def find_random_pos(self, n=100):
+        """
+        Returns a random position in the environment.
+
+        :param n: The maximum number of iterations to find a free space.
+        :type n: int
+        :return: The random position found.
+        :rtype: tuple
+        """
+        n_init = n
+        while n > 0:
+            pos = rand(self.dim) * tuple(reversed(self.image.shape))
+            if self.is_space(pos):
+                break
+            n -= 1
+        logger.debug("Random position found in {} iterations.", (n_init - n))
+        return pos
