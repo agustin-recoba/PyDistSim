@@ -7,6 +7,7 @@ from pydistsim.logger import logger
 from pydistsim.message import Message
 from pydistsim.message import MetaHeader as MessageMetaHeader
 from pydistsim.node import Node
+from pydistsim.observers import AlgorithmObserver, ObserverManagerMixin
 
 
 class ActionEnum(StrEnum):
@@ -71,7 +72,7 @@ class AlgorithmMeta(type):
         return super().__new__(cls, clsname, bases, dct)
 
 
-class Algorithm(metaclass=AlgorithmMeta):
+class Algorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
     """
     Abstract base class for all algorithms.
 
@@ -113,10 +114,12 @@ class Algorithm(metaclass=AlgorithmMeta):
 
     """
 
+    OBSERVER_TYPE = AlgorithmObserver
     required_params = ()
     default_params = {}
 
     def __init__(self, network, **kwargs):
+        super().__init__()
         self.network: nt.Network = network
         self.name = self.__class__.__name__
         logger.debug("Instance of {} class has been initialized.", self.name)
@@ -139,6 +142,19 @@ class Algorithm(metaclass=AlgorithmMeta):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.__dict__})"
 
+    def step(self):
+        raise NotImplementedError
+
+    def is_initialized(self):
+        return (
+            self.network.algorithmState["step"] != 1
+            and self.network.get_current_algorithm() == self
+        )
+
+    def step_done_notify(self):
+        for observer in self.observers:
+            observer.on_step_done(self)
+
 
 class NodeAlgorithm(Algorithm):
     """
@@ -155,9 +171,6 @@ class NodeAlgorithm(Algorithm):
       start the algorithm and set some attributes needed by the specific
       algorithm
 
-    As indication of global termination of algorithm some method could
-    optionally return True.
-
     """
 
     INI = MessageMetaHeader.INITIALIZATION_MESSAGE
@@ -165,22 +178,43 @@ class NodeAlgorithm(Algorithm):
     class Status(StatusValues):
         IDLE = "IDLE"
 
+    def step(self):
+        logger.debug("Processing one step of {}.", self.name)
+        if not self.is_initialized():
+            self.initializer()
+            if not self.network.network_outbox:
+                logger.warning("Initializer didn't send any message (even INI).")
+        else:
+            self.network.communicate()
+            for node in self.network.nodes_sorted():
+                self.node_step(node)
+            logger.debug(
+                "[{}] Step {} finished",
+                self.name,
+                self.network.algorithmState["step"],
+            )
+        self.network.algorithmState["step"] += 1
+
+        self.step_done_notify()
+
     def initializer(self):
         """Pass INI message to certain nodes in network based on type."""
+        logger.debug("Initializing algorithm {}.", self.name)
         node = self.network.nodes_sorted()[0]
-        self.network.outbox.insert(
+        self.network.network_outbox.insert(
             0, Message(meta_header=NodeAlgorithm.INI, destination=node)
         )
         for node in self.network.nodes_sorted():
             node.status = self.Status.IDLE
 
-    def step(self, node: Node):
+    def node_step(self, node: Node):
         """Executes one step of the algorithm for given node."""
         message: Message = node.receive()
         if message:
+            logger.debug("Processing step at node {}.", node.id)
             if message.destination is None or message.destination == node:
                 # when destination is None it is broadcast message
-                return self._process_message(node, message)
+                self._process_message(node, message)
             elif message.nexthop == node.id:
                 self._forward_message(node, message)
 
@@ -193,16 +227,16 @@ class NodeAlgorithm(Algorithm):
             node.send(message)
 
     def _process_message(self, node: Node, message: Message):
-        status = getattr(self.Status, node.status.value)
+        status: StatusValues = getattr(self.Status, node.status.value)
         logger.debug("Processing message: 0x%x" % id(message))
         method_name = MSG_META_HEADER_MAP[message.meta_header]
 
         if status.implements(method_name):
             method = getattr(status, method_name)
-            return method(self, node, message)
+            method(self, node, message)
         elif status.implements(ActionEnum.default):
             method = getattr(status, ActionEnum.default)
-            return method(self, node, message)
+            method(self, node, message)
         else:
             logger.error(
                 f"Method {method_name} not implemented for status {node.status}."
@@ -219,6 +253,9 @@ class NetworkAlgorithm(Algorithm):
     Method __init__ and run should be implemented in subclass.
 
     """
+
+    def step(self):
+        return self.run()
 
     def run(self):
         raise NotImplementedError

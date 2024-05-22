@@ -3,6 +3,7 @@ import unittest
 from pydistsim.algorithm import NetworkAlgorithm, NodeAlgorithm
 from pydistsim.networkgenerator import NetworkGenerator
 from pydistsim.simulation import Simulation
+from pydistsim.utils.testing import PyDistSimTestCase
 
 
 class UnimplementedNodeAlgorithm(NodeAlgorithm): ...
@@ -15,7 +16,7 @@ class ImplementedNetworkAlgorithm(NetworkAlgorithm):
             node.memory["test"] = "test"
 
 
-class TestRunBaseNodeAlgorithm(unittest.TestCase):
+class TestRunBaseNodeAlgorithm(PyDistSimTestCase):
 
     def setUp(self):
         net_gen = NetworkGenerator(100)
@@ -34,8 +35,12 @@ class TestRunBaseNodeAlgorithm(unittest.TestCase):
         assert sim.is_halted()
 
         sim.run_step()
-        # First step should transfer the INI from the outbox to the inbox of the initiator node
-        assert len(self.net.outbox) == 0
+        # First step should put the INI in the outbox
+        assert len(self.net.network_outbox) > 0
+        assert all(len(node.outbox) == 0 for node in self.net.nodes())
+
+        # Put the INI message in the inbox of a node
+        sim.run_step()
 
         nodes_with_1_msg = 0
         for node in self.net.nodes():
@@ -49,6 +54,10 @@ class TestRunBaseNodeAlgorithm(unittest.TestCase):
 
         sim.run_step()
         # Second step should process the INI message (and do nothing)
+
+        assert len(self.net.network_outbox) == 0
+        assert all([len(node.outbox) == 0 for node in self.net.nodes()])
+        assert all([len(node.inbox) == 0 for node in self.net.nodes()])
 
         assert sim.is_halted()
 

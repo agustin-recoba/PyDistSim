@@ -23,7 +23,7 @@ class FloodingUpdate(NodeAlgorithm):
 
         for node in self.network.nodes():
             if self.initiator_condition(node):
-                self.network.outbox.insert(
+                self.network.network_outbox.insert(
                     0, Message(destination=node, meta_header=NodeAlgorithm.INI)
                 )
                 node.status = self.Status.INITIATOR

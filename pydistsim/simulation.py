@@ -1,15 +1,22 @@
 from PySide6.QtCore import SIGNAL, QThread
 
-from pydistsim.algorithm import Algorithm, NetworkAlgorithm, NodeAlgorithm
-from pydistsim.logger import LogLevels, logger
+from pydistsim.algorithm import Algorithm
+from pydistsim.logger import logger
 from pydistsim.network import Network
+from pydistsim.observers import (
+    AlgorithmObserver,
+    ObserverManagerMixin,
+    SimulationObserver,
+)
 
 
-class Simulation(QThread):
+class Simulation(ObserverManagerMixin, QThread):
     """
     Controls single network algorithm and node algorithms simulation.
     It is responsible for visualization and logging, also.
     """
+
+    OBSERVER_TYPE = SimulationObserver
 
     def __init__(self, network: Network, **kwargs):
         """
@@ -21,12 +28,14 @@ class Simulation(QThread):
         :type logLevel: LogLevels
         :param kwargs: Additional keyword arguments.
         """
+        super().__init__()
+
         self._network = network
         self._network.simulation = self
         self.stepsLeft = 0
-        self.logger = logger
-        self.logger.debug("Simulation {} created successfully.", hex(id(self)))
-        QThread.__init__(self)
+        self.add_observers(QThreadObserver(self))
+
+        logger.debug("Simulation {} created successfully.", hex(id(self)))
 
     def __del__(self):
         self.exiting = True
@@ -46,17 +55,18 @@ class Simulation(QThread):
         """
         self.stepsLeft = steps
         while True:
-            algorithm = self.network.get_current_algorithm()
+            algorithm: "Algorithm" = self.network.get_current_algorithm()
             if not algorithm:
-                self.logger.info(
+                logger.info(
                     "Simulation has finished. There are no "
                     "algorithms left to run. "
                     "To run it from the start use sim.reset()."
                 )
-                self.emit(SIGNAL("redraw()"))
+                self.notify_observers("state_changed", self)
                 break
+            algorithm.add_observers(*self.observers)
             self._run_algorithm(algorithm)
-            self.emit(SIGNAL("redraw()"))
+            self.notify_observers("state_changed", self)
             if self.stepsLeft >= 0:
                 break
 
@@ -79,41 +89,18 @@ class Simulation(QThread):
 
         :param algorithm: The algorithm to run on the network.
         """
-        if isinstance(algorithm, NetworkAlgorithm):
+        while True:
+            algorithm.step()
             self.stepsLeft -= 1
-            algorithm.run()
-        elif isinstance(algorithm, NodeAlgorithm):
-            if self.network.algorithmState["step"] == 1:
-                algorithm.initializer()
-                if not self.network.outbox:
-                    self.logger.warning("Initializer didn't send INI message")
-            while not self.is_halted():
-                self.stepsLeft -= 1
-                self.network.communicate()
-                for node in self.network.nodes_sorted():
-                    nodeTerminated = algorithm.step(node)
-                self.emit(
-                    SIGNAL("updateLog(QString)"),
-                    "[{}] Step {} finished",
-                    algorithm.name,
-                    self.network.algorithmState["step"],
-                )
-                self.logger.debug(
-                    "[{}] Step {} finished",
-                    algorithm.name,
-                    self.network.algorithmState["step"],
-                )
-                self.network.algorithmState["step"] += 1
-                if nodeTerminated:
-                    break
-                if self.stepsLeft == 0:
-                    return  # not finished
-        self.emit(
-            SIGNAL("updateLog(QString)"), "[%s] Algorithm finished" % (algorithm.name)
-        )
-        self.logger.debug("[{}] Algorithm finished", algorithm.name)
+            if self.stepsLeft == 0:
+                return  # not finished
+
+            if self.is_halted():  # end of the loop so at least one step is done
+                break
+
+        self.notify_observers("algorithm_finished", algorithm)
+        logger.debug("[{}] Algorithm finished", algorithm.name)
         self.network.algorithmState["finished"] = True
-        return
 
     def reset(self):
         """
@@ -121,7 +108,7 @@ class Simulation(QThread):
 
         :return: None
         """
-        self.logger.info("Resetting simulation.")
+        logger.info("Resetting simulation.")
         self._network.reset()
 
     def is_halted(self):
@@ -135,7 +122,7 @@ class Simulation(QThread):
         :rtype: bool
         """
         if (
-            len(self._network.outbox) > 0
+            len(self._network.network_outbox) > 0
             or any([len(node.outbox) for node in self.network.nodes()])
             or any([len(node.inbox) for node in self.network.nodes()])
         ):
@@ -162,8 +149,35 @@ class Simulation(QThread):
         :rtype: None
 
         """
-        self._network.simulation = None
+        self._network.simulation = (
+            None  # remove reference to this simulation in the old network
+        )
         self._network = network
         self._network.simulation = self
-        self.emit(SIGNAL("updateLog(QString)"), "Network loaded")
-        self.emit(SIGNAL("redraw()"))
+        self.notify_observers("network_changed", self)
+
+
+class QThreadObserver(AlgorithmObserver, SimulationObserver):
+    def __init__(self, q_thread: QThread, *args, **kwargs) -> None:
+        self.q_thread = q_thread
+        super().__init__(*args, **kwargs)
+
+    def on_step_done(self, algorithm: Algorithm) -> None:
+        self.q_thread.emit(
+            SIGNAL("updateLog(QString)"),
+            "[{}] Step {} finished",
+            algorithm.name,
+            algorithm.network.algorithmState["step"],
+        )
+
+    def on_state_changed(self, simulation: Simulation) -> None:
+        self.q_thread.emit(SIGNAL("redraw()"))
+
+    def on_algorithm_finished(self, algorithm: Algorithm) -> None:
+        self.q_thread.emit(
+            SIGNAL("updateLog(QString)"), "[%s] Algorithm finished" % (algorithm.name)
+        )
+
+    def on_network_changed(self, simulation: Simulation) -> None:
+        self.q_thread.emit(SIGNAL("updateLog(QString)"), "Network loaded")
+        self.q_thread.emit(SIGNAL("redraw()"))

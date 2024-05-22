@@ -31,7 +31,7 @@ class Flood(NodeAlgorithm):
                 node.status = self.Status.INITIATOR
                 ini_nodes.append(node)
         for ini_node in ini_nodes:
-            self.network.outbox.insert(
+            self.network.network_outbox.insert(
                 0, Message(meta_header=NodeAlgorithm.INI, destination=ini_node)
             )
 

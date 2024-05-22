@@ -32,7 +32,7 @@ from pydistsim.utils.memory.positions import Positions
 
 class SimulationGui(QMainWindow):
     def __init__(self, net=None, parent=None, fname=None):
-        QMainWindow.__init__(self)
+        super().__init__()
 
         self.ui = Ui_SimulationWindow()
         self.ui.setupUi(self)
@@ -507,14 +507,14 @@ class NodeCircle(Circle):
     """Circle with node data."""
 
     def __init__(self, xy, *args, **kwargs):
-        Circle.__init__(self, xy, *args, **kwargs)
+        super().__init__(xy, *args, **kwargs)
 
 
 class MessageCircle(Circle):
     """Circle with message data."""
 
     def __init__(self, message, net, direction, *args, **kwargs):
-        Circle.__init__(self, self._get_pos(message, net, direction), *args, **kwargs)
+        super().__init__(self._get_pos(message, net, direction), *args, **kwargs)
 
     def _get_pos(self, message, net, direction):
         xd, yd = net.pos[message.destination]
