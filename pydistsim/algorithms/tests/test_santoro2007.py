@@ -115,7 +115,7 @@ class TestTraversalDFT(unittest.TestCase):
     def test_broadcast(self):
         sim = Simulation(self.net)
 
-        sim.run_all()
+        sim.run()
 
         for node in self.net.nodes():
             assert node.status == DFT.Status.DONE, "Node %d is not DONE" % node.id
@@ -139,7 +139,7 @@ class TestTraversalDFStar(unittest.TestCase):
     def test_broadcast(self):
         sim = Simulation(self.net)
 
-        sim.run_all()
+        sim.run()
 
         for node in self.net.nodes():
             assert node.status == DFStar.Status.DONE, "Node %d is not DONE" % node.id

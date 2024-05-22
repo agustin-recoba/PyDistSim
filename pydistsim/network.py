@@ -1,11 +1,19 @@
 import inspect
+import random
 from collections.abc import Iterable
 from copy import deepcopy
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
-import networkx as nx
-from networkx import DiGraph, Graph, is_connected, is_strongly_connected
+from networkx import (
+    DiGraph,
+    Graph,
+    draw_networkx_edges,
+    draw_networkx_labels,
+    draw_networkx_nodes,
+    is_connected,
+    is_strongly_connected,
+)
 from numpy import array, max, min, pi, sign
 from numpy.core.numeric import Inf, allclose
 from numpy.lib.function_base import average
@@ -17,6 +25,7 @@ from pydistsim.conf import settings
 from pydistsim.environment import Environment
 from pydistsim.logger import logger
 from pydistsim.node import Node
+from pydistsim.observers import NetworkObserver, ObserverManagerMixin
 from pydistsim.sensor import CompositeSensor
 from pydistsim.utils.helpers import pydistsim_equal_objects, with_typehint
 
@@ -27,13 +36,15 @@ if TYPE_CHECKING:
 AlgorithmsParam = tuple[type[Algorithm] | tuple[type[Algorithm], dict]]
 
 
-class NetworkMixin(with_typehint(Graph)):
+class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
     """
     Mixin to extend Graph and DiGraph. The result represents a network in a distributed simulation.
 
     The Network classes (:class:`.Network` and :class:`.BidirectionalNetwork`) extend the Graph class and provides additional functionality
     for managing nodes, algorithms, and network properties.
     """
+
+    OBSERVER_TYPE = NetworkObserver
 
     def __init__(
         self,
@@ -57,16 +68,16 @@ class NetworkMixin(with_typehint(Graph)):
         :type graph: NetworkX graph, optional
         :param kwargs: Additional keyword arguments.
         """
+        super().__init__(incoming_graph_data)
         self._environment = environment or Environment()
         self.channelType = channelType or ChannelType(self._environment)
         self.channelType.environment = self._environment
         self.pos = {}
         self.ori = {}
         self.labels = {}
-        super().__init__(incoming_graph_data)
         self.algorithms = algorithms or settings.ALGORITHMS
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
-        self.outbox = []
+        self.network_outbox = []
         self.networkRouting = networkRouting
         self.simulation = None
         logger.info("Instance of Network has been initialized.")
@@ -117,7 +128,7 @@ class NetworkMixin(with_typehint(Graph)):
         # Copy network attributes and reinitialize algorithms
         H.algorithms = deepcopy(self._algorithms_param) or settings.ALGORITHMS
         H.algorithmState = {"index": 0, "step": 1, "finished": False}
-        H.outbox = []
+        H.network_outbox = []
         H.simulation = None
 
         assert isinstance(H, NetworkMixin)
@@ -129,10 +140,10 @@ class NetworkMixin(with_typehint(Graph)):
 
         :param data: A boolean value indicating whether to include node data in the sorted list.
         :type data: bool
-        :return: A sorted list of nodes.
-        :rtype: list
+        :return: A sorted tuple of nodes.
+        :rtype: tuple
         """
-        return list(sorted(self.nodes(), key=lambda k: k.id))
+        return tuple(sorted(self.nodes(), key=lambda k: k.id))
 
     @property
     def algorithms(self):
@@ -408,8 +419,8 @@ class NetworkMixin(with_typehint(Graph)):
             pos = self.pos
             net = self
         labels = labels or net.labels
-        nx.draw_networkx_edges(net, pos, alpha=0.6, edgelist=edgelist)
-        nx.draw_networkx_nodes(
+        draw_networkx_edges(net, pos, alpha=0.6, edgelist=edgelist)
+        draw_networkx_nodes(
             net, pos, node_size=node_size, node_color=nodeColor, cmap="YlOrRd"
         )
         if show_labels:
@@ -419,7 +430,7 @@ class NetworkMixin(with_typehint(Graph)):
             label_delta = sqrt(node_size * 0.6) * dpi / 100
             for n in net.nodes():
                 label_pos[n] = pos[n].copy() + label_delta
-            nx.draw_networkx_labels(
+            draw_networkx_labels(
                 net,
                 label_pos,
                 labels=labels,
@@ -471,6 +482,67 @@ class NetworkMixin(with_typehint(Graph)):
             node.reset()
         logger.info("Resetting all nodes.")
 
+    def get_some_message(self) -> Optional["Message"]:
+        if len(self.network_outbox) > 0:  # There are messages in the network outbox.
+            message = self.network_outbox.pop(0)
+            return message
+
+        nodes_with_messages = [node for node in self.nodes() if len(node.outbox) > 0]
+
+        if len(nodes_with_messages) == 0:  # No nodes with messages in outbox.
+            logger.debug("There are no nodes with messages in outbox.")
+            return None
+
+        node: "Node" = random.choice(nodes_with_messages)
+        message = random.choice(
+            node.outbox
+        )  # TODO: implement OPTIONAL message ordering
+
+        node.outbox.remove(message)
+
+        return message
+
+    def communication_step(self):
+        """
+        Perform one step of communication in the network.
+
+        :return: True if a message was "communicated", False otherwise.
+        :rtype: bool
+        """
+        if len(self) == 0:
+            return True
+
+        message = self.get_some_message()
+        if message is None:
+            return False
+
+        logger.debug("Communicating message: {}", message)
+
+        if message.destination is None and message.nexthop is None:
+            # broadcast
+            self.broadcast(message)
+        elif message.nexthop is not None:
+            # Node routing
+            try:
+                self.send(message.nexthop, message)
+            except PyDistSimMessageUndeliverable as e:
+                logger.warning("Routing Message Undeliverable: {}", e.message)
+        elif message.destination is not None:
+            # Destination is neighbor
+            if message.source in self.nodes() and message.destination in self.neighbors(
+                message.source
+            ):  # for DiGraph, `self.neighbors` are the out-neighbors
+                self.send(message.destination, message)
+            elif self.networkRouting:
+                # Network routing
+                # TODO: program network routing so it goes hop by hop only
+                #       in connected part of the network
+                self.send(message.destination, message)
+            else:
+                raise PyDistSimMessageUndeliverable("Can't deliver message.", message)
+
+        return True
+
     def communicate(self):
         """
         Pass all messages from node's outboxes to its neighbors inboxes.
@@ -483,40 +555,10 @@ class NetworkMixin(with_typehint(Graph)):
 
         :return: None
         """
-        # Collect messages
-        for node in self.nodes():
-            self.outbox.extend(node.outbox)
-            node.outbox = []
-        while self.outbox:
-            message = self.outbox.pop()
-            if message.destination is None and message.nexthop is None:
-                # broadcast
-                self.broadcast(message)
-            elif message.nexthop is not None:
-                # Node routing
-                try:
-                    self.send(message.nexthop, message)
-                except PyDistSimMessageUndeliverable as e:
-                    logger.warning("Routing Message Undeliverable: {}", e.message)
-            elif message.destination is not None:
-                # Destination is neighbor
-                if (
-                    message.source in self.nodes()
-                    and message.destination
-                    in self.neighbors(
-                        message.source
-                    )  # for DiGraph, these are the out-neighbors
-                ):
-                    self.send(message.destination, message)
-                elif self.networkRouting:
-                    # Network routing
-                    # TODO: program network routing so it goes hop by hop only
-                    #       in connected part of the network
-                    self.send(message.destination, message)
-                else:
-                    raise PyDistSimMessageUndeliverable(
-                        "Can't deliver message.", message
-                    )
+        logger.debug("Communicating messages in the network.")
+
+        while self.communication_step():
+            ...
 
     def broadcast(self, message: "Message"):
         """

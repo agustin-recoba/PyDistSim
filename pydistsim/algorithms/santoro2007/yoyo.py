@@ -56,7 +56,7 @@ class YoYo(NodeAlgorithm):
             node.memory[self.SENT_IDS_KEY] = 0
             node.memory[self.RECEIVED_IDS_WHILE_WAITING_RESPONSE_KEY] = {}
 
-            self.network.outbox.insert(
+            self.network.network_outbox.insert(
                 0, Message(meta_header=NodeAlgorithm.INI, destination=node)
             )
 

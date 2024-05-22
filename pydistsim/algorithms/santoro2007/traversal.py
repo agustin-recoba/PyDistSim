@@ -18,7 +18,7 @@ class DFT(NodeAlgorithm):
             node.status = self.Status.IDLE
         ini_node = self.network.nodes_sorted()[0]
         ini_node.status = self.Status.INITIATOR
-        self.network.outbox.insert(
+        self.network.network_outbox.insert(
             0, Message(meta_header=NodeAlgorithm.INI, destination=ini_node)
         )
 
@@ -86,7 +86,7 @@ class DFStar(NodeAlgorithm):
             node.status = self.Status.IDLE
         ini_node = self.network.nodes_sorted()[0]
         ini_node.status = self.Status.INITIATOR
-        self.network.outbox.insert(
+        self.network.network_outbox.insert(
             0, Message(meta_header=NodeAlgorithm.INI, destination=ini_node)
         )
 
