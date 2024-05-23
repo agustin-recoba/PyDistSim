@@ -1,9 +1,9 @@
-from collections.abc import Iterable
 from types import NoneType
 from typing import TYPE_CHECKING, Optional
 
 from pydistsim.conf import settings
 from pydistsim.logger import LogLevels, logger
+from pydistsim.observers import ObservableEvents, ObserverManagerMixin
 from pydistsim.sensor import CompositeSensor
 
 if TYPE_CHECKING:
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from pydistsim.sensor import Sensor
 
 
-class Node:
+class Node(ObserverManagerMixin):
     """
     Represents a node in a network.
     """
@@ -37,12 +37,14 @@ class Node:
         :type sensors: tuple[type[Sensor] | str], optional
         :param kwargs: Additional keyword arguments.
         """
+        super().__init__()
         self._compositeSensor = CompositeSensor(self, sensors or settings.SENSORS)
         self.network = network
         self._commRange = commRange or settings.COMM_RANGE
         self.id = self.__class__.next_node_id
         self.__class__.next_node_id += 1
         self._inboxDelay = True
+        self._status = None
         self.reset()
 
     def __repr__(self):
@@ -52,6 +54,32 @@ class Node:
     # def __deepcopy__(self, memo):
     #     return self
 
+    @property
+    def status(self):
+        """
+        Get the status of the node.
+
+        :return: The status of the node.
+        :rtype: str
+        """
+        return self._status
+
+    @status.setter
+    def status(self, status: str):
+        """
+        Set the status of the node.
+
+        :param status: The status to be set.
+        :type status: str
+        """
+        self.notify_observers(
+            ObservableEvents.node_status_changed,
+            node=self,
+            previous_status=self._status,
+            new_status=status,
+        )
+        self._status = status
+
     def reset(self):
         """
         Reset the node's state.
@@ -60,29 +88,8 @@ class Node:
         """
         self.outbox = []
         self._inbox = []
-        self.status = None
+        self._status = None
         self.memory = {}
-
-    def send(self, message: "Message"):
-        """
-        Send a message to nodes listed in message's destination field.
-
-        Note: Destination should be a list of nodes or one node.
-
-        Update message's source field and inserts in node's outbox one copy
-        of it for each destination.
-
-        :param message: The message to be sent.
-        :type message: Message
-        """
-        message.source = self
-        if not isinstance(message.destination, Iterable):
-            message.destination = [message.destination]
-        for destination in message.destination:
-            logger.debug("Node {} sent message {}.", self.id, message.__repr__())
-            m = message.copy()
-            m.destination = destination
-            self.outbox.insert(0, m)
 
     def receive(self):
         """
@@ -117,7 +124,7 @@ class Node:
         """
         return self._inbox
 
-    def push_to_inbox(self, message):
+    def push_to_inbox(self, message: "Message"):
         """
         Push a message to the inbox of the node.
 
@@ -126,6 +133,22 @@ class Node:
         """
         self._inboxDelay = self._inboxDelay or not self._inbox
         self._inbox.insert(0, message)
+        logger.debug("Message delivered to {}", self)
+        self.notify_observers(ObservableEvents.message_delivered, message)
+
+    def push_to_outbox(self, message: "Message", destination: "Node"):
+        """
+        Push a message to the outbox of the node.
+
+        :param message: The message to be pushed to the outbox.
+        :type message: Message
+        :param destination: The destination node of the message.
+        :type destination: Node
+        """
+        message.destination = destination
+        self.outbox.insert(0, message)
+        logger.debug("Node {} sent message {}.", self.id, message.__repr__())
+        self.notify_observers(ObservableEvents.message_sent, message)
 
     @property
     def compositeSensor(self):
