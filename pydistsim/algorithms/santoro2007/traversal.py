@@ -18,8 +18,8 @@ class DFT(NodeAlgorithm):
             node.status = self.Status.IDLE
         ini_node = self.network.nodes_sorted()[0]
         ini_node.status = self.Status.INITIATOR
-        self.network.network_outbox.insert(
-            0, Message(meta_header=NodeAlgorithm.INI, destination=ini_node)
+        ini_node.push_to_inbox(
+            Message(meta_header=NodeAlgorithm.INI, destination=ini_node)
         )
 
     @Status.INITIATOR
@@ -48,7 +48,9 @@ class DFT(NodeAlgorithm):
     def receiving(self, node, message):
         if message.header == "Token":
             node.memory["unvisited"].remove(message.source)
-            node.send(Message(header="Backedge", destination=message.source))
+            self.send_message(
+                node, Message(header="Backedge", destination=message.source)
+            )
         elif message.header == "Return":
             self.visit(node)
         elif message.header == "Backedge":
@@ -61,11 +63,13 @@ class DFT(NodeAlgorithm):
     def visit(self, node):
         if len(node.memory["unvisited"]) == 0:
             if node.memory["parent"] is not None:
-                node.send(Message(header="Return", destination=node.memory["parent"]))
+                self.send_message(
+                    node, Message(header="Return", destination=node.memory["parent"])
+                )
             node.status = self.Status.DONE
         else:
             next_unvisited = node.memory["unvisited"].pop()
-            node.send(Message(header="Token", destination=next_unvisited))
+            self.send_message(node, Message(header="Token", destination=next_unvisited))
             node.status = self.Status.VISITED
 
 
@@ -86,8 +90,8 @@ class DFStar(NodeAlgorithm):
             node.status = self.Status.IDLE
         ini_node = self.network.nodes_sorted()[0]
         ini_node.status = self.Status.INITIATOR
-        self.network.network_outbox.insert(
-            0, Message(meta_header=NodeAlgorithm.INI, destination=ini_node)
+        ini_node.push_to_inbox(
+            Message(meta_header=NodeAlgorithm.INI, destination=ini_node)
         )
 
     @Status.INITIATOR
@@ -96,13 +100,16 @@ class DFStar(NodeAlgorithm):
         node.memory["unvisited"] = list(node.memory[self.neighborsKey])
         node.memory["next"] = node.memory["unvisited"].pop()
         if len(node.memory["unvisited"]) > 0:
-            node.send(
+            self.send_message(
+                node,
                 Message(
                     header="T",
                     destination=node.memory["next"],
-                )
+                ),
             )
-            node.send(Message(header="Visited", destination=node.memory["unvisited"]))
+            self.send_message(
+                node, Message(header="Visited", destination=node.memory["unvisited"])
+            )
             node.status = self.Status.VISITED
             self.visitedAction(node)
         else:
@@ -158,42 +165,50 @@ class DFStar(NodeAlgorithm):
             pass
         if node.memory["unvisited"]:
             node.memory["next"] = node.memory["unvisited"].pop()
-            node.send(
+            self.send_message(
+                node,
                 Message(
                     header="T",
                     destination=node.memory["next"],
-                )
+                ),
             )
 
-            node.send(
+            self.send_message(
+                node,
                 Message(
                     header="Visited",
                     destination=set(node.memory[self.neighborsKey])
                     - {node.memory["entry"], node.memory["next"]},
-                )
+                ),
             )
             node.status = self.Status.VISITED
         else:
-            node.send(Message(header="Return", destination=node.memory["entry"]))
-            node.send(
+            self.send_message(
+                node, Message(header="Return", destination=node.memory["entry"])
+            )
+            self.send_message(
+                node,
                 Message(
                     header="Visited",
                     destination=set(node.memory[self.neighborsKey])
                     - {node.memory["entry"]},
-                )
+                ),
             )
             node.status = self.Status.DONE
 
     def visit(self, node, message):
         if node.memory["unvisited"]:
             node.memory["next"] = node.memory["unvisited"].pop()
-            node.send(
+            self.send_message(
+                node,
                 Message(
                     header="T",
                     destination=node.memory["next"],
-                )
+                ),
             )
         else:
             if not node.memory["initiator"]:
-                node.send(Message(header="Return", destination=node.memory["entry"]))
+                self.send_message(
+                    node, Message(header="Return", destination=node.memory["entry"])
+                )
             node.status = self.Status.DONE

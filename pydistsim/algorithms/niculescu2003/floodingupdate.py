@@ -23,21 +23,21 @@ class FloodingUpdate(NodeAlgorithm):
 
         for node in self.network.nodes():
             if self.initiator_condition(node):
-                self.network.network_outbox.insert(
-                    0, Message(destination=node, meta_header=NodeAlgorithm.INI)
+                node.push_to_inbox(
+                    Message(destination=node, meta_header=NodeAlgorithm.INI)
                 )
                 node.status = self.Status.INITIATOR
             node.status = self.Status.FLOODING
 
     @Status.INITIATOR
     def spontaneously(self, node, message):
-        node.send(Message(header="Flood", data=self.initiator_data(node)))
+        self.send_message(node, Message(header="Flood", data=self.initiator_data(node)))
 
     @Status.FLOODING
     def receiving(self, node, message):
         updated_data = self.handle_flood_message(node, message)
         if updated_data:
-            node.send(Message(header="Flood", data=updated_data))
+            self.send_message(node, Message(header="Flood", data=updated_data))
 
     def initiator_condition(self, node):
         raise NotImplementedError
