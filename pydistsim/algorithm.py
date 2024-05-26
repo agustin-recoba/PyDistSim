@@ -154,10 +154,6 @@ class Algorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
             and self.network.get_current_algorithm() == self
         )
 
-    def step_done_notify(self):
-        for observer in self.observers:
-            observer.on_step_done(self)
-
 
 class NodeAlgorithm(Algorithm):
     """
@@ -204,7 +200,7 @@ class NodeAlgorithm(Algorithm):
         )
         self.network.algorithmState["step"] += 1
 
-        self.step_done_notify()
+        self.notify_observers(ObservableEvents.step_done, self)
 
     def initializer(self):
         """
