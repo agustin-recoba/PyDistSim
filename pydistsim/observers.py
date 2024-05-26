@@ -26,6 +26,18 @@ class ObservableEvents(str):
     message_delivered = "message_delivered"
     node_status_changed = "node_status_changed"
 
+    _all = (
+        added,
+        step_done,
+        message_sent,
+        sim_state_changed,
+        algorithm_started,
+        algorithm_finished,
+        network_changed,
+        message_delivered,
+        node_status_changed,
+    )
+
 
 class Observer:
     """
