@@ -121,12 +121,12 @@ class Simulation(ObserverManagerMixin, QThread):
         :return: True if the algorithm is halted, False otherwise.
         :rtype: bool
         """
-        if any([len(node.outbox) for node in self.network.nodes()]) or any(
-            [len(node.inbox) for node in self.network.nodes()]
+        if all([len(node.outbox) == 0 for node in self.network.nodes()]) and all(
+            [len(node.inbox) == 0 for node in self.network.nodes()]
         ):
-            return False
-        else:
             return True
+        else:
+            return False
 
     @property
     def network(self):
