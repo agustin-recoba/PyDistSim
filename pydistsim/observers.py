@@ -182,7 +182,7 @@ class ObserverManagerMixin:
     def add_observers(self, *observers: "Observer"):
         for observer in observers:
             self.observers.add(observer)
-            self.notify_observers(ObservableEvents.added, self)
+            observer.notify(ObservableEvents.added, self)
 
     def clear_observers(self):
         self.observers = set()
