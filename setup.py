@@ -11,7 +11,7 @@ if "install" in sys.argv or "develop" in sys.argv:
         from IPython.paths import get_ipython_dir
 
         ipythondir = get_ipython_dir()
-    except ImportError as AttributeError:  # @ReservedAssignment
+    except ImportError:  # @ReservedAssignment
         print(
             "PyDistSim IPython configuration not installed. Install latest "
             "IPython and then copy the conf/ipython/profile_pydistsim/"

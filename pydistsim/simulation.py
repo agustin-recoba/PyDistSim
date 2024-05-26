@@ -5,6 +5,8 @@ from pydistsim.logger import logger
 from pydistsim.network import Network
 from pydistsim.observers import (
     AlgorithmObserver,
+    NetworkObserver,
+    ObservableEvents,
     ObserverManagerMixin,
     SimulationObserver,
 )
@@ -15,8 +17,6 @@ class Simulation(ObserverManagerMixin, QThread):
     Controls single network algorithm and node algorithms simulation.
     It is responsible for visualization and logging, also.
     """
-
-    OBSERVER_TYPE = SimulationObserver
 
     def __init__(self, network: Network, **kwargs):
         """
@@ -62,11 +62,11 @@ class Simulation(ObserverManagerMixin, QThread):
                     "algorithms left to run. "
                     "To run it from the start use sim.reset()."
                 )
-                self.notify_observers("state_changed", self)
+                self.notify_observers(ObservableEvents.sim_state_changed, self)
                 break
             algorithm.add_observers(*self.observers)
             self._run_algorithm(algorithm)
-            self.notify_observers("state_changed", self)
+            self.notify_observers(ObservableEvents.sim_state_changed, self)
             if self.stepsLeft >= 0:
                 break
 
@@ -98,7 +98,7 @@ class Simulation(ObserverManagerMixin, QThread):
             if self.is_halted():  # end of the loop so at least one step is done
                 break
 
-        self.notify_observers("algorithm_finished", algorithm)
+        self.notify_observers(ObservableEvents.algorithm_finished, algorithm)
         logger.debug("[{}] Algorithm finished", algorithm.name)
         self.network.algorithmState["finished"] = True
 
@@ -121,14 +121,12 @@ class Simulation(ObserverManagerMixin, QThread):
         :return: True if the algorithm is halted, False otherwise.
         :rtype: bool
         """
-        if (
-            len(self._network.network_outbox) > 0
-            or any([len(node.outbox) for node in self.network.nodes()])
-            or any([len(node.inbox) for node in self.network.nodes()])
+        if all([len(node.outbox) == 0 for node in self.network.nodes()]) and all(
+            [len(node.inbox) == 0 for node in self.network.nodes()]
         ):
-            return False
-        else:
             return True
+        else:
+            return False
 
     @property
     def network(self):
@@ -152,9 +150,25 @@ class Simulation(ObserverManagerMixin, QThread):
         self._network.simulation = (
             None  # remove reference to this simulation in the old network
         )
+        self._network.clear_observers()
+
         self._network = network
         self._network.simulation = self
-        self.notify_observers("network_changed", self)
+        self.notify_observers(ObservableEvents.network_changed, self)
+        self._copy_observers_to_network()
+
+    def add_observers(self, *observers: "SimulationObserver"):
+        super().add_observers(*observers)
+        self._copy_observers_to_network()
+
+    def _copy_observers_to_network(self):
+        self.network.add_observers(
+            *(
+                observer
+                for observer in self.observers
+                if isinstance(observer, NetworkObserver)
+            )
+        )
 
 
 class QThreadObserver(AlgorithmObserver, SimulationObserver):

@@ -1,14 +1,13 @@
-import unittest
-
 from pydistsim.algorithms.broadcast import Flood
 from pydistsim.networkgenerator import NetworkGenerator
 from pydistsim.simulation import Simulation
+from pydistsim.utils.testing import PyDistSimTestCase
 
 HELLO = "Hello distributed world"
 BYE = "Bye bye distributed world"
 
 
-class TestBroadcastSimple(unittest.TestCase):
+class TestBroadcastSimple(PyDistSimTestCase):
 
     def setUp(self):
         net_gen = NetworkGenerator(100, directed=False)
@@ -36,7 +35,7 @@ class TestBroadcastSimple(unittest.TestCase):
             self.assertEqual(node.memory["greet"], HELLO)
 
 
-class TestBroadcastConcatenated(unittest.TestCase):
+class TestBroadcastConcatenated(PyDistSimTestCase):
 
     def setUp(self):
         net_gen = NetworkGenerator(100, directed=False)

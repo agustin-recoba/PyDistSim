@@ -1,6 +1,11 @@
+from typing import TYPE_CHECKING
+
 from pydistsim.algorithm import NodeAlgorithm, StatusValues
 from pydistsim.message import Message
 from pydistsim.restrictions import Restrictions
+
+if TYPE_CHECKING:
+    from pydistsim.node import Node
 
 
 class Flood(NodeAlgorithm):
@@ -23,7 +28,7 @@ class Flood(NodeAlgorithm):
     ]
 
     def initializer(self):
-        ini_nodes = []
+        ini_nodes: list["Node"] = []
         for node in self.network.nodes():
             node.memory[self.neighborsKey] = node.compositeSensor.read()["Neighbors"]
             node.status = self.Status.IDLE
@@ -31,13 +36,20 @@ class Flood(NodeAlgorithm):
                 node.status = self.Status.INITIATOR
                 ini_nodes.append(node)
         for ini_node in ini_nodes:
-            self.network.network_outbox.insert(
-                0, Message(meta_header=NodeAlgorithm.INI, destination=ini_node)
+            ini_node.push_to_inbox(
+                Message(meta_header=NodeAlgorithm.INI, destination=ini_node)
             )
 
     @Status.INITIATOR
     def spontaneously(self, node, message):
-        node.send(Message(header="Information", data=node.memory[self.informationKey]))
+        self.send_message(
+            node,
+            Message(
+                header="Information",
+                data=node.memory[self.informationKey],
+                destination=list(node.memory[self.neighborsKey]),
+            ),
+        )
         node.status = self.Status.DONE
 
     @Status.IDLE
@@ -45,15 +57,16 @@ class Flood(NodeAlgorithm):
         if message.header == "Information":
             node.memory[self.informationKey] = message.data
             destination_nodes = list(node.memory[self.neighborsKey])
-            # send to every neighbor-sender
+            # send to every neighbor, except the original sender
             destination_nodes.remove(message.source)
             if destination_nodes:
-                node.send(
+                self.send_message(
+                    node,
                     Message(
                         destination=destination_nodes,
                         header="Information",
                         data=message.data,
-                    )
+                    ),
                 )
         node.status = self.Status.DONE
 

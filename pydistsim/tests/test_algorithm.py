@@ -10,7 +10,6 @@ from pydistsim.algorithm import (
 )
 from pydistsim.network import PyDistSimNetworkError
 from pydistsim.networkgenerator import NetworkGenerator
-from pydistsim.simulation import Simulation
 
 
 def set_algorithms(net, algorithms):

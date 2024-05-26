@@ -1,7 +1,6 @@
 from itertools import product
 
 from numpy import array, sign, sqrt
-from numpy.core.numeric import Inf
 from numpy.random import rand
 
 from pydistsim.conf import settings

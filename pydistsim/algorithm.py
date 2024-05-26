@@ -1,4 +1,4 @@
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from enum import StrEnum
 from inspect import getmembers
 
@@ -7,7 +7,7 @@ from pydistsim.logger import logger
 from pydistsim.message import Message
 from pydistsim.message import MetaHeader as MessageMetaHeader
 from pydistsim.node import Node
-from pydistsim.observers import AlgorithmObserver, ObserverManagerMixin
+from pydistsim.observers import ObservableEvents, ObserverManagerMixin
 
 
 class ActionEnum(StrEnum):
@@ -114,7 +114,6 @@ class Algorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
 
     """
 
-    OBSERVER_TYPE = AlgorithmObserver
     required_params = ()
     default_params = {}
 
@@ -151,10 +150,6 @@ class Algorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
             and self.network.get_current_algorithm() == self
         )
 
-    def step_done_notify(self):
-        for observer in self.observers:
-            observer.on_step_done(self)
-
 
 class NodeAlgorithm(Algorithm):
     """
@@ -179,35 +174,44 @@ class NodeAlgorithm(Algorithm):
         IDLE = "IDLE"
 
     def step(self):
-        logger.debug("Processing one step of {}.", self.name)
+        logger.debug(
+            "[{}] Step {} started",
+            self.name,
+            self.network.algorithmState["step"],
+        )
         if not self.is_initialized():
+            self.notify_observers(ObservableEvents.algorithm_started, self)
             self.initializer()
-            if not self.network.network_outbox:
-                logger.warning("Initializer didn't send any message (even INI).")
+            # TODO: warn when initializer does not send any message
+            # if not self.network.network_outbox:
+            #     logger.warning("Initializer didn't send any message (even INI).")
         else:
             self.network.communicate()
             for node in self.network.nodes_sorted():
-                self.node_step(node)
-            logger.debug(
-                "[{}] Step {} finished",
-                self.name,
-                self.network.algorithmState["step"],
-            )
+                self._node_step(node)
+        logger.debug(
+            "[{}] Step {} finished",
+            self.name,
+            self.network.algorithmState["step"],
+        )
         self.network.algorithmState["step"] += 1
 
-        self.step_done_notify()
+        self.notify_observers(ObservableEvents.step_done, self)
 
     def initializer(self):
-        """Pass INI message to certain nodes in network based on type."""
+        """
+        Method used to initialize the algorithm. Is always called first.
+        :class:`NodeAlgorithm` subclasses may want to reimplement it.
+
+        Base implementation sends an INI message to the node with the lowest id.
+        """
         logger.debug("Initializing algorithm {}.", self.name)
-        node = self.network.nodes_sorted()[0]
-        self.network.network_outbox.insert(
-            0, Message(meta_header=NodeAlgorithm.INI, destination=node)
-        )
+        node: "Node" = self.network.nodes_sorted()[0]
+        node.push_to_inbox(Message(meta_header=NodeAlgorithm.INI))
         for node in self.network.nodes_sorted():
             node.status = self.Status.IDLE
 
-    def node_step(self, node: Node):
+    def _node_step(self, node: Node):
         """Executes one step of the algorithm for given node."""
         message: Message = node.receive()
         if message:
@@ -224,7 +228,25 @@ class NodeAlgorithm(Algorithm):
         except KeyError:
             logger.warning("Missing routing table or destination node not in it.")
         else:
-            node.send(message)
+            self.send_message(node, message)
+
+    def send_message(self, source_node: Node, message: Message):
+        """
+        Send a message to nodes listed in message's destination field.
+
+        Note: Destination should be a list of nodes or one node.
+
+        Update message's source field and inserts in node's outbox one copy
+        of it for each destination.
+
+        :param message: The message to be sent.
+        :type message: Message
+        """
+        message.source = source_node
+        if not isinstance(message.destination, Iterable):
+            message.destination = [message.destination]
+        for destination in message.destination:
+            source_node.push_to_outbox(message.copy(), destination)
 
     def _process_message(self, node: Node, message: Message):
         status: StatusValues = getattr(self.Status, node.status.value)

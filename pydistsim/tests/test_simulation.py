@@ -36,8 +36,8 @@ class TestRunBaseNodeAlgorithm(PyDistSimTestCase):
 
         sim.run_step()
         # First step should put the INI in the outbox
-        assert len(self.net.network_outbox) > 0
         assert all(len(node.outbox) == 0 for node in self.net.nodes())
+        assert sum(len(node.inbox) for node in self.net.nodes()) == 1
 
         # Put the INI message in the inbox of a node
         sim.run_step()
@@ -55,7 +55,6 @@ class TestRunBaseNodeAlgorithm(PyDistSimTestCase):
         sim.run_step()
         # Second step should process the INI message (and do nothing)
 
-        assert len(self.net.network_outbox) == 0
         assert all([len(node.outbox) == 0 for node in self.net.nodes()])
         assert all([len(node.inbox) == 0 for node in self.net.nodes()])
 

@@ -1,20 +1,7 @@
-from numpy import (
-    arctan2,
-    array,
-    concatenate,
-    dot,
-    eye,
-    isnan,
-    mod,
-    nan,
-    outer,
-    pi,
-    sqrt,
-)
+from numpy import arctan2, array, concatenate, dot, isnan, mod, nan, outer, pi, sqrt
 from numpy.lib.type_check import imag, real
 from numpy.linalg import det, eig
 
-from pydistsim.logger import logger
 from pydistsim.utils.localization.stitchsubclusterselectors import (
     MaxCommonNodeSelector,
     StitchSubclusterSelectorBase,

@@ -25,7 +25,7 @@ from pydistsim.conf import settings
 from pydistsim.environment import Environment
 from pydistsim.logger import logger
 from pydistsim.node import Node
-from pydistsim.observers import NetworkObserver, ObserverManagerMixin
+from pydistsim.observers import NodeObserver, ObserverManagerMixin
 from pydistsim.sensor import CompositeSensor
 from pydistsim.utils.helpers import pydistsim_equal_objects, with_typehint
 
@@ -43,8 +43,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
     The Network classes (:class:`.Network` and :class:`.BidirectionalNetwork`) extend the Graph class and provides additional functionality
     for managing nodes, algorithms, and network properties.
     """
-
-    OBSERVER_TYPE = NetworkObserver
 
     def __init__(
         self,
@@ -77,7 +75,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         self.labels = {}
         self.algorithms = algorithms or settings.ALGORITHMS
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
-        self.network_outbox = []
         self.networkRouting = networkRouting
         self.simulation = None
         logger.info("Instance of Network has been initialized.")
@@ -128,8 +125,8 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         # Copy network attributes and reinitialize algorithms
         H.algorithms = deepcopy(self._algorithms_param) or settings.ALGORITHMS
         H.algorithmState = {"index": 0, "step": 1, "finished": False}
-        H.network_outbox = []
         H.simulation = None
+        H.clear_observers()
 
         assert isinstance(H, NetworkMixin)
         return H
@@ -234,28 +231,49 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         """
         if not node:
             node = Node(commRange=commRange)
+
         assert isinstance(node, Node)
-        if not node.network:
-            node.network = self
-        else:
+
+        if node.network:
             logger.exception("Node is already in another network, can't add.")
             raise PyDistSimNetworkError(NetworkErrorMsg.NODE)
+
+        node.network = self
 
         pos = pos if pos is not None else self._environment.find_random_pos(n=100)
         ori = ori if ori is not None else rand() * 2 * pi
         ori = ori % (2 * pi)
 
-        if self._environment.is_space(pos):
-            super().add_node(node)
-            self.pos[node] = array(pos)
-            self.ori[node] = ori
-            self.labels[node] = str(node.id)
-            logger.debug("Node {} is placed on position {}.", node.id, pos)
-            self.recalculate_edges([node])
-        else:
+        if not self._environment.is_space(pos):
             logger.error("Given position is not free space.")
             raise PyDistSimNetworkError(NetworkErrorMsg.NODE_SPACE)
+
+        super().add_node(node)
+        self.pos[node] = array(pos)
+        self.ori[node] = ori
+        self.labels[node] = str(node.id)
+        logger.debug("Node {} is placed on position {}.", node.id, pos)
+        self.recalculate_edges([node])
+        self._copy_observers_to_nodes(node)
         return node
+
+    def add_observers(self, *observers):
+        super().add_observers(*observers)
+        self._copy_observers_to_nodes()
+
+    def _copy_observers_to_nodes(self, *nodes):
+        if not nodes:
+            nodes = self.nodes()
+
+        for node in nodes:
+            node.add_observers(
+                *(obs for obs in self.observers if isinstance(obs, NodeObserver))
+            )  # Register observers to the nodes, too (only if they are NodeNetworkObservers)
+
+    def clear_observers(self):
+        super().clear_observers()
+        for node in self.nodes():
+            node.clear_observers()
 
     def node_by_id(self, id_):
         """
@@ -356,6 +374,11 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         return self.algorithms[self.algorithmState["index"]]
 
     def reset(self):
+        """
+        Reset the network to its initial state.
+
+        Does not reset the observers of the network nor the observers of the nodes.
+        """
         logger.info("Resetting network.")
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self.reset_all_nodes()
@@ -477,16 +500,12 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         :return: None
         """
+        logger.info("Resetting all nodes.")
         for node in self.nodes():
             node: "Node"
             node.reset()
-        logger.info("Resetting all nodes.")
 
     def get_some_message(self) -> Optional["Message"]:
-        if len(self.network_outbox) > 0:  # There are messages in the network outbox.
-            message = self.network_outbox.pop(0)
-            return message
-
         nodes_with_messages = [node for node in self.nodes() if len(node.outbox) > 0]
 
         if len(nodes_with_messages) == 0:  # No nodes with messages in outbox.
@@ -589,9 +608,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         :type message: Message
         :raises PyDistSimMessageUndeliverable: If the destination is not in the network.
         """
-        logger.debug(
-            "Sending message from {} to {}.", repr(message.source), destination
-        )
+        logger.debug("Sending message from {} to {}.", message.source, destination)
         if destination in self.nodes():
             destination.push_to_inbox(message)
         else:
