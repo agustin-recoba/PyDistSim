@@ -27,6 +27,7 @@ from pydistsim.logger import logger
 from pydistsim.node import Node
 from pydistsim.observers import (
     NodeNetworkObserver,
+    NodeObserver,
     ObservableEvents,
     ObserverManagerMixin,
 )
@@ -271,7 +272,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         for node in nodes:
             node.add_observers(
-                *(obs for obs in self.observers if isinstance(obs, NodeNetworkObserver))
+                *(obs for obs in self.observers if isinstance(obs, NodeObserver))
             )  # Register observers to the nodes, too (only if they are NodeNetworkObservers)
 
     def clear_observers(self):
