@@ -1,0 +1,18 @@
+{
+  "folders": [
+    {
+      "path": ".."
+    }
+  ],
+  "settings": {
+    "python.testing.pytestArgs": ["pydistsim"],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.analysis.typeCheckingMode": "off",
+    "editor.formatOnSave": true,
+    "python.analysis.fixAll": ["source.unusedImports"],
+    "remote.autoForwardPortsFallback": 0,
+    "remote.autoForwardPorts": false,
+    "cSpell.enabled": true
+  }
+}
