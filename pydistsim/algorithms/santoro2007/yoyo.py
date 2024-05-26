@@ -1,5 +1,4 @@
 from pydistsim.algorithm import NodeAlgorithm, StatusValues
-from pydistsim.logger import logger
 from pydistsim.message import Message
 
 
@@ -403,10 +402,10 @@ class YoYo(NodeAlgorithm):
     @Status.SOURCE
     def receiving(self, node, message):
         if message.header == "response":
-            num_receiverd_responses = self.receive_response(node, message)
+            self.receive_response(node, message)
 
         elif message.header == "id":
-            num_received_ids = self.receive_id(node, message)
+            self.receive_id(node, message)
 
         self.do_source(node)
 

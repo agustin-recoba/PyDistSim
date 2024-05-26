@@ -7,11 +7,7 @@ from pydistsim.logger import logger
 from pydistsim.message import Message
 from pydistsim.message import MetaHeader as MessageMetaHeader
 from pydistsim.node import Node
-from pydistsim.observers import (
-    AlgorithmObserver,
-    ObservableEvents,
-    ObserverManagerMixin,
-)
+from pydistsim.observers import ObservableEvents, ObserverManagerMixin
 
 
 class ActionEnum(StrEnum):

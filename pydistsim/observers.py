@@ -5,7 +5,6 @@ from pydistsim.logger import logger
 if TYPE_CHECKING:
     from pydistsim.algorithm import Algorithm
     from pydistsim.message import Message
-    from pydistsim.network import Network
     from pydistsim.node import Node
     from pydistsim.simulation import Simulation
 

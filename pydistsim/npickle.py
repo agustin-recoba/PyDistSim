@@ -4,7 +4,7 @@ import errno
 import os
 import pickle as pickle
 from types import MethodType
-from typing import Any, Type
+from typing import Any
 
 from pydistsim.logger import logger
 

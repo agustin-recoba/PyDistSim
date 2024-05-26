@@ -25,12 +25,7 @@ from pydistsim.conf import settings
 from pydistsim.environment import Environment
 from pydistsim.logger import logger
 from pydistsim.node import Node
-from pydistsim.observers import (
-    NodeNetworkObserver,
-    NodeObserver,
-    ObservableEvents,
-    ObserverManagerMixin,
-)
+from pydistsim.observers import NodeObserver, ObserverManagerMixin
 from pydistsim.sensor import CompositeSensor
 from pydistsim.utils.helpers import pydistsim_equal_objects, with_typehint
 
