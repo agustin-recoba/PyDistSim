@@ -17,7 +17,8 @@ class Message:
         nexthop=None,
         header="",
         meta_header=MetaHeader.NORMAL_MESSAGE,
-        data={},
+        data=None,
+        meta_data=None,
     ):
         """
         Initialize a Message object.
@@ -34,13 +35,16 @@ class Message:
         :type meta_header: MetaHeader
         :param data: The data associated with the message.
         :type data: dict
+        :param meta_data: The meta data associated with the message. This is meant to be used by the simulation.
+        :type meta_data: dict
         """
         self.source = source
         self.destination = destination
         self.nexthop = nexthop
         self.header = header
+        self.data = data or dict()
         self.meta_header = meta_header
-        self.data = data
+        self.meta_data = meta_data or dict()
 
     def __repr__(self):
         destination = self.destination

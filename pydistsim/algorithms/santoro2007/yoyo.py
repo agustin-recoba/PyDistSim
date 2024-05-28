@@ -83,7 +83,7 @@ class YoYo(NodeAlgorithm):
         for received_id in received_ids:
             if no_received:
                 # Send NO to all node that sent an id
-                self.send_message(
+                self.send(
                     node,
                     Message(
                         destination=received_ids[received_id],
@@ -104,7 +104,7 @@ class YoYo(NodeAlgorithm):
                     # remaining after inverting and pruning
                     # it will become a LEAF SINK,
                     # so send a PRUNE request with the YES response as well
-                    self.send_message(
+                    self.send(
                         node,
                         Message(
                             destination=received_ids[received_id][0],
@@ -114,7 +114,7 @@ class YoYo(NodeAlgorithm):
                     )
                     prune_nodes.append(received_ids[received_id][0])
                 else:
-                    self.send_message(
+                    self.send(
                         node,
                         Message(
                             destination=received_ids[received_id][0],
@@ -125,7 +125,7 @@ class YoYo(NodeAlgorithm):
 
                 # Send PRUNE request to extra nodes that sent min_id
                 # and add them to prune_nodes to be pruned
-                self.send_message(
+                self.send(
                     node,
                     Message(
                         destination=received_ids[received_id][1:],
@@ -138,7 +138,7 @@ class YoYo(NodeAlgorithm):
             else:
                 # Send NO responses to all inNeighbors that didn't
                 # send min_id and add them to no_nodes to be inverted
-                self.send_message(
+                self.send(
                     node,
                     Message(
                         destination=received_ids[received_id],
@@ -216,7 +216,7 @@ class YoYo(NodeAlgorithm):
             node.memory[self.RECEIVED_RESPONSES_KEY] = {}
             node.memory[self.REQUESTED_PRUNING_KEY] = []
 
-            self.send_message(
+            self.send(
                 node,
                 Message(
                     destination=node.memory[self.outNeighborsKey],
@@ -277,7 +277,7 @@ class YoYo(NodeAlgorithm):
                 min_id = min(ids)
 
                 # Forward min id to outNeighbors
-                self.send_message(
+                self.send(
                     node,
                     Message(
                         destination=node.memory[self.outNeighborsKey],
@@ -376,7 +376,7 @@ class YoYo(NodeAlgorithm):
             return
 
         # default destination: send to every neighbor
-        self.send_message(node, Message(header="init_id", data=node.id))
+        self.send(node, Message(header="init_id", data=node.id))
 
         node.status = self.Status.IDLE
 

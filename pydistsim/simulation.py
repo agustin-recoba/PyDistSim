@@ -95,7 +95,7 @@ class Simulation(ObserverManagerMixin, QThread):
             if self.stepsLeft == 0:
                 return  # not finished
 
-            if self.is_halted():  # end of the loop so at least one step is done
+            if algorithm.is_halted():
                 break
 
         self.notify_observers(ObservableEvents.algorithm_finished, algorithm)
@@ -113,20 +113,17 @@ class Simulation(ObserverManagerMixin, QThread):
 
     def is_halted(self):
         """
-        Check if the distributed algorithm has come to an end or deadlock,
-        i.e. there are no messages to pass.
+        Check if simulation has come to an end or deadlock,
+        i.e. there are no messages to pass and no alarms set.
 
-        A not-started algorithm is considered halted.
+        A not-started algorithm is considered halted. If there are
+        no algorithms left to run, the simulation is also considered halted.
 
         :return: True if the algorithm is halted, False otherwise.
         :rtype: bool
         """
-        if all([len(node.outbox) == 0 for node in self.network.nodes()]) and all(
-            [len(node.inbox) == 0 for node in self.network.nodes()]
-        ):
-            return True
-        else:
-            return False
+        algorithm: "Algorithm" = self.network.get_current_algorithm()
+        return algorithm is None or algorithm.is_halted()
 
     @property
     def network(self):

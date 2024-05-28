@@ -107,6 +107,7 @@ class Node(ObserverManagerMixin):
         :rtype: Message or None
         """
         if self._inbox and not self._inboxDelay:
+            # TODO: implement precedence in message type: Spontaneously > Alarm > Receiving
             message = self._inbox.pop()
             logger.debug("Node {} received message {}", self.id, message.__repr__())
         else:

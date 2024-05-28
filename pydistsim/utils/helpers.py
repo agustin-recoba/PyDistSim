@@ -1,4 +1,8 @@
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, TypeVar
+
+T = TypeVar("T")
+U = TypeVar("U")
 
 
 def pydistsim_equal_objects(obj1, obj2):
@@ -21,9 +25,6 @@ def pydistsim_equal_objects(obj1, obj2):
     return classes and attr_names and attr_values
 
 
-T = TypeVar("T")
-
-
 def with_typehint(baseclass: type[T]) -> type[T]:
     """
     Useful function to make mixins with baseclass typehint without actually inheriting from it.
@@ -31,3 +32,20 @@ def with_typehint(baseclass: type[T]) -> type[T]:
     if TYPE_CHECKING:
         return baseclass
     return object
+
+
+def first(iterable: Iterable[T], default: U | None = None) -> T | U | None:
+    """
+    Return the first item in an iterable, or a default value if the iterable is empty.
+
+    :param iterable: The iterable to get the first item from.
+    :type iterable: Iterable[T]
+    :param default: The default value to return if the iterable is empty.
+    :type default: U | None
+
+    :return: The first item in the iterable, or the default value if the iterable is empty.
+    :rtype: T | U | None
+    """
+
+    iterator = iter(iterable)
+    return next(iterator, default)
