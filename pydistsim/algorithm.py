@@ -129,7 +129,6 @@ class Algorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
     def __init__(self, network, **kwargs):
         super().__init__()
         self.network: nt.Network = network
-        self.alarms = []
         self.name = self.__class__.__name__
         logger.debug("Instance of {} class has been initialized.", self.name)
 
@@ -189,6 +188,10 @@ class NodeAlgorithm(Algorithm):
     class Status(StatusValues):
         IDLE = "IDLE"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.alarms: list[Alarm] = []
+
     def step(self):
         logger.debug(
             "[{}] Step {} started",
@@ -198,7 +201,7 @@ class NodeAlgorithm(Algorithm):
         if not self.is_initialized():
             self.notify_observers(ObservableEvents.algorithm_started, self)
             self.initializer()
-            # TODO: warn when initializer does not send any message
+            # TODO: log a warning when initializer does not send any message
             # if not self.network.network_outbox:
             #     logger.warning("Initializer didn't send any message (even INI).")
         else:
@@ -271,7 +274,6 @@ class NodeAlgorithm(Algorithm):
     def _process_alarms(self):
         for alarm in self.alarms.copy():
             # copy to avoid errors produced by modifying the list while iterating
-
             alarm.time -= 1
             if alarm.time == 0:
                 self.alarms.remove(alarm)
@@ -290,6 +292,8 @@ class NodeAlgorithm(Algorithm):
         :type time: int
         :param message: The message to be sent when the alarm triggers.
         :type message: Message
+        :return: The alarm that was set.
+        :rtype: Alarm
         """
         assert time > 0, "Time must be greater than 0."
 
@@ -298,7 +302,37 @@ class NodeAlgorithm(Algorithm):
         message.meta_header = MessageMetaHeader.ALARM_MESSAGE
         message.destination = node
 
-        self.alarms.append(Alarm(time, message, node))
+        alarm = Alarm(time, message, node)
+        self.alarms.append(alarm)
+        return alarm
+
+    def disable_node_alarms(self, node: Node):
+        """
+        Disable all alarms set for the node.
+
+        :param node: The node for which the alarms are disabled.
+        :type node: Node
+        """
+        to_delete_messages = [
+            alarm.message for alarm in self.alarms if alarm.node == node
+        ]
+        self.alarms = [alarm for alarm in self.alarms if alarm.node != node]
+
+        for message in node.inbox.copy():
+            if message in to_delete_messages and message in node.inbox:
+                node.inbox.remove(message)
+
+    def disable_alarm(self, alarm: Alarm):
+        """
+        Disable an alarm.
+
+        :param alarm: The alarm to be disabled.
+        :type alarm: Alarm
+        """
+        if alarm in self.alarms:
+            self.alarms.remove(alarm)
+        if alarm.message in alarm.node.inbox:
+            alarm.node.inbox.remove(alarm.message)
 
     def _process_message(self, node: Node, message: Message):
         status: StatusValues = getattr(self.Status, node.status.value)
