@@ -513,9 +513,8 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
             return None
 
         node: "Node" = random.choice(nodes_with_messages)
-        message = random.choice(
-            node.outbox
-        )  # TODO: implement OPTIONAL message ordering
+        message = random.choice(node.outbox)
+        # TODO: implement OPTIONAL message ordering
 
         node.outbox.remove(message)
 
@@ -543,7 +542,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         elif message.nexthop is not None:
             # Node routing
             try:
-                self.send(message.nexthop, message)
+                self.deliver_to(message.nexthop, message)
             except PyDistSimMessageUndeliverable as e:
                 logger.warning("Routing Message Undeliverable: {}", e.message)
         elif message.destination is not None:
@@ -551,12 +550,12 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
             if message.source in self.nodes() and message.destination in self.neighbors(
                 message.source
             ):  # for DiGraph, `self.neighbors` are the out-neighbors
-                self.send(message.destination, message)
+                self.deliver_to(message.destination, message)
             elif self.networkRouting:
                 # Network routing
                 # TODO: program network routing so it goes hop by hop only
                 #       in connected part of the network
-                self.send(message.destination, message)
+                self.deliver_to(message.destination, message)
             else:
                 raise PyDistSimMessageUndeliverable("Can't deliver message.", message)
 
@@ -591,16 +590,16 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
             for neighbor in self.neighbors(message.source):
                 neighbors_message = message.copy()
                 neighbors_message.destination = neighbor
-                self.send(neighbor, neighbors_message)
+                self.deliver_to(neighbor, neighbors_message)
         else:
             raise PyDistSimMessageUndeliverable(
                 "Source not in network. Can't broadcast",
                 message,
             )
 
-    def send(self, destination: "Node", message: "Message"):
+    def deliver_to(self, destination: "Node", message: "Message"):
         """
-        Send a message to a destination node in the network.
+        Deliver a message to a destination node in the network.
 
         :param destination: The destination node to send the message to.
         :type destination: Node

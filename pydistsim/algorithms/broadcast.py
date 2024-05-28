@@ -42,7 +42,7 @@ class Flood(NodeAlgorithm):
 
     @Status.INITIATOR
     def spontaneously(self, node, message):
-        self.send_message(
+        self.send(
             node,
             Message(
                 header="Information",
@@ -60,7 +60,7 @@ class Flood(NodeAlgorithm):
             # send to every neighbor, except the original sender
             destination_nodes.remove(message.source)
             if destination_nodes:
-                self.send_message(
+                self.send(
                     node,
                     Message(
                         destination=destination_nodes,

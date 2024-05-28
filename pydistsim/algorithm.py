@@ -251,9 +251,9 @@ class NodeAlgorithm(Algorithm):
         except KeyError:
             logger.warning("Missing routing table or destination node not in it.")
         else:
-            self.send_message(node, message)
+            self.send(node, message)
 
-    def send_message(self, source_node: Node, message: Message):
+    def send(self, source_node: Node, message: Message):
         """
         Send a message to nodes listed in message's destination field.
 
