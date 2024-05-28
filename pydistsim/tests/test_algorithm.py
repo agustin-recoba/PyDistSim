@@ -215,63 +215,44 @@ class TestAlarms(unittest.TestCase):
             for node in self.network.nodes():
                 node.status = self.Status.IDLE
                 self.set_alarm(node, 3, Message(data=f"ALARM{node.id}"))
+                self.set_alarm(node, 6, Message(data=f"ALARM{node.id}"))
+                node.memory["LAST_ALARM"] = self.set_alarm(
+                    node, 9, Message(data=f"ALARM{node.id}")
+                )
 
         @Status.IDLE
         def alarm(self, node, message):
-            node.status = self.Status.DONE
             node.memory["alarm"] = message.data
+
+            self.disable_alarm(node.memory["LAST_ALARM"])
+            self.disable_node_alarms(node)
+            node.status = self.Status.DONE
 
     class TimerDefaultMessage(TimerAlgorithm):
         def initializer(self):
             for node in self.network.nodes():
                 node.status = self.Status.IDLE
                 self.set_alarm(node, 3)
+                self.set_alarm(node, 6)
+                node.memory["LAST_ALARM"] = self.set_alarm(node, 9)
 
     def test_run_base_algorithm(self):
-        self.net = NetworkGenerator(10).generate_random_network()
-        self.net.algorithms = (self.TimerAlgorithm,)
-
-        sim = Simulation(self.net)
-        some_n = first(self.net.nodes())
-
-        assert sim.is_halted()
-
-        sim.run(
-            1
-        )  # 1 step for initialization, 3 steps for alarms, 1 step for processing alarm messages
-
-        assert len(sim.network.get_current_algorithm().alarms) > 0
-        assert len(some_n.inbox) + len(some_n.outbox) == 0
-
-        sim.run(1)
-
-        assert len(sim.network.get_current_algorithm().alarms) > 0
-        assert len(some_n.inbox) + len(some_n.outbox) == 0
-
-        sim.run(1)
-
-        assert len(sim.network.get_current_algorithm().alarms) > 0
-        assert len(some_n.inbox) + len(some_n.outbox) == 0
-
-        sim.run(1)
-
-        assert len(sim.network.get_current_algorithm().alarms) == 0
-        assert len(some_n.inbox) + len(some_n.outbox) > 0
-
-        sim.run(1)
-
-        assert all(
-            [
-                node.status == self.TimerAlgorithm.Status.DONE
-                and node.memory["alarm"] == f"ALARM{node.id}"
-                for node in self.net.nodes()
-            ]
+        self.aux_test(
+            self.TimerAlgorithm,
+            lambda node: node.status == self.TimerAlgorithm.Status.DONE
+            and node.memory["alarm"] == f"ALARM{node.id}",
         )
-        assert sim.is_halted()
 
     def test_run_base_algorithm_default_message(self):
+        self.aux_test(
+            self.TimerDefaultMessage,
+            lambda node: node.status == self.TimerAlgorithm.Status.DONE
+            and len(node.memory["alarm"]) == 0,
+        )
+
+    def aux_test(self, algo_class, data_test):
         self.net = NetworkGenerator(10).generate_random_network()
-        self.net.algorithms = (self.TimerDefaultMessage,)
+        self.net.algorithms = (algo_class,)
 
         sim = Simulation(self.net)
         some_n = first(self.net.nodes())
@@ -281,31 +262,34 @@ class TestAlarms(unittest.TestCase):
         # 1 step for initialization, 3 steps for alarms, 1 step for processing alarm messages
         sim.run(1)
 
-        assert len(sim.network.get_current_algorithm().alarms) > 0
-        assert len(some_n.inbox) + len(some_n.outbox) == 0
+        assert len(sim.network.get_current_algorithm().alarms) == 3 * len(
+            self.net.nodes()
+        )
+        assert len(some_n.inbox) == 0
 
-        sim.run(1)
+        sim.run(1)  # alarm tic
 
-        assert len(sim.network.get_current_algorithm().alarms) > 0
-        assert len(some_n.inbox) + len(some_n.outbox) == 0
+        assert len(sim.network.get_current_algorithm().alarms) == 3 * len(
+            self.net.nodes()
+        )
+        assert len(some_n.inbox) == 0
 
-        sim.run(1)
+        sim.run(1)  # alarm tic
 
-        assert len(sim.network.get_current_algorithm().alarms) > 0
-        assert len(some_n.inbox) + len(some_n.outbox) == 0
+        assert len(sim.network.get_current_algorithm().alarms) == 3 * len(
+            self.net.nodes()
+        )
+        assert len(some_n.inbox) == 0
 
-        sim.run(1)
+        sim.run(1)  # alarm tic
 
+        assert len(sim.network.get_current_algorithm().alarms) == 2 * len(
+            self.net.nodes()
+        )
+        assert all(len(node.inbox) == 1 for node in self.net.nodes())
+
+        sim.run(1)  # 1 step for processing alarm messages
+
+        assert all([data_test(node) for node in self.net.nodes()])
         assert len(sim.network.get_current_algorithm().alarms) == 0
-        assert len(some_n.inbox) + len(some_n.outbox) > 0
-
-        sim.run(1)
-
-        assert all(
-            [
-                node.status == self.TimerAlgorithm.Status.DONE
-                for node in self.net.nodes()
-            ]
-        ) and all([len(node.memory["alarm"]) == 0 for node in self.net.nodes()])
-
         assert sim.is_halted()
