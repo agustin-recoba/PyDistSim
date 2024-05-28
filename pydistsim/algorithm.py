@@ -1,6 +1,8 @@
 from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 from enum import StrEnum
 from inspect import getmembers
+from typing import Optional
 
 import pydistsim.network as nt
 from pydistsim.logger import logger
@@ -22,6 +24,13 @@ MSG_META_HEADER_MAP = {
     MessageMetaHeader.INITIALIZATION_MESSAGE: ActionEnum.spontaneously,
     MessageMetaHeader.ALARM_MESSAGE: ActionEnum.alarm,
 }
+
+
+@dataclass
+class Alarm:
+    time: int
+    message: Message
+    node: Node
 
 
 class StatusValues(StrEnum):
@@ -120,6 +129,7 @@ class Algorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
     def __init__(self, network, **kwargs):
         super().__init__()
         self.network: nt.Network = network
+        self.alarms = []
         self.name = self.__class__.__name__
         logger.debug("Instance of {} class has been initialized.", self.name)
 
@@ -149,6 +159,12 @@ class Algorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
             self.network.algorithmState["step"] != 1
             and self.network.get_current_algorithm() == self
         )
+
+    def is_halted(self):
+        """
+        Check if the distributed algorithm has come to an end or deadlock.
+        """
+        raise NotImplementedError
 
 
 class NodeAlgorithm(Algorithm):
@@ -187,6 +203,7 @@ class NodeAlgorithm(Algorithm):
             #     logger.warning("Initializer didn't send any message (even INI).")
         else:
             self.network.communicate()
+            self._process_alarms()
             for node in self.network.nodes_sorted():
                 self._node_step(node)
         logger.debug(
@@ -214,11 +231,14 @@ class NodeAlgorithm(Algorithm):
     def _node_step(self, node: Node):
         """Executes one step of the algorithm for given node."""
         message: Message = node.receive()
+
         if message:
             logger.debug("Processing step at node {}.", node.id)
             if message.destination is None or message.destination == node:
                 # when destination is None it is broadcast message
-                self._process_message(node, message)
+                processed = self._process_message(node, message)
+                if not processed:
+                    node.push_to_inbox(message)  # put back to start of queue
             elif message.nexthop == node.id:
                 self._forward_message(node, message)
 
@@ -248,6 +268,38 @@ class NodeAlgorithm(Algorithm):
         for destination in message.destination:
             source_node.push_to_outbox(message.copy(), destination)
 
+    def _process_alarms(self):
+        for alarm in self.alarms.copy():
+            # copy to avoid errors produced by modifying the list while iterating
+
+            alarm.time -= 1
+            if alarm.time == 0:
+                self.alarms.remove(alarm)
+                alarm.node.push_to_inbox(alarm.message)
+
+    def set_alarm(self, node: Node, time: int, message: Message | None = None):
+        """
+        Set an alarm for the node.
+        One unit of time is one step of the algorithm.
+        After the time has passed, the alarm will trigger and the message will be sent to the node.
+        When will that message be processed is not guaranteed to be immediate.
+
+        :param node: The node for which the alarm is set.
+        :type node: Node
+        :param time: The time after which the alarm will trigger.
+        :type time: int
+        :param message: The message to be sent when the alarm triggers.
+        :type message: Message
+        """
+        assert time > 0, "Time must be greater than 0."
+
+        if message is None:
+            message = Message()
+        message.meta_header = MessageMetaHeader.ALARM_MESSAGE
+        message.destination = node
+
+        self.alarms.append(Alarm(time, message, node))
+
     def _process_message(self, node: Node, message: Message):
         status: StatusValues = getattr(self.Status, node.status.value)
         logger.debug("Processing message: 0x%x" % id(message))
@@ -263,6 +315,25 @@ class NodeAlgorithm(Algorithm):
             logger.error(
                 f"Method {method_name} not implemented for status {node.status}."
             )
+        return True
+
+    def is_halted(self):
+        """
+        Check if the distributed algorithm has come to an end or deadlock,
+        i.e. there are no messages to pass and no alarms set.
+
+        A not-started algorithm is considered halted.
+
+        :return: True if the algorithm is halted, False otherwise.
+        :rtype: bool
+        """
+        return (
+            all(
+                (len(node.inbox) == 0 and len(node.outbox) == 0)
+                for node in self.network.nodes()
+            )
+            and len(self.alarms) == 0
+        )
 
 
 class NetworkAlgorithm(Algorithm):
@@ -276,11 +347,19 @@ class NetworkAlgorithm(Algorithm):
 
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._is_halted = False
+
     def step(self):
+        self._is_halted = True
         return self.run()
 
     def run(self):
         raise NotImplementedError
+
+    def is_halted(self):
+        return self._is_halted
 
 
 class PyDistSimAlgorithmException(Exception):

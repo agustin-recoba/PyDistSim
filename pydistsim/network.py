@@ -696,7 +696,11 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
                 and "children" in node.memory[treeKey]
             ):
                 neighbors_in_tree += node.memory[treeKey]["children"]
-                if not downstream_only and "parent" in node.memory[treeKey]:
+                if (
+                    not downstream_only
+                    and "parent" in node.memory[treeKey]
+                    and node.memory[treeKey]["parent"] is not None
+                ):
                     neighbors_in_tree.append(node.memory[treeKey]["parent"])
 
             tree_edges_ids.extend(
@@ -711,7 +715,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
                 for neighbor in neighbors_in_tree
                 if neighbor in self.neighbors(node)
             )
-            if tree_nodes:
+            if neighbors_in_tree:
                 print(f"{node}, {tree_edges_ids=}")
                 tree_nodes.append(node)
 

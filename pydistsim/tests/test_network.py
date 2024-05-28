@@ -22,6 +22,7 @@ class TestDirectedNetwork(unittest.TestCase):
         self.node1 = self.net.add_node(pos=[22.8, 21.8])
         self.node2 = self.net.add_node(pos=[21.9, 22.9])
         self.node3 = self.net.add_node(pos=[21.7, 21.7])
+        self.node4 = self.net.add_node(pos=[23.7, 23.7])
 
         self.net.algorithms = (NodeAlgorithm,)
 
@@ -31,7 +32,7 @@ class TestDirectedNetwork(unittest.TestCase):
     def test_nodes(self):
         """Make sure the nodes are added."""
         assert isinstance(self.node1, Node)
-        assert len(self.net.nodes()) == 3
+        assert len(self.net.nodes()) == 4
         if isinstance(self.net.environment, Environment2D):
             assert (
                 self.net.environment.image.shape == settings.ENVIRONMENT2D_SHAPE
@@ -83,16 +84,22 @@ class TestDirectedNetwork(unittest.TestCase):
 
     def test_nodes_sorted(self):
         """Test sorting of nodes."""
-        assert self.net.nodes_sorted() == (self.node1, self.node2, self.node3)
+        assert self.net.nodes_sorted() == (
+            self.node1,
+            self.node2,
+            self.node3,
+            self.node4,
+        )
 
     def test_remove_node(self):
         """Test node removal."""
         pos = self.net.pos[self.node1]
+        original_len = len(self.net.nodes())
 
         print(f"Nodes ids pre-remove: {[node.id for node in self.net.nodes()]}")
         self.net.remove_node(self.node1)
         print(f"Nodes ids post-remove: {[node.id for node in self.net.nodes()]}")
-        assert len(self.net.nodes()) == 2
+        assert len(self.net.nodes()) == original_len - 1
         assert self.node1 not in self.net.nodes()
 
         with self.assertRaises(PyDistSimNetworkError):
@@ -135,12 +142,13 @@ class TestDirectedNetwork(unittest.TestCase):
         self.node2.memory[treeKey] = {"parent": self.node1, "children": []}
         self.node2.memory[keepMemKey] = {"test": 1}
         self.node3.memory[treeKey] = {"parent": self.node1, "children": []}
+        self.node4.memory[treeKey] = {"parent": None, "children": []}
 
         tree = self.net.get_tree_net(treeKey)
 
         assert isinstance(tree, self.nw_class)
         assert len(tree.nodes()) == 3
-        assert len(self.net.nodes()) == 3
+        assert len(self.net.nodes()) == 4
         assert tree.is_connected()
         assert (node.network == tree for node in tree.nodes())
 
