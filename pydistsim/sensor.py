@@ -35,7 +35,7 @@ from scipy.stats import rv_continuous, rv_discrete
 import pydistsim.conf as s
 
 if TYPE_CHECKING:
-    from pydistsim.node import Node
+    from pydistsim.network import Node
 
 
 class Sensor:
@@ -100,9 +100,7 @@ def node_in_network(fun: Callable):
     @wraps(fun)
     def f(sensor: Sensor, node: "Node"):
         if not node.network:
-            raise SensorError(
-                "Cannot take a sensor reading if node is outside of a network."
-            )
+            raise SensorError("Cannot take a sensor reading if node is outside of a network.")
         return fun(sensor, node)
 
     return f
@@ -212,9 +210,7 @@ class CompositeSensor:
 
     """
 
-    def __init__(
-        self, node: "Node", componentSensors: tuple[type[Sensor] | str, ...] = None
-    ):
+    def __init__(self, node: "Node", componentSensors: tuple[type[Sensor] | str, ...] = None):
         """
         Initialize the Sensor object.
 

@@ -116,10 +116,7 @@ class TestStitchers(unittest.TestCase):
         """Return new cluster with nodes form main_cluster and with
         subclusters defined as in subcluster argument."""
 
-        positions = [
-            {k: v for k, v in list(self.test_cluster.items()) if k in sub}
-            for sub in subclusters
-        ]
+        positions = [{k: v for k, v in list(self.test_cluster.items()) if k in sub} for sub in subclusters]
         return Positions(positions)
 
     def transform(self, positions, R_i=None, t_i=None, s_i=None, flip=False):

@@ -80,9 +80,7 @@ class BaseStitcher:
         """
         stitched = {}
         while True:
-            dstSubIndex, srcSubIndex = self.selector.select(
-                dst, src, stitched, is_intra
-            )
+            dstSubIndex, srcSubIndex = self.selector.select(dst, src, stitched, is_intra)
 
             if dstSubIndex is None and srcSubIndex is None:
                 break
@@ -151,19 +149,11 @@ class BaseStitcher:
 
     def _get_rotation_matrix_horn(self, commonNodes, dstSubPos, srcSubPos, p_d, p_s):
         """Horn method for calculating rotation matrix."""
-        M = sum(
-            [
-                outer((dstSubPos[cn][:2] - p_d), (srcSubPos[cn][:2] - p_s))
-                for cn in commonNodes
-            ]
-        )
+        M = sum([outer((dstSubPos[cn][:2] - p_d), (srcSubPos[cn][:2] - p_s)) for cn in commonNodes])
         D, V = eig(dot(M.T, M))
         R = dot(
             M,
-            (
-                1 / sqrt(D[0]) * outer(V[:, 0], V[:, 0].conj().T)
-                + 1 / sqrt(D[1]) * outer(V[:, 1], V[:, 1].conj().T)
-            ),
+            (1 / sqrt(D[0]) * outer(V[:, 0], V[:, 0].conj().T) + 1 / sqrt(D[1]) * outer(V[:, 1], V[:, 1].conj().T)),
         )
         # only rotation, if det(M)<0 it is reflection (Horn et.al)
         if det(M) < 0:

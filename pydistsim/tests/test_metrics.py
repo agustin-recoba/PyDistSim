@@ -1,7 +1,7 @@
 from pydistsim.algorithms.broadcast import Flood
 from pydistsim.message import Message
 from pydistsim.metrics import MetricCollector
-from pydistsim.networkgenerator import NetworkGenerator
+from pydistsim.network import NetworkGenerator
 from pydistsim.simulation import Simulation
 from pydistsim.utils.testing import PyDistSimTestCase
 
@@ -52,10 +52,7 @@ class TestMetricCollector(PyDistSimTestCase):
 
         assert "messages_sent" in report and report["messages_sent"] > 0
         assert "messages_delivered" in report and report["messages_delivered"] > 0
-        assert (
-            "qty_nodes_status_changed" in report
-            and report["qty_nodes_status_changed"] > 0
-        )
+        assert "qty_nodes_status_changed" in report and report["qty_nodes_status_changed"] > 0
 
 
 class TestWrongEvent(PyDistSimTestCase):
@@ -89,11 +86,5 @@ class TestCustomMetricCollector(PyDistSimTestCase):
 
         assert "messages_sent" in report and report["messages_sent"] > 0
         assert "messages_delivered" in report and report["messages_delivered"] > 0
-        assert (
-            "qty_nodes_status_changed" in report
-            and report["qty_nodes_status_changed"] > 0
-        )
-        assert (
-            "example_custom_event_msgs_sources" in report
-            and len(report["example_custom_event_msgs_sources"]) > 0
-        )
+        assert "qty_nodes_status_changed" in report and report["qty_nodes_status_changed"] > 0
+        assert "example_custom_event_msgs_sources" in report and len(report["example_custom_event_msgs_sources"]) > 0

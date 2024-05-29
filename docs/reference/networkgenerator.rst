@@ -5,14 +5,14 @@ Network Generator
 Implementation of different methods for automated network creation.
 It defines parameters (conditions) that generated network must satisfy.
 
-.. currentmodule:: pydistsim.networkgenerator
-.. automodule:: pydistsim.networkgenerator
+.. currentmodule:: pydistsim.network.generator
+.. automodule:: pydistsim.network.generator
 .. autoclass:: NetworkGenerator
 
 Methods
 -------
-.. automethod:: pydistsim.networkgenerator.NetworkGenerator.generate_random_network
-.. automethod:: pydistsim.networkgenerator.NetworkGenerator.generate_neigborhood_network
+.. automethod:: pydistsim.network.generator.NetworkGenerator.generate_random_network
+.. automethod:: pydistsim.network.generator.NetworkGenerator.generate_neigborhood_network
 
 Default procedure
 -----------------

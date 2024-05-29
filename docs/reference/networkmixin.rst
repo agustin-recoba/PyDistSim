@@ -1,5 +1,5 @@
 .. _networkmixin:
-.. currentmodule:: pydistsim.network
+.. currentmodule:: pydistsim.network.network
 
 Networks and the NetworkMixin
 =============================

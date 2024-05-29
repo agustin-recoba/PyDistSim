@@ -23,10 +23,7 @@ if "install" in sys.argv or "develop" in sys.argv:
             os.makedirs(ipythondir)
         if not os.path.exists(profiledir):
             os.makedirs(profiledir)
-        print(
-            "copying ipython_config.py and ipython_notebook_config.py "
-            "to " + profiledir
-        )
+        print("copying ipython_config.py and ipython_notebook_config.py to " + profiledir)
         shutil.copy(
             os.path.join("pydistsim", "conf", "ipython", "ipython_config.py"),
             profiledir,

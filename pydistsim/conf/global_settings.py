@@ -18,7 +18,7 @@ ENVIRONMENT = "Environment2D"
 ENVIRONMENT2D_SHAPE = (600, 600)
 
 #: default number of nodes, used in
-#: :class:`pydistsim.networkgenerator.NetworkGenerator`.
+#: :class:`pydistsim.network.generator.NetworkGenerator`.
 N_COUNT = 100
 
 #: No algorithms defined by default.
@@ -28,7 +28,7 @@ ALGORITHMS = ()
 DIRECTED = True
 
 #: Unit disc graph is the default channel type.
-CHANNEL_TYPE = "Udg"
+CHANNEL_TYPE = "UdgRangeType"
 
 #: Absolute tolerance of network degree
 DEG_ATOL = 1

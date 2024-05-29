@@ -35,13 +35,8 @@ class Trilaterate(FloodingUpdate):
         landmarks = list(node.memory[self.dataKey].keys())
         # calculate estimated distances
         if len(landmarks) >= 3:
-            landmark_distances = [
-                node.memory[self.dataKey][lm][2] * node.memory[self.hopsizeKey]
-                for lm in landmarks
-            ]
-            landmark_positions = [
-                array(node.memory[self.dataKey][lm][:2]) for lm in landmarks
-            ]
+            landmark_distances = [node.memory[self.dataKey][lm][2] * node.memory[self.hopsizeKey] for lm in landmarks]
+            landmark_positions = [array(node.memory[self.dataKey][lm][:2]) for lm in landmarks]
             # take centroid as initial estimation
             pos = average(landmark_positions, axis=0)
             W = diag(ones(len(landmarks)))
@@ -53,14 +48,9 @@ class Trilaterate(FloodingUpdate):
             while True:
                 J = array([(lp - pos) / dist(lp, pos) for lp in landmark_positions])
                 range_correction = array(
-                    [
-                        dist(landmark_positions[li], pos) - landmark_distances[li]
-                        for li, lm in enumerate(landmarks)
-                    ]
+                    [dist(landmark_positions[li], pos) - landmark_distances[li] for li, lm in enumerate(landmarks)]
                 )
-                pos_correction = dot(
-                    linalg.inv(dot(dot(J.T, W), J)), dot(dot(J.T, W), range_correction)
-                )
+                pos_correction = dot(linalg.inv(dot(dot(J.T, W), J)), dot(dot(J.T, W), range_correction))
                 pos = pos + pos_correction
                 # print pos
                 # print pos_correction

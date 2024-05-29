@@ -73,9 +73,7 @@ class AoAStitcherHorn(AoAStitcher):
         (p_s, p_d, w_d) = self._get_centroids(commonNodes, dstSubPos, srcSubPos)
         s = self._get_scaling_factor(commonNodes, dstSubPos, srcSubPos, p_d, p_s, w_d)
         if len(commonNodes) == 2:
-            R = self._get_rotation_matrix_2_common_nodes(
-                commonNodes, dstSubPos, srcSubPos
-            )
+            R = self._get_rotation_matrix_2_common_nodes(commonNodes, dstSubPos, srcSubPos)
         else:
             R = self.get_rotation_matrix(commonNodes, dstSubPos, srcSubPos, p_d, p_s)
         t = p_d - dot(dot(s, R), p_s)

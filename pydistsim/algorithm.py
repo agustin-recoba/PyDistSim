@@ -2,14 +2,15 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 from inspect import getmembers
-from typing import Optional
+from typing import TYPE_CHECKING
 
-import pydistsim.network as nt
 from pydistsim.logger import logger
 from pydistsim.message import Message
 from pydistsim.message import MetaHeader as MessageMetaHeader
-from pydistsim.node import Node
 from pydistsim.observers import ObservableEvents, ObserverManagerMixin
+
+if TYPE_CHECKING:
+    from pydistsim.network import NetworkType, Node
 
 
 class ActionEnum(StrEnum):
@@ -30,7 +31,7 @@ MSG_META_HEADER_MAP = {
 class Alarm:
     time: int
     message: Message
-    node: Node
+    node: "Node"
 
 
 class StatusValues(StrEnum):
@@ -66,9 +67,7 @@ class AlgorithmMeta(type):
         dps.update(dct.get("default_params", {}))
         all_params = rps + list(dps.keys())
 
-        assert len(rps) == len(
-            set(rps)
-        ), "Some required params %s defined in multiple classes." % str(rps)
+        assert len(rps) == len(set(rps)), "Some required params %s defined in multiple classes." % str(rps)
         assert len(all_params) == len(
             set(all_params)
         ), "Required params {} and default params {} should be unique.".format(
@@ -128,7 +127,7 @@ class Algorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
 
     def __init__(self, network, **kwargs):
         super().__init__()
-        self.network: nt.Network = network
+        self.network: "NetworkType" = network
         self.name = self.__class__.__name__
         logger.debug("Instance of {} class has been initialized.", self.name)
 
@@ -154,10 +153,7 @@ class Algorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
         raise NotImplementedError
 
     def is_initialized(self):
-        return (
-            self.network.algorithmState["step"] != 1
-            and self.network.get_current_algorithm() == self
-        )
+        return self.network.algorithmState["step"] != 1 and self.network.get_current_algorithm() == self
 
     def is_halted(self):
         """
@@ -231,7 +227,7 @@ class NodeAlgorithm(Algorithm):
         for node in self.network.nodes_sorted():
             node.status = self.Status.IDLE
 
-    def _node_step(self, node: Node):
+    def _node_step(self, node: "Node"):
         """Executes one step of the algorithm for given node."""
         message: Message = node.receive()
 
@@ -245,7 +241,7 @@ class NodeAlgorithm(Algorithm):
             elif message.nexthop == node.id:
                 self._forward_message(node, message)
 
-    def _forward_message(self, node: Node, message: Message):
+    def _forward_message(self, node: "Node", message: Message):
         try:
             message.nexthop = node.memory["routing"][message.destination]
         except KeyError:
@@ -253,7 +249,7 @@ class NodeAlgorithm(Algorithm):
         else:
             self.send(node, message)
 
-    def send(self, source_node: Node, message: Message):
+    def send(self, source_node: "Node", message: Message):
         """
         Send a message to nodes listed in message's destination field.
 
@@ -279,7 +275,7 @@ class NodeAlgorithm(Algorithm):
                 self.alarms.remove(alarm)
                 alarm.node.push_to_inbox(alarm.message)
 
-    def set_alarm(self, node: Node, time: int, message: Message | None = None):
+    def set_alarm(self, node: "Node", time: int, message: Message | None = None):
         """
         Set an alarm for the node.
         One unit of time is one step of the algorithm.
@@ -306,16 +302,14 @@ class NodeAlgorithm(Algorithm):
         self.alarms.append(alarm)
         return alarm
 
-    def disable_node_alarms(self, node: Node):
+    def disable_node_alarms(self, node: "Node"):
         """
         Disable all alarms set for the node.
 
         :param node: The node for which the alarms are disabled.
         :type node: Node
         """
-        to_delete_messages = [
-            alarm.message for alarm in self.alarms if alarm.node == node
-        ]
+        to_delete_messages = [alarm.message for alarm in self.alarms if alarm.node == node]
         self.alarms = [alarm for alarm in self.alarms if alarm.node != node]
 
         for message in node.inbox.copy():
@@ -334,7 +328,7 @@ class NodeAlgorithm(Algorithm):
         if alarm.message in alarm.node.inbox:
             alarm.node.inbox.remove(alarm.message)
 
-    def _process_message(self, node: Node, message: Message):
+    def _process_message(self, node: "Node", message: Message):
         status: StatusValues = getattr(self.Status, node.status.value)
         logger.debug("Processing message: 0x%x" % id(message))
         method_name = MSG_META_HEADER_MAP[message.meta_header]
@@ -346,9 +340,7 @@ class NodeAlgorithm(Algorithm):
             method = getattr(status, ActionEnum.default)
             method(self, node, message)
         else:
-            logger.error(
-                f"Method {method_name} not implemented for status {node.status}."
-            )
+            logger.error(f"Method {method_name} not implemented for status {node.status}.")
         return True
 
     def is_halted(self):
@@ -362,10 +354,7 @@ class NodeAlgorithm(Algorithm):
         :rtype: bool
         """
         return (
-            all(
-                (len(node.inbox) == 0 and len(node.outbox) == 0)
-                for node in self.network.nodes()
-            )
+            all((len(node.inbox) == 0 and len(node.outbox) == 0) for node in self.network.nodes())
             and len(self.alarms) == 0
         )
 

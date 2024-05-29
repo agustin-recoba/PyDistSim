@@ -1,5 +1,5 @@
 from pydistsim.algorithms.broadcast import Flood
-from pydistsim.networkgenerator import NetworkGenerator
+from pydistsim.network import NetworkGenerator
 from pydistsim.simulation import Simulation
 from pydistsim.utils.testing import PyDistSimTestCase
 

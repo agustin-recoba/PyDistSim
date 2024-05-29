@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 
 from pydistsim.algorithms.broadcast import Flood
-from pydistsim.networkgenerator import NetworkGenerator
+from pydistsim.network import NetworkGenerator
 from pydistsim.observers import (
     AlgorithmObserver,
     NetworkObserver,
@@ -13,9 +13,7 @@ from pydistsim.simulation import Simulation
 from pydistsim.utils.testing import PyDistSimTestCase
 
 
-class TestableObserver(
-    AlgorithmObserver, SimulationObserver, NetworkObserver, NodeObserver
-):
+class ObserverForTests(AlgorithmObserver, SimulationObserver, NetworkObserver, NodeObserver):
     """
     A test observer that raises an exception when notified.
     """
@@ -84,7 +82,7 @@ class TestObserver(PyDistSimTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls.observer = TestableObserver()
+        cls.observer = ObserverForTests()
         cls.net = NetworkGenerator(10, directed=False).generate_random_network()
         cls.net.algorithms = ((Flood, {"informationKey": "greet"}),)
 
@@ -95,7 +93,7 @@ class TestObserver(PyDistSimTestCase):
 
     def test_added(self):
         with self.observer.do_raise(ObservableEvents.added):
-            with self.assertRaises(TestableObserver.ObserverNotified) as context:
+            with self.assertRaises(ObserverForTests.ObserverNotified) as context:
                 self.sim.add_observers(self.observer)
 
         self.assertEqual(context.exception.event, ObservableEvents.added)
@@ -103,7 +101,7 @@ class TestObserver(PyDistSimTestCase):
     def test_step_done(self):
         self.sim.add_observers(self.observer)
         with self.observer.do_raise(ObservableEvents.step_done):
-            with self.assertRaises(TestableObserver.ObserverNotified) as context:
+            with self.assertRaises(ObserverForTests.ObserverNotified) as context:
                 self.sim.run(1)
 
         self.assertEqual(context.exception.event, ObservableEvents.step_done)
@@ -111,7 +109,7 @@ class TestObserver(PyDistSimTestCase):
     def test_algorithm_started(self):
         self.sim.add_observers(self.observer)
         with self.observer.do_raise(ObservableEvents.algorithm_started):
-            with self.assertRaises(TestableObserver.ObserverNotified) as context:
+            with self.assertRaises(ObserverForTests.ObserverNotified) as context:
                 self.sim.run(1)
 
         self.assertEqual(context.exception.event, ObservableEvents.algorithm_started)
@@ -119,7 +117,7 @@ class TestObserver(PyDistSimTestCase):
     def test_algorithm_finished(self):
         self.sim.add_observers(self.observer)
         with self.observer.do_raise(ObservableEvents.algorithm_finished):
-            with self.assertRaises(TestableObserver.ObserverNotified) as context:
+            with self.assertRaises(ObserverForTests.ObserverNotified) as context:
                 self.sim.run()
 
         self.assertEqual(context.exception.event, ObservableEvents.algorithm_finished)
@@ -127,7 +125,7 @@ class TestObserver(PyDistSimTestCase):
     def test_network_changed(self):
         self.sim.add_observers(self.observer)
         with self.observer.do_raise(ObservableEvents.network_changed):
-            with self.assertRaises(TestableObserver.ObserverNotified) as context:
+            with self.assertRaises(ObserverForTests.ObserverNotified) as context:
                 self.sim.network = self.net
 
         self.assertEqual(context.exception.event, ObservableEvents.network_changed)
@@ -135,7 +133,7 @@ class TestObserver(PyDistSimTestCase):
     def test_sim_state_changed(self):
         self.sim.add_observers(self.observer)
         with self.observer.do_raise(ObservableEvents.sim_state_changed):
-            with self.assertRaises(TestableObserver.ObserverNotified) as context:
+            with self.assertRaises(ObserverForTests.ObserverNotified) as context:
                 self.sim.run()
 
         self.assertEqual(context.exception.event, ObservableEvents.sim_state_changed)
@@ -143,7 +141,7 @@ class TestObserver(PyDistSimTestCase):
     def test_message_sent(self):
         self.sim.add_observers(self.observer)
         with self.observer.do_raise(ObservableEvents.message_sent):
-            with self.assertRaises(TestableObserver.ObserverNotified) as context:
+            with self.assertRaises(ObserverForTests.ObserverNotified) as context:
                 self.sim.run(3)
 
         self.assertEqual(context.exception.event, ObservableEvents.message_sent)
@@ -151,7 +149,7 @@ class TestObserver(PyDistSimTestCase):
     def test_message_delivered(self):
         self.sim.add_observers(self.observer)
         with self.observer.do_raise(ObservableEvents.message_delivered):
-            with self.assertRaises(TestableObserver.ObserverNotified) as context:
+            with self.assertRaises(ObserverForTests.ObserverNotified) as context:
                 self.sim.run(1)
 
         self.assertEqual(context.exception.event, ObservableEvents.message_delivered)
@@ -160,7 +158,7 @@ class TestObserver(PyDistSimTestCase):
         some_node = self.net.nodes_sorted()[0]
         some_node.add_observers(self.observer)
         with self.observer.do_raise(ObservableEvents.node_status_changed):
-            with self.assertRaises(TestableObserver.ObserverNotified) as context:
+            with self.assertRaises(ObserverForTests.ObserverNotified) as context:
                 some_node.status = "NEW"
 
         self.assertEqual(context.exception.event, ObservableEvents.node_status_changed)
@@ -170,7 +168,7 @@ class TestWrongEvent(PyDistSimTestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-        cls.observer = TestableObserver()
+        cls.observer = ObserverForTests()
         cls.net = NetworkGenerator(10, directed=False).generate_random_network()
 
     def test_wrong_event(self):

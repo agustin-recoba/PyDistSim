@@ -34,9 +34,7 @@ class MaxCommonNodeSelector(StitchSubclusterSelectorBase):
                     stitched[(dst_index, src_index)] = ()
                     continue
 
-                commonNodes = [
-                    node for node in list(dst_sc.keys()) if node in list(src_sc.keys())
-                ]
+                commonNodes = [node for node in list(dst_sc.keys()) if node in list(src_sc.keys())]
                 cn_count = len(commonNodes)
                 if cn_count > cn_count_max and cn_count >= self.cn_count_treshold:
                     cn_count_max = cn_count
@@ -44,10 +42,6 @@ class MaxCommonNodeSelector(StitchSubclusterSelectorBase):
                     srcSubIndex = src_index
 
         # in intraStitch make sure that dstSub is larger one
-        if (
-            is_intra
-            and cn_count_max != 0
-            and len(src[srcSubIndex]) > len(dst[dstSubIndex])
-        ):
+        if is_intra and cn_count_max != 0 and len(src[srcSubIndex]) > len(dst[dstSubIndex]):
             return (srcSubIndex, dstSubIndex)  # swapped src and dst indexes
         return (dstSubIndex, srcSubIndex)

@@ -4,20 +4,28 @@ import pytest
 from networkx import is_directed_acyclic_graph, is_weakly_connected
 
 from pydistsim.algorithm import NodeAlgorithm
-from pydistsim.channeltype import ChannelType, Complete
 from pydistsim.conf import settings
-from pydistsim.environment import Environment2D
-from pydistsim.network import BidirectionalNetwork, Network, PyDistSimNetworkError
-from pydistsim.node import Node
+from pydistsim.network import (
+    BidirectionalNetwork,
+    BidirectionalRangeNetwork,
+    CompleteRangeType,
+    Network,
+    NetworkException,
+    NetworkType,
+    Node,
+    RangeNetwork,
+    RangeType,
+)
+from pydistsim.network.environment import Environment2D
 from pydistsim.utils.tree import check_tree_key
 
 
 class TestDirectedNetwork(unittest.TestCase):
-    nw_class = Network
+    nw_class = RangeNetwork
 
     def setUp(self):
         env = Environment2D()
-        self.net = self.nw_class(channelType=Complete(env))
+        self.net = self.nw_class(rangeType=CompleteRangeType(env))
         self.net.environment.image[22, 22] = 0
         self.node1 = self.net.add_node(pos=[22.8, 21.8])
         self.node2 = self.net.add_node(pos=[21.9, 22.9])
@@ -26,7 +34,7 @@ class TestDirectedNetwork(unittest.TestCase):
 
         self.net.algorithms = (NodeAlgorithm,)
 
-        self.other_net = self.nw_class(channelType=Complete(env))
+        self.other_net = self.nw_class(rangeType=CompleteRangeType(env))
         self.node_in_other_net = self.other_net.add_node()
 
     def test_nodes(self):
@@ -34,11 +42,9 @@ class TestDirectedNetwork(unittest.TestCase):
         assert isinstance(self.node1, Node)
         assert len(self.net.nodes()) == 4
         if isinstance(self.net.environment, Environment2D):
-            assert (
-                self.net.environment.image.shape == settings.ENVIRONMENT2D_SHAPE
-            ), "incorrect default size"
+            assert self.net.environment.image.shape == settings.ENVIRONMENT2D_SHAPE, "incorrect default size"
 
-        assert isinstance(self.net.channelType, ChannelType)
+        assert isinstance(self.net.rangeType, RangeType)
 
         assert all(node.network == self.net for node in self.net.nodes())
 
@@ -47,26 +53,20 @@ class TestDirectedNetwork(unittest.TestCase):
         Pixel 22,22 is not space so node1 and node2 should not be visible
         but node3 is visible.
         """
-        assert not self.net.environment.are_visible(
-            self.net.pos[self.node1], self.net.pos[self.node2]
-        )
+        assert not self.net.environment.are_visible(self.net.pos[self.node1], self.net.pos[self.node2])
 
-        assert self.net.environment.are_visible(
-            self.net.pos[self.node2], self.net.pos[self.node3]
-        )
+        assert self.net.environment.are_visible(self.net.pos[self.node2], self.net.pos[self.node3])
 
     def test_subnetwork(self):
         """Test subnetwork creation."""
-        subnetwork: Network = self.net.subnetwork([self.node1, self.node2])
+        subnetwork: "NetworkType" = self.net.subnetwork([self.node1, self.node2])
 
         assert len(subnetwork.nodes()) == 2
         assert (
             subnetwork._algorithms_param == self.net._algorithms_param
         )  # compare the algorithms classes and their parameters
 
-        assert (
-            subnetwork.algorithms != self.net.algorithms
-        )  # compare algorithm instances
+        assert subnetwork.algorithms != self.net.algorithms  # compare algorithm instances
 
         assert all(
             algo1.network == subnetwork and algo2.network == self.net
@@ -102,14 +102,14 @@ class TestDirectedNetwork(unittest.TestCase):
         assert len(self.net.nodes()) == original_len - 1
         assert self.node1 not in self.net.nodes()
 
-        with self.assertRaises(PyDistSimNetworkError):
+        with self.assertRaises(NetworkException):
             self.net.remove_node(self.node1)
 
         self.net.add_node(self.node1, pos=pos)
 
     def test_add_node_error_in_other_net(self):
         """Test adding node to network."""
-        with self.assertRaises(PyDistSimNetworkError):
+        with self.assertRaises(NetworkException):
             self.net.add_node(self.node_in_other_net)
 
     def test_get_current_algorithm(self):
@@ -118,7 +118,7 @@ class TestDirectedNetwork(unittest.TestCase):
 
         self.net.algorithms = ()
 
-        with self.assertRaises(PyDistSimNetworkError):
+        with self.assertRaises(NetworkException):
             self.net.get_current_algorithm()
 
         self.net.algorithms = (NodeAlgorithm,)
@@ -172,4 +172,4 @@ class TestDirectedNetwork(unittest.TestCase):
 
 
 class TestUnDirectedNetwork(TestDirectedNetwork):
-    nw_class = BidirectionalNetwork
+    nw_class = BidirectionalRangeNetwork

@@ -78,9 +78,7 @@ class Positions(MemoryStructure):
         """Returns new Positions instance with only one largest subcluster.
         If multiple subclusters have maximum number of nodes, first one is
         returned."""
-        return Positions(
-            [reduce(lambda x, y: len(x) > len(y) and x or y, self.subclusters)]
-        )
+        return Positions([reduce(lambda x, y: len(x) > len(y) and x or y, self.subclusters)])
 
     def get_dic(self):
         dic = {}

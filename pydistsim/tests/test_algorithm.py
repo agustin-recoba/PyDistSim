@@ -9,8 +9,7 @@ from pydistsim.algorithm import (
     StatusValues,
 )
 from pydistsim.message import Message
-from pydistsim.network import PyDistSimNetworkError
-from pydistsim.networkgenerator import NetworkGenerator
+from pydistsim.network import NetworkException, NetworkGenerator
 from pydistsim.simulation import Simulation
 from pydistsim.utils.helpers import first
 from pydistsim.utils.testing import PyDistSimTestCase
@@ -85,13 +84,13 @@ class TestAlgorithmsSetter(unittest.TestCase):
         self.check = [
             # wrong_format
             (
-                PyDistSimNetworkError,
+                NetworkException,
                 [
                     (SomeNodeAlgorithm, {"rp1": 1, "rp2": 2, "rp3": 3}),
                 ],
             ),
             # wrong_base_class
-            (PyDistSimNetworkError, ((Node, {}),)),
+            (NetworkException, ((Node, {}),)),
             # missing_req_params
             (
                 PyDistSimAlgorithmException,
@@ -216,9 +215,7 @@ class TestAlarms(unittest.TestCase):
                 node.status = self.Status.IDLE
                 self.set_alarm(node, 3, Message(data=f"ALARM{node.id}"))
                 self.set_alarm(node, 6, Message(data=f"ALARM{node.id}"))
-                node.memory["LAST_ALARM"] = self.set_alarm(
-                    node, 9, Message(data=f"ALARM{node.id}")
-                )
+                node.memory["LAST_ALARM"] = self.set_alarm(node, 9, Message(data=f"ALARM{node.id}"))
 
         @Status.IDLE
         def alarm(self, node, message):
@@ -239,15 +236,13 @@ class TestAlarms(unittest.TestCase):
     def test_run_base_algorithm(self):
         self.aux_test(
             self.TimerAlgorithm,
-            lambda node: node.status == self.TimerAlgorithm.Status.DONE
-            and node.memory["alarm"] == f"ALARM{node.id}",
+            lambda node: node.status == self.TimerAlgorithm.Status.DONE and node.memory["alarm"] == f"ALARM{node.id}",
         )
 
     def test_run_base_algorithm_default_message(self):
         self.aux_test(
             self.TimerDefaultMessage,
-            lambda node: node.status == self.TimerAlgorithm.Status.DONE
-            and len(node.memory["alarm"]) == 0,
+            lambda node: node.status == self.TimerAlgorithm.Status.DONE and len(node.memory["alarm"]) == 0,
         )
 
     def aux_test(self, algo_class, data_test):
@@ -262,30 +257,22 @@ class TestAlarms(unittest.TestCase):
         # 1 step for initialization, 3 steps for alarms, 1 step for processing alarm messages
         sim.run(1)
 
-        assert len(sim.network.get_current_algorithm().alarms) == 3 * len(
-            self.net.nodes()
-        )
+        assert len(sim.network.get_current_algorithm().alarms) == 3 * len(self.net.nodes())
         assert len(some_n.inbox) == 0
 
         sim.run(1)  # alarm tic
 
-        assert len(sim.network.get_current_algorithm().alarms) == 3 * len(
-            self.net.nodes()
-        )
+        assert len(sim.network.get_current_algorithm().alarms) == 3 * len(self.net.nodes())
         assert len(some_n.inbox) == 0
 
         sim.run(1)  # alarm tic
 
-        assert len(sim.network.get_current_algorithm().alarms) == 3 * len(
-            self.net.nodes()
-        )
+        assert len(sim.network.get_current_algorithm().alarms) == 3 * len(self.net.nodes())
         assert len(some_n.inbox) == 0
 
         sim.run(1)  # alarm tic
 
-        assert len(sim.network.get_current_algorithm().alarms) == 2 * len(
-            self.net.nodes()
-        )
+        assert len(sim.network.get_current_algorithm().alarms) == 2 * len(self.net.nodes())
         assert all(len(node.inbox) == 1 for node in self.net.nodes())
 
         sim.run(1)  # 1 step for processing alarm messages

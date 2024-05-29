@@ -5,9 +5,7 @@ def start_ipydistsim():
     if sys.platform.startswith("win32") or sys.platform.startswith("linux2"):
         try:
             os.environ["VIRTUAL_ENV"] = os.environ["PYDISTSIM_ENV"]
-            os.environ["IPYTHONDIR"] = os.path.join(
-                os.environ["PYDISTSIM_ENV"], ".ipython"
-            )
+            os.environ["IPYTHONDIR"] = os.path.join(os.environ["PYDISTSIM_ENV"], ".ipython")
         except KeyError:
             pass
 
