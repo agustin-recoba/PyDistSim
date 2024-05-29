@@ -11,7 +11,7 @@ from pydistsim.observers import (
 if TYPE_CHECKING:
     from pydistsim.algorithm import Algorithm
     from pydistsim.message import Message
-    from pydistsim.node import Node
+    from pydistsim.network import Node
     from pydistsim.simulation import Simulation
 
 
@@ -86,9 +86,7 @@ class MetricCollector(NodeNetworkObserver, AlgorithmObserver, SimulationObserver
         )
 
     # NodeNetworkObserver methods
-    def on_node_status_changed(
-        self, node: "Node", previous_status: str, new_status: str
-    ) -> None:
+    def on_node_status_changed(self, node: "Node", previous_status: str, new_status: str) -> None:
         self._add_metric(
             ObservableEvents.node_status_changed,
             {

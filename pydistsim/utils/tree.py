@@ -15,9 +15,7 @@ def get_root_node(net, treeKey="mst"):
     check_tree_key(net, treeKey)
 
     node = net.nodes_sorted()[0]
-    while (
-        node.memory[treeKey]["parent"] and node.memory[treeKey]["parent"] in net.nodes()
-    ):
+    while node.memory[treeKey]["parent"] and node.memory[treeKey]["parent"] in net.nodes():
         node = node.memory[treeKey]["parent"]
     return node
 
@@ -105,7 +103,4 @@ class NodeNotRoot(TreeNetworkException):
         self.node = node
 
     def __str__(self):
-        return (
-            "Node with id=%d is is not root in tree defined by "
-            "'%s' key in memory." % (self.node.id, self.treeKey)
-        )
+        return "Node with id=%d is is not root in tree defined by '%s' key in memory." % (self.node.id, self.treeKey)

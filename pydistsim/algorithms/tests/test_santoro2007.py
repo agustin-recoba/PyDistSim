@@ -3,6 +3,7 @@ import unittest
 from pydistsim import Network, NetworkGenerator, Simulation
 from pydistsim.algorithms.santoro2007.traversal import DFT, DFStar
 from pydistsim.algorithms.santoro2007.yoyo import YoYo
+from pydistsim.network import RangeNetwork
 
 
 class TestYoYo(unittest.TestCase):
@@ -27,7 +28,7 @@ class TestYoYo(unittest.TestCase):
 
         for i, node_positions in enumerate(nets, start=1):
             with self.subTest(i=i):
-                net = Network()
+                net = RangeNetwork()
                 for node_pos in node_positions:
                     net.add_node(pos=node_pos, commRange=node_range)
 
@@ -41,18 +42,14 @@ class TestYoYo(unittest.TestCase):
                 for node in sim.network.nodes():
                     if node.id != min_id:
                         # Check if every other node is PRUNED
-                        assert (
-                            node.status == YoYo.Status.PRUNED
-                        ), "%s: Node %d has status %s, not PRUNED" % (
+                        assert node.status == YoYo.Status.PRUNED, "%s: Node %d has status %s, not PRUNED" % (
                             name,
                             node.id,
                             node.status,
                         )
                     else:
                         # Check if the node with the smallest ID is the LEADER
-                        assert (
-                            node.status == YoYo.Status.LEADER
-                        ), "%s: Node %d has status %s, not LEADER" % (
+                        assert node.status == YoYo.Status.LEADER, "%s: Node %d has status %s, not LEADER" % (
                             name,
                             node.id,
                             node.status,
@@ -64,11 +61,9 @@ class TestYoYo(unittest.TestCase):
         N_NODES_STEP = 5
 
         for i in range(N_ITERS):
-            for n_nodes in range(
-                N_NODES_STEP, N_NETWORKS * N_NODES_STEP + N_NODES_STEP, N_NODES_STEP
-            ):
+            for n_nodes in range(N_NODES_STEP, N_NETWORKS * N_NODES_STEP + N_NODES_STEP, N_NODES_STEP):
                 with self.subTest(i=i, n_nodes=n_nodes):
-                    net_gen = NetworkGenerator(n_nodes)
+                    net_gen = NetworkGenerator(n_nodes, directed=False)
                     net = net_gen.generate_random_network()
 
                     name = "Random %d, %d nodes" % (i, n_nodes)
@@ -81,18 +76,14 @@ class TestYoYo(unittest.TestCase):
                     for node in sim.network.nodes():
                         if node.id == min_id:
                             # Check if the node with the smallest ID is the LEADER
-                            assert (
-                                node.status == YoYo.Status.LEADER
-                            ), "%s: Node %d has status %s, not LEADER" % (
+                            assert node.status == YoYo.Status.LEADER, "%s: Node %d has status %s, not LEADER" % (
                                 name,
                                 node.id,
                                 node.status,
                             )
                         else:
                             # Check if every other node is PRUNED
-                            assert (
-                                node.status == YoYo.Status.PRUNED
-                            ), "%s: Node %d has status %s, not PRUNED" % (
+                            assert node.status == YoYo.Status.PRUNED, "%s: Node %d has status %s, not PRUNED" % (
                                 name,
                                 node.id,
                                 node.status,
@@ -102,17 +93,15 @@ class TestYoYo(unittest.TestCase):
 class TestTraversalDFT(unittest.TestCase):
 
     def setUp(self):
-        net_gen = NetworkGenerator(100)
+        net_gen = NetworkGenerator(100, directed=False)
         self.net = net_gen.generate_random_network()
 
         self.visited = []
 
         # Asigna el algoritmo
-        self.net.algorithms = (
-            (DFT, {"visitedAction": lambda node: self.visited.append(node.id)}),
-        )
+        self.net.algorithms = ((DFT, {"visitedAction": lambda node: self.visited.append(node.id)}),)
 
-    def test_broadcast(self):
+    def test_traversal(self):
         sim = Simulation(self.net)
 
         sim.run()
@@ -132,11 +121,9 @@ class TestTraversalDFStar(unittest.TestCase):
         self.visited = []
 
         # Asigna el algoritmo
-        self.net.algorithms = (
-            (DFStar, {"visitedAction": lambda node: self.visited.append(node.id)}),
-        )
+        self.net.algorithms = ((DFStar, {"visitedAction": lambda node: self.visited.append(node.id)}),)
 
-    def test_broadcast(self):
+    def test_traversal(self):
         sim = Simulation(self.net)
 
         sim.run()

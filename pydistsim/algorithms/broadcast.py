@@ -5,7 +5,7 @@ from pydistsim.message import Message
 from pydistsim.restrictions import Restrictions
 
 if TYPE_CHECKING:
-    from pydistsim.node import Node
+    from pydistsim.network import Node
 
 
 class Flood(NodeAlgorithm):
@@ -36,9 +36,7 @@ class Flood(NodeAlgorithm):
                 node.status = self.Status.INITIATOR
                 ini_nodes.append(node)
         for ini_node in ini_nodes:
-            ini_node.push_to_inbox(
-                Message(meta_header=NodeAlgorithm.INI, destination=ini_node)
-            )
+            ini_node.push_to_inbox(Message(meta_header=NodeAlgorithm.INI, destination=ini_node))
 
     @Status.INITIATOR
     def spontaneously(self, node, message):

@@ -2,7 +2,7 @@ import unittest
 
 from pydistsim.algorithms.niculescu2003.dvhop import DVHop
 from pydistsim.algorithms.niculescu2003.trilaterate import Trilaterate
-from pydistsim.networkgenerator import NetworkGenerator
+from pydistsim.network import NetworkGenerator
 from pydistsim.sensor import TruePosSensor
 from pydistsim.simulation import Simulation
 
@@ -32,6 +32,4 @@ class TestNiculescu2003(unittest.TestCase):
         sim = Simulation(self.net)
         sim.run()
         for node in self.net.nodes():
-            self.assertTrue(
-                len(node.memory.get("pos", [None, None])) == 2 or "tp" in node.memory
-            )
+            self.assertTrue(len(node.memory.get("pos", [None, None])) == 2 or "tp" in node.memory)

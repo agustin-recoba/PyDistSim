@@ -2,8 +2,7 @@ import os
 import unittest
 
 from pydistsim.algorithms.broadcast import Flood
-from pydistsim.network import Network
-from pydistsim.networkgenerator import NetworkGenerator
+from pydistsim.network import Network, NetworkGenerator, NetworkType
 from pydistsim.npickle import read_npickle, write_npickle
 
 
@@ -30,33 +29,22 @@ class TestPickle(unittest.TestCase):
                 try:
                     write_npickle(net, f"net_test_{i}.tar.gz")
 
-                    assert os.path.isfile(
-                        f"net_test_{i}.tar.gz"
-                    ), "The file has not been created"
+                    assert os.path.isfile(f"net_test_{i}.tar.gz"), "The file has not been created"
 
-                    net_from_file: Network = read_npickle(f"net_test_{i}.tar.gz")
+                    net_from_file: "NetworkType" = read_npickle(f"net_test_{i}.tar.gz")
 
-                    assert type(net) == type(
-                        net_from_file
-                    ), "The type of the object is not the same."
+                    assert type(net) == type(net_from_file), "The type of the object is not the same."
 
-                    assert len(net.nodes()) == len(
-                        net_from_file.nodes()
-                    ), "The number of nodes is not the same."
+                    assert len(net.nodes()) == len(net_from_file.nodes()), "The number of nodes is not the same."
 
+                    assert net.elected.id == net_from_file.elected.id, "The elected node is not the same."
                     assert (
-                        net.elected.id == net_from_file.elected.id
-                    ), "The elected node is not the same."
-                    assert (
-                        net.elected.memory[f"some_key_{size}"]
-                        == net_from_file.elected.memory[f"some_key_{size}"]
+                        net.elected.memory[f"some_key_{size}"] == net_from_file.elected.memory[f"some_key_{size}"]
                     ), "The value of the elected node is not the same."
 
                 finally:
                     os.remove(f"net_test_{i}.tar.gz")
-                    assert not os.path.isfile(
-                        f"net_test_{i}.tar.gz"
-                    ), "The file has not been deleted"
+                    assert not os.path.isfile(f"net_test_{i}.tar.gz"), "The file has not been deleted"
 
     def test_read_not_found(self):
         with self.assertRaises(OSError):

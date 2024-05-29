@@ -44,21 +44,15 @@ class SimulationGui(QMainWindow):
         self.ui.nodeInspector.addAction(self.ui.actionCopyInspectorData)
         self.ui.nodeInspector.addAction(self.ui.actionShowLocalizedSubclusters)
         # callbacks
-        self.ui.actionCopyInspectorData.triggered.connect(
-            self.on_actionCopyInspectorData_triggered
-        )
-        self.ui.actionShowLocalizedSubclusters.triggered.connect(
-            self.on_actionShowLocalizedSubclusters_triggered
-        )
+        self.ui.actionCopyInspectorData.triggered.connect(self.on_actionCopyInspectorData_triggered)
+        self.ui.actionShowLocalizedSubclusters.triggered.connect(self.on_actionShowLocalizedSubclusters_triggered)
 
         self.dpi = 72
         # take size of networDisplayWidget
         self.fig = Figure((700 / self.dpi, 731 / self.dpi), self.dpi, facecolor="0.9")
         self.canvas = FigureCanvas(self.fig)
         self.canvas.setParent(self.ui.networkDisplayWidget)
-        self.nav = NavigationToolbar(
-            self.canvas, self.ui.networkDisplayWidget, coordinates=True
-        )
+        self.nav = NavigationToolbar(self.canvas, self.ui.networkDisplayWidget, coordinates=True)
         self.nav.setGeometry(QRect(0, 0, 651, 36))
         self.nav.setIconSize(QSize(24, 24))
 
@@ -69,26 +63,14 @@ class SimulationGui(QMainWindow):
         if net:
             self.init_sim(net)
 
-        self.connect(
-            self.ui.showNodes, SIGNAL("stateChanged(int)"), self.refresh_visibility
-        )
-        self.connect(
-            self.ui.showEdges, SIGNAL("stateChanged(int)"), self.refresh_visibility
-        )
-        self.connect(
-            self.ui.showMessages, SIGNAL("stateChanged(int)"), self.refresh_visibility
-        )
-        self.connect(
-            self.ui.showLabels, SIGNAL("stateChanged(int)"), self.refresh_visibility
-        )
+        self.connect(self.ui.showNodes, SIGNAL("stateChanged(int)"), self.refresh_visibility)
+        self.connect(self.ui.showEdges, SIGNAL("stateChanged(int)"), self.refresh_visibility)
+        self.connect(self.ui.showMessages, SIGNAL("stateChanged(int)"), self.refresh_visibility)
+        self.connect(self.ui.showLabels, SIGNAL("stateChanged(int)"), self.refresh_visibility)
         self.connect(self.ui.redrawNetworkButton, SIGNAL("clicked(bool)"), self.redraw)
-        self.connect(
-            self.ui.treeGroupBox, SIGNAL("toggled(bool)"), self.refresh_visibility
-        )
+        self.connect(self.ui.treeGroupBox, SIGNAL("toggled(bool)"), self.refresh_visibility)
         self.connect(self.ui.treeKey, SIGNAL("textEdited(QString)"), self.redraw)
-        self.connect(
-            self.ui.propagationError, SIGNAL("toggled(bool)"), self.refresh_visibility
-        )
+        self.connect(self.ui.propagationError, SIGNAL("toggled(bool)"), self.refresh_visibility)
         self.connect(self.ui.locKey, SIGNAL("textEdited(QString)"), self.redraw)
         # callbacks
         self.ui.actionOpenNetwork.triggered.connect(self.on_actionOpenNetwork_triggered)
@@ -145,13 +127,9 @@ class SimulationGui(QMainWindow):
         self.draw_labels(net)
         self.drawnNet = net
         step_text = (
-            " (step %d)" % self.net.algorithmState["step"]
-            if isinstance(currentAlgorithm, NodeAlgorithm)
-            else ""
+            " (step %d)" % self.net.algorithmState["step"] if isinstance(currentAlgorithm, NodeAlgorithm) else ""
         )
-        self.axes.set_title(
-            (currentAlgorithm.name if currentAlgorithm else "") + step_text
-        )
+        self.axes.set_title((currentAlgorithm.name if currentAlgorithm else "") + step_text)
 
         self.refresh_visibility()
         # To save multiple figs of the simulation uncomment next two lines:
@@ -232,9 +210,7 @@ class SimulationGui(QMainWindow):
     def draw_edges(self, net=None):
         if not net:
             net = self.net
-        self.edge_collection = nx.draw_networkx_edges(
-            net, net.pos, alpha=0.6, edgelist=None, ax=self.axes
-        )
+        self.edge_collection = nx.draw_networkx_edges(net, net.pos, alpha=0.6, edgelist=None, ax=self.axes)
 
     def draw_messages(self, net=None):
         if not net:
@@ -261,15 +237,11 @@ class SimulationGui(QMainWindow):
                         self.messages.append(nbr_msg)
                         msgCircles.append(c)
                 else:
-                    c = MessageCircle(
-                        msg, net, "out", 3.0, lw=0, picker=3, zorder=3, color="b"
-                    )
+                    c = MessageCircle(msg, net, "out", 3.0, lw=0, picker=3, zorder=3, color="b")
                     self.messages.append(msg)
                     msgCircles.append(c)
             for msg in node.inbox:
-                c = MessageCircle(
-                    msg, net, "in", 3.0, lw=0, picker=3, zorder=3, color="g"
-                )
+                c = MessageCircle(msg, net, "in", 3.0, lw=0, picker=3, zorder=3, color="g")
                 self.messages.append(msg)
                 msgCircles.append(c)
         if self.messages:
@@ -283,9 +255,7 @@ class SimulationGui(QMainWindow):
         label_pos = {}
         for n in net.nodes():
             label_pos[n] = net.pos[n].copy() + 10
-        self.label_collection = nx.draw_networkx_labels(
-            net, label_pos, labels=net.labels, ax=self.axes
-        )
+        self.label_collection = nx.draw_networkx_labels(net, label_pos, labels=net.labels, ax=self.axes)
 
     def refresh_visibility(self):
         try:
@@ -295,9 +265,7 @@ class SimulationGui(QMainWindow):
                 label.set_visible(self.ui.showLabels.isChecked())
             self.tree_collection.set_visible(self.ui.treeGroupBox.isChecked())
             self.ini_error_collection.set_visible(self.ui.propagationError.isChecked())
-            self.propagation_error_collection.set_visible(
-                self.ui.propagationError.isChecked()
-            )
+            self.propagation_error_collection.set_visible(self.ui.propagationError.isChecked())
             # sould be last, sometimes there are no messages
             self.message_collection.set_visible(self.ui.showMessages.isChecked())
         except AttributeError:
@@ -339,18 +307,10 @@ class SimulationGui(QMainWindow):
 
         rms = {"iniRms": {}, "stitchRms": {}}
         for node in net.nodes():
-            rms["iniRms"][node] = (
-                get_rms(self.net.pos, (node.memory["iniLocs"]), True) * SCALE_FACTOR
-            )
-            rms["stitchRms"][node] = (
-                get_rms(self.net.pos, node.memory[locKey], True) * SCALE_FACTOR
-            )
-        self.propagation_error_collection = self.draw_nodes(
-            net=net, node_colors="g", node_radius=rms["stitchRms"]
-        )
-        self.ini_error_collection = self.draw_nodes(
-            net=net, node_colors="b", node_radius=rms["iniRms"]
-        )
+            rms["iniRms"][node] = get_rms(self.net.pos, (node.memory["iniLocs"]), True) * SCALE_FACTOR
+            rms["stitchRms"][node] = get_rms(self.net.pos, node.memory[locKey], True) * SCALE_FACTOR
+        self.propagation_error_collection = self.draw_nodes(net=net, node_colors="g", node_radius=rms["stitchRms"])
+        self.ini_error_collection = self.draw_nodes(net=net, node_colors="b", node_radius=rms["iniRms"])
 
     def reset_zoom(self):
         self.axes.set_xlim((0, self.net.environment.image.shape[1]))
@@ -410,9 +370,7 @@ class SimulationGui(QMainWindow):
 
             self.draw_network(net=net, drawMessages=False)
 
-            edge_pos = numpy.asarray(
-                [(self.net.pos[node], estimatedsub[node][:2]) for node in net]
-            )
+            edge_pos = numpy.asarray([(self.net.pos[node], estimatedsub[node][:2]) for node in net])
             error_collection = LineCollection(edge_pos, colors="r")
             self.axes.add_collection(error_collection)
 
@@ -435,9 +393,7 @@ class SimulationGui(QMainWindow):
         selectedFilter = "Network pickle (gz)"
         filters = ";;".join(filters)
 
-        fname = QFileDialog.getSaveFileName(
-            self, "Choose a filename", start, filters, selectedFilter
-        )[0]
+        fname = QFileDialog.getSaveFileName(self, "Choose a filename", start, filters, selectedFilter)[0]
         if fname:
             try:
                 write_pickle(self.net, fname)
@@ -460,9 +416,7 @@ class SimulationGui(QMainWindow):
         selectedFilter = "Network pickle (gz)"
         filters = ";;".join(filters)
 
-        fname = QFileDialog.getOpenFileName(
-            self, "Choose a file to open", start, filters, selectedFilter
-        )[0]
+        fname = QFileDialog.getOpenFileName(self, "Choose a file to open", start, filters, selectedFilter)[0]
         if fname:
             try:
                 print("open" + fname)

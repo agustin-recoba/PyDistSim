@@ -18,9 +18,7 @@ class DFT(NodeAlgorithm):
             node.status = self.Status.IDLE
         ini_node = self.network.nodes_sorted()[0]
         ini_node.status = self.Status.INITIATOR
-        ini_node.push_to_inbox(
-            Message(meta_header=NodeAlgorithm.INI, destination=ini_node)
-        )
+        ini_node.push_to_inbox(Message(meta_header=NodeAlgorithm.INI, destination=ini_node))
 
     @Status.INITIATOR
     def spontaneously(self, node, message):
@@ -61,9 +59,7 @@ class DFT(NodeAlgorithm):
     def visit(self, node):
         if len(node.memory["unvisited"]) == 0:
             if node.memory["parent"] is not None:
-                self.send(
-                    node, Message(header="Return", destination=node.memory["parent"])
-                )
+                self.send(node, Message(header="Return", destination=node.memory["parent"]))
             node.status = self.Status.DONE
         else:
             next_unvisited = node.memory["unvisited"].pop()
@@ -88,9 +84,7 @@ class DFStar(NodeAlgorithm):
             node.status = self.Status.IDLE
         ini_node = self.network.nodes_sorted()[0]
         ini_node.status = self.Status.INITIATOR
-        ini_node.push_to_inbox(
-            Message(meta_header=NodeAlgorithm.INI, destination=ini_node)
-        )
+        ini_node.push_to_inbox(Message(meta_header=NodeAlgorithm.INI, destination=ini_node))
 
     @Status.INITIATOR
     def spontaneously(self, node, message):
@@ -105,9 +99,7 @@ class DFStar(NodeAlgorithm):
                     destination=node.memory["next"],
                 ),
             )
-            self.send(
-                node, Message(header="Visited", destination=node.memory["unvisited"])
-            )
+            self.send(node, Message(header="Visited", destination=node.memory["unvisited"]))
             node.status = self.Status.VISITED
             self.visitedAction(node)
         else:
@@ -175,8 +167,7 @@ class DFStar(NodeAlgorithm):
                 node,
                 Message(
                     header="Visited",
-                    destination=set(node.memory[self.neighborsKey])
-                    - {node.memory["entry"], node.memory["next"]},
+                    destination=set(node.memory[self.neighborsKey]) - {node.memory["entry"], node.memory["next"]},
                 ),
             )
             node.status = self.Status.VISITED
@@ -186,8 +177,7 @@ class DFStar(NodeAlgorithm):
                 node,
                 Message(
                     header="Visited",
-                    destination=set(node.memory[self.neighborsKey])
-                    - {node.memory["entry"]},
+                    destination=set(node.memory[self.neighborsKey]) - {node.memory["entry"]},
                 ),
             )
             node.status = self.Status.DONE
@@ -204,7 +194,5 @@ class DFStar(NodeAlgorithm):
             )
         else:
             if not node.memory["initiator"]:
-                self.send(
-                    node, Message(header="Return", destination=node.memory["entry"])
-                )
+                self.send(node, Message(header="Return", destination=node.memory["entry"]))
             node.status = self.Status.DONE

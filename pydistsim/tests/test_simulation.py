@@ -1,7 +1,7 @@
 import unittest
 
 from pydistsim.algorithm import NetworkAlgorithm, NodeAlgorithm
-from pydistsim.networkgenerator import NetworkGenerator
+from pydistsim.network import NetworkGenerator
 from pydistsim.simulation import Simulation
 from pydistsim.utils.testing import PyDistSimTestCase
 
@@ -116,9 +116,7 @@ class TestResetNetwork(unittest.TestCase):
 
     def test_set_network(self):
         assert isinstance(self.net1.get_current_algorithm(), UnimplementedNodeAlgorithm)
-        assert isinstance(
-            self.net2.get_current_algorithm(), ImplementedNetworkAlgorithm
-        )
+        assert isinstance(self.net2.get_current_algorithm(), ImplementedNetworkAlgorithm)
 
         assert self.sim.network == self.net1
         assert self.net1.simulation == self.sim

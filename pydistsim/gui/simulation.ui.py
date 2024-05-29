@@ -82,9 +82,7 @@ class Ui_SimulationWindow:
         icon.addFile(":/icons/pydistsim.png", QSize(), QIcon.Normal, QIcon.Off)
         SimulationWindow.setWindowIcon(icon)
         SimulationWindow.setDockOptions(
-            QMainWindow.AllowTabbedDocks
-            | QMainWindow.AnimatedDocks
-            | QMainWindow.VerticalTabs
+            QMainWindow.AllowTabbedDocks | QMainWindow.AnimatedDocks | QMainWindow.VerticalTabs
         )
         self.actionRun = QAction(SimulationWindow)
         self.actionRun.setObjectName("actionRun")
@@ -117,26 +115,20 @@ class Ui_SimulationWindow:
         icon5.addFile(":/icons/fileopen.png", QSize(), QIcon.Normal, QIcon.Off)
         self.actionOpenNetwork.setIcon(icon5)
         self.actionShowLocalizedSubclusters = QAction(SimulationWindow)
-        self.actionShowLocalizedSubclusters.setObjectName(
-            "actionShowLocalizedSubclusters"
-        )
+        self.actionShowLocalizedSubclusters.setObjectName("actionShowLocalizedSubclusters")
         self.centralwidget = QWidget(SimulationWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.centralwidget.setEnabled(True)
         sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(
-            self.centralwidget.sizePolicy().hasHeightForWidth()
-        )
+        sizePolicy1.setHeightForWidth(self.centralwidget.sizePolicy().hasHeightForWidth())
         self.centralwidget.setSizePolicy(sizePolicy1)
         self.horizontalLayout = QHBoxLayout(self.centralwidget)
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.leftWidget = QWidget(self.centralwidget)
         self.leftWidget.setObjectName("leftWidget")
-        sizePolicy2 = QSizePolicy(
-            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred
-        )
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.leftWidget.sizePolicy().hasHeightForWidth())
@@ -172,14 +164,10 @@ class Ui_SimulationWindow:
 
         self.viewGroupBox = QGroupBox(self.leftWidget)
         self.viewGroupBox.setObjectName("viewGroupBox")
-        sizePolicy3 = QSizePolicy(
-            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum
-        )
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         sizePolicy3.setHorizontalStretch(0)
         sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(
-            self.viewGroupBox.sizePolicy().hasHeightForWidth()
-        )
+        sizePolicy3.setHeightForWidth(self.viewGroupBox.sizePolicy().hasHeightForWidth())
         self.viewGroupBox.setSizePolicy(sizePolicy3)
         self.verticalLayout_2 = QVBoxLayout(self.viewGroupBox)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
@@ -216,9 +204,7 @@ class Ui_SimulationWindow:
         sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy4.setHorizontalStretch(0)
         sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(
-            self.redrawNetworkButton.sizePolicy().hasHeightForWidth()
-        )
+        sizePolicy4.setHeightForWidth(self.redrawNetworkButton.sizePolicy().hasHeightForWidth())
         self.redrawNetworkButton.setSizePolicy(sizePolicy4)
 
         self.verticalLayout_6.addWidget(self.redrawNetworkButton)
@@ -227,14 +213,10 @@ class Ui_SimulationWindow:
 
         self.treeGroupBox = QGroupBox(self.viewGroupBox)
         self.treeGroupBox.setObjectName("treeGroupBox")
-        sizePolicy5 = QSizePolicy(
-            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred
-        )
+        sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy5.setHorizontalStretch(0)
         sizePolicy5.setVerticalStretch(0)
-        sizePolicy5.setHeightForWidth(
-            self.treeGroupBox.sizePolicy().hasHeightForWidth()
-        )
+        sizePolicy5.setHeightForWidth(self.treeGroupBox.sizePolicy().hasHeightForWidth())
         self.treeGroupBox.setSizePolicy(sizePolicy5)
         self.treeGroupBox.setMinimumSize(QSize(132, 60))
         self.treeGroupBox.setFlat(False)
@@ -266,33 +248,25 @@ class Ui_SimulationWindow:
 
         self.verticalLayout_3.addWidget(self.viewGroupBox)
 
-        self.verticalSpacer = QSpacerItem(
-            20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding
-        )
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout_3.addItem(self.verticalSpacer)
 
         self.horizontalLayout.addWidget(self.leftWidget)
 
-        self.horizontalSpacer = QSpacerItem(
-            0, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
-        )
+        self.horizontalSpacer = QSpacerItem(0, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout.addItem(self.horizontalSpacer)
 
         self.networkDisplayWidget = QWidget(self.centralwidget)
         self.networkDisplayWidget.setObjectName("networkDisplayWidget")
-        sizePolicy1.setHeightForWidth(
-            self.networkDisplayWidget.sizePolicy().hasHeightForWidth()
-        )
+        sizePolicy1.setHeightForWidth(self.networkDisplayWidget.sizePolicy().hasHeightForWidth())
         self.networkDisplayWidget.setSizePolicy(sizePolicy1)
         self.networkDisplayWidget.setMinimumSize(QSize(650, 0))
 
         self.horizontalLayout.addWidget(self.networkDisplayWidget)
 
-        self.horizontalSpacer_2 = QSpacerItem(
-            0, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
-        )
+        self.horizontalSpacer_2 = QSpacerItem(0, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout.addItem(self.horizontalSpacer_2)
 
@@ -312,20 +286,14 @@ class Ui_SimulationWindow:
         self.dockWidget = QDockWidget(SimulationWindow)
         self.dockWidget.setObjectName("dockWidget")
         self.dockWidget.setMinimumSize(QSize(87, 109))
-        self.dockWidget.setFeatures(
-            QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable
-        )
+        self.dockWidget.setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
         self.dockWidget.setAllowedAreas(Qt.RightDockWidgetArea)
         self.dockWidgetContents = QWidget()
         self.dockWidgetContents.setObjectName("dockWidgetContents")
-        sizePolicy6 = QSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
-        )
+        sizePolicy6 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         sizePolicy6.setHorizontalStretch(0)
         sizePolicy6.setVerticalStretch(0)
-        sizePolicy6.setHeightForWidth(
-            self.dockWidgetContents.sizePolicy().hasHeightForWidth()
-        )
+        sizePolicy6.setHeightForWidth(self.dockWidgetContents.sizePolicy().hasHeightForWidth())
         self.dockWidgetContents.setSizePolicy(sizePolicy6)
         self.horizontalLayout_3 = QHBoxLayout(self.dockWidgetContents)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
@@ -342,34 +310,24 @@ class Ui_SimulationWindow:
         self.horizontalLayout_3.addWidget(self.networkInspector)
 
         self.dockWidget.setWidget(self.dockWidgetContents)
-        SimulationWindow.addDockWidget(
-            Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget
-        )
+        SimulationWindow.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget)
         self.dockWidget_2 = QDockWidget(SimulationWindow)
         self.dockWidget_2.setObjectName("dockWidget_2")
         self.dockWidget_2.setMinimumSize(QSize(105, 377))
-        self.dockWidget_2.setFeatures(
-            QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable
-        )
+        self.dockWidget_2.setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
         self.dockWidget_2.setAllowedAreas(Qt.RightDockWidgetArea)
         self.dockWidgetContents_2 = QWidget()
         self.dockWidgetContents_2.setObjectName("dockWidgetContents_2")
-        sizePolicy6.setHeightForWidth(
-            self.dockWidgetContents_2.sizePolicy().hasHeightForWidth()
-        )
+        sizePolicy6.setHeightForWidth(self.dockWidgetContents_2.sizePolicy().hasHeightForWidth())
         self.dockWidgetContents_2.setSizePolicy(sizePolicy6)
         self.horizontalLayout_4 = QHBoxLayout(self.dockWidgetContents_2)
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.nodeInspector = QTreeView(self.dockWidgetContents_2)
         self.nodeInspector.setObjectName("nodeInspector")
-        sizePolicy7 = QSizePolicy(
-            QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding
-        )
+        sizePolicy7 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
         sizePolicy7.setHorizontalStretch(0)
         sizePolicy7.setVerticalStretch(0)
-        sizePolicy7.setHeightForWidth(
-            self.nodeInspector.sizePolicy().hasHeightForWidth()
-        )
+        sizePolicy7.setHeightForWidth(self.nodeInspector.sizePolicy().hasHeightForWidth())
         self.nodeInspector.setSizePolicy(sizePolicy7)
         self.nodeInspector.setMinimumSize(QSize(87, 337))
         self.nodeInspector.setContextMenuPolicy(Qt.ActionsContextMenu)
@@ -383,21 +341,15 @@ class Ui_SimulationWindow:
         self.horizontalLayout_4.addWidget(self.nodeInspector)
 
         self.dockWidget_2.setWidget(self.dockWidgetContents_2)
-        SimulationWindow.addDockWidget(
-            Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_2
-        )
+        SimulationWindow.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_2)
         self.dockWidget_3 = QDockWidget(SimulationWindow)
         self.dockWidget_3.setObjectName("dockWidget_3")
         self.dockWidget_3.setMinimumSize(QSize(87, 109))
-        self.dockWidget_3.setFeatures(
-            QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable
-        )
+        self.dockWidget_3.setFeatures(QDockWidget.DockWidgetFloatable | QDockWidget.DockWidgetMovable)
         self.dockWidget_3.setAllowedAreas(Qt.RightDockWidgetArea)
         self.dockWidgetContents_3 = QWidget()
         self.dockWidgetContents_3.setObjectName("dockWidgetContents_3")
-        sizePolicy6.setHeightForWidth(
-            self.dockWidgetContents_3.sizePolicy().hasHeightForWidth()
-        )
+        sizePolicy6.setHeightForWidth(self.dockWidgetContents_3.sizePolicy().hasHeightForWidth())
         self.dockWidgetContents_3.setSizePolicy(sizePolicy6)
         self.horizontalLayout_5 = QHBoxLayout(self.dockWidgetContents_3)
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
@@ -410,9 +362,7 @@ class Ui_SimulationWindow:
         self.horizontalLayout_5.addWidget(self.logListWidget)
 
         self.dockWidget_3.setWidget(self.dockWidgetContents_3)
-        SimulationWindow.addDockWidget(
-            Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_3
-        )
+        SimulationWindow.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.dockWidget_3)
         QWidget.setTabOrder(self.stepSize, self.treeKey)
 
         self.toolBar.addAction(self.actionOpenNetwork)
@@ -436,92 +386,52 @@ class Ui_SimulationWindow:
     # setupUi
 
     def retranslateUi(self, SimulationWindow):
-        SimulationWindow.setWindowTitle(
-            QCoreApplication.translate("SimulationWindow", "PyDistSim Simulation", None)
-        )
-        self.actionRun.setText(
-            QCoreApplication.translate("SimulationWindow", "Run", None)
-        )
+        SimulationWindow.setWindowTitle(QCoreApplication.translate("SimulationWindow", "PyDistSim Simulation", None))
+        self.actionRun.setText(QCoreApplication.translate("SimulationWindow", "Run", None))
         # if QT_CONFIG(tooltip)
-        self.actionRun.setToolTip(
-            QCoreApplication.translate(
-                "SimulationWindow", "Run simulation from beginning", None
-            )
-        )
+        self.actionRun.setToolTip(QCoreApplication.translate("SimulationWindow", "Run simulation from beginning", None))
         # endif // QT_CONFIG(tooltip)
         # if QT_CONFIG(shortcut)
-        self.actionRun.setShortcut(
-            QCoreApplication.translate("SimulationWindow", "Ctrl+R", None)
-        )
+        self.actionRun.setShortcut(QCoreApplication.translate("SimulationWindow", "Ctrl+R", None))
         # endif // QT_CONFIG(shortcut)
-        self.actionStep.setText(
-            QCoreApplication.translate("SimulationWindow", "Step", None)
-        )
+        self.actionStep.setText(QCoreApplication.translate("SimulationWindow", "Step", None))
         # if QT_CONFIG(tooltip)
-        self.actionStep.setToolTip(
-            QCoreApplication.translate("SimulationWindow", "Run next step", None)
-        )
+        self.actionStep.setToolTip(QCoreApplication.translate("SimulationWindow", "Run next step", None))
         # endif // QT_CONFIG(tooltip)
         # if QT_CONFIG(shortcut)
-        self.actionStep.setShortcut(
-            QCoreApplication.translate("SimulationWindow", "Ctrl+Space", None)
-        )
+        self.actionStep.setShortcut(QCoreApplication.translate("SimulationWindow", "Ctrl+Space", None))
         # endif // QT_CONFIG(shortcut)
-        self.actionReset.setText(
-            QCoreApplication.translate("SimulationWindow", "Reset", None)
-        )
+        self.actionReset.setText(QCoreApplication.translate("SimulationWindow", "Reset", None))
         # if QT_CONFIG(tooltip)
-        self.actionReset.setToolTip(
-            QCoreApplication.translate("SimulationWindow", "Reset simulation", None)
-        )
+        self.actionReset.setToolTip(QCoreApplication.translate("SimulationWindow", "Reset simulation", None))
         # endif // QT_CONFIG(tooltip)
         # if QT_CONFIG(shortcut)
-        self.actionReset.setShortcut(
-            QCoreApplication.translate("SimulationWindow", "Ctrl+W", None)
-        )
+        self.actionReset.setShortcut(QCoreApplication.translate("SimulationWindow", "Ctrl+W", None))
         # endif // QT_CONFIG(shortcut)
-        self.actionCopyInspectorData.setText(
-            QCoreApplication.translate("SimulationWindow", "Copy", None)
-        )
+        self.actionCopyInspectorData.setText(QCoreApplication.translate("SimulationWindow", "Copy", None))
         # if QT_CONFIG(shortcut)
-        self.actionCopyInspectorData.setShortcut(
-            QCoreApplication.translate("SimulationWindow", "Ctrl+C", None)
-        )
+        self.actionCopyInspectorData.setShortcut(QCoreApplication.translate("SimulationWindow", "Ctrl+C", None))
         # endif // QT_CONFIG(shortcut)
-        self.actionSaveNetwork.setText(
-            QCoreApplication.translate("SimulationWindow", "Save", None)
-        )
+        self.actionSaveNetwork.setText(QCoreApplication.translate("SimulationWindow", "Save", None))
         # if QT_CONFIG(tooltip)
         self.actionSaveNetwork.setToolTip(
-            QCoreApplication.translate(
-                "SimulationWindow", "Save network in npickle format", None
-            )
+            QCoreApplication.translate("SimulationWindow", "Save network in npickle format", None)
         )
         # endif // QT_CONFIG(tooltip)
         # if QT_CONFIG(shortcut)
-        self.actionSaveNetwork.setShortcut(
-            QCoreApplication.translate("SimulationWindow", "Ctrl+S", None)
-        )
+        self.actionSaveNetwork.setShortcut(QCoreApplication.translate("SimulationWindow", "Ctrl+S", None))
         # endif // QT_CONFIG(shortcut)
-        self.actionOpenNetwork.setText(
-            QCoreApplication.translate("SimulationWindow", "Open", None)
-        )
+        self.actionOpenNetwork.setText(QCoreApplication.translate("SimulationWindow", "Open", None))
         # if QT_CONFIG(tooltip)
         self.actionOpenNetwork.setToolTip(
-            QCoreApplication.translate(
-                "SimulationWindow", "Open network from npickle", None
-            )
+            QCoreApplication.translate("SimulationWindow", "Open network from npickle", None)
         )
         # endif // QT_CONFIG(tooltip)
         # if QT_CONFIG(shortcut)
-        self.actionOpenNetwork.setShortcut(
-            QCoreApplication.translate("SimulationWindow", "Ctrl+O", None)
-        )
+        self.actionOpenNetwork.setShortcut(QCoreApplication.translate("SimulationWindow", "Ctrl+O", None))
         # endif // QT_CONFIG(shortcut)
         self.actionShowLocalizedSubclusters.setText(
-            QCoreApplication.translate(
-                "SimulationWindow", "Show localized subclusters", None
-            )
+            QCoreApplication.translate("SimulationWindow", "Show localized subclusters", None)
         )
         # if QT_CONFIG(tooltip)
         self.actionShowLocalizedSubclusters.setToolTip(
@@ -533,40 +443,18 @@ class Ui_SimulationWindow:
         )
         # endif // QT_CONFIG(tooltip)
         # if QT_CONFIG(shortcut)
-        self.actionShowLocalizedSubclusters.setShortcut(
-            QCoreApplication.translate("SimulationWindow", "Ctrl+L", None)
-        )
+        self.actionShowLocalizedSubclusters.setShortcut(QCoreApplication.translate("SimulationWindow", "Ctrl+L", None))
         # endif // QT_CONFIG(shortcut)
-        self.controlGroupBox.setTitle(
-            QCoreApplication.translate("SimulationWindow", "Control", None)
-        )
-        self.label_2.setText(
-            QCoreApplication.translate("SimulationWindow", "Step size:", None)
-        )
-        self.stepSize.setSpecialValueText(
-            QCoreApplication.translate("SimulationWindow", "All", None)
-        )
-        self.viewGroupBox.setTitle(
-            QCoreApplication.translate("SimulationWindow", "View", None)
-        )
-        self.networkViewGroup.setTitle(
-            QCoreApplication.translate("SimulationWindow", "Network", None)
-        )
-        self.showNodes.setText(
-            QCoreApplication.translate("SimulationWindow", "Nodes", None)
-        )
-        self.showEdges.setText(
-            QCoreApplication.translate("SimulationWindow", "Edges", None)
-        )
-        self.showMessages.setText(
-            QCoreApplication.translate("SimulationWindow", "Messages", None)
-        )
-        self.showLabels.setText(
-            QCoreApplication.translate("SimulationWindow", "Labels", None)
-        )
-        self.redrawNetworkButton.setText(
-            QCoreApplication.translate("SimulationWindow", "Redraw", None)
-        )
+        self.controlGroupBox.setTitle(QCoreApplication.translate("SimulationWindow", "Control", None))
+        self.label_2.setText(QCoreApplication.translate("SimulationWindow", "Step size:", None))
+        self.stepSize.setSpecialValueText(QCoreApplication.translate("SimulationWindow", "All", None))
+        self.viewGroupBox.setTitle(QCoreApplication.translate("SimulationWindow", "View", None))
+        self.networkViewGroup.setTitle(QCoreApplication.translate("SimulationWindow", "Network", None))
+        self.showNodes.setText(QCoreApplication.translate("SimulationWindow", "Nodes", None))
+        self.showEdges.setText(QCoreApplication.translate("SimulationWindow", "Edges", None))
+        self.showMessages.setText(QCoreApplication.translate("SimulationWindow", "Messages", None))
+        self.showLabels.setText(QCoreApplication.translate("SimulationWindow", "Labels", None))
+        self.redrawNetworkButton.setText(QCoreApplication.translate("SimulationWindow", "Redraw", None))
         # if QT_CONFIG(tooltip)
         self.treeGroupBox.setToolTip(
             QCoreApplication.translate(
@@ -576,12 +464,8 @@ class Ui_SimulationWindow:
             )
         )
         # endif // QT_CONFIG(tooltip)
-        self.treeGroupBox.setTitle(
-            QCoreApplication.translate("SimulationWindow", "Tree", None)
-        )
-        self.treeKey.setText(
-            QCoreApplication.translate("SimulationWindow", "treeNeighbors", None)
-        )
+        self.treeGroupBox.setTitle(QCoreApplication.translate("SimulationWindow", "Tree", None))
+        self.treeKey.setText(QCoreApplication.translate("SimulationWindow", "treeNeighbors", None))
         self.label.setText(QCoreApplication.translate("SimulationWindow", "Key:", None))
         # if QT_CONFIG(tooltip)
         self.propagationError.setToolTip(
@@ -592,32 +476,14 @@ class Ui_SimulationWindow:
             )
         )
         # endif // QT_CONFIG(tooltip)
-        self.propagationError.setTitle(
-            QCoreApplication.translate("SimulationWindow", "Propagation error", None)
-        )
-        self.locKey.setText(
-            QCoreApplication.translate("SimulationWindow", "convergecastLoc", None)
-        )
-        self.label2.setText(
-            QCoreApplication.translate("SimulationWindow", "LocKey:", None)
-        )
-        self.toolBar.setWindowTitle(
-            QCoreApplication.translate("SimulationWindow", "toolBar", None)
-        )
-        self.menuFile.setTitle(
-            QCoreApplication.translate("SimulationWindow", "File", None)
-        )
-        self.menuSimulation.setTitle(
-            QCoreApplication.translate("SimulationWindow", "Simulation", None)
-        )
-        self.dockWidget.setWindowTitle(
-            QCoreApplication.translate("SimulationWindow", "Network inspector", None)
-        )
-        self.dockWidget_2.setWindowTitle(
-            QCoreApplication.translate("SimulationWindow", "Node inspector", None)
-        )
-        self.dockWidget_3.setWindowTitle(
-            QCoreApplication.translate("SimulationWindow", "Log", None)
-        )
+        self.propagationError.setTitle(QCoreApplication.translate("SimulationWindow", "Propagation error", None))
+        self.locKey.setText(QCoreApplication.translate("SimulationWindow", "convergecastLoc", None))
+        self.label2.setText(QCoreApplication.translate("SimulationWindow", "LocKey:", None))
+        self.toolBar.setWindowTitle(QCoreApplication.translate("SimulationWindow", "toolBar", None))
+        self.menuFile.setTitle(QCoreApplication.translate("SimulationWindow", "File", None))
+        self.menuSimulation.setTitle(QCoreApplication.translate("SimulationWindow", "Simulation", None))
+        self.dockWidget.setWindowTitle(QCoreApplication.translate("SimulationWindow", "Network inspector", None))
+        self.dockWidget_2.setWindowTitle(QCoreApplication.translate("SimulationWindow", "Node inspector", None))
+        self.dockWidget_3.setWindowTitle(QCoreApplication.translate("SimulationWindow", "Log", None))
 
     # retranslateUi

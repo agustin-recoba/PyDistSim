@@ -5,9 +5,8 @@ from inspect import isclass
 from numpy.core.numeric import Inf
 
 from pydistsim.algorithms.readsensors import ReadSensors
-from pydistsim.channeltype import Udg
-from pydistsim.environment import Environment2D
-from pydistsim.networkgenerator import NetworkGenerator, NetworkGeneratorException
+from pydistsim.network import NetworkGenerator, NetworkGeneratorException, UdgRangeType
+from pydistsim.network.environment import Environment2D
 from pydistsim.sensor import NeighborsSensor
 from pydistsim.utils.testing import PyDistSimTestCase
 
@@ -19,7 +18,7 @@ class TestNetworkGeneration(PyDistSimTestCase):
         # returns None
         # else expected network/node properties dictionary
         env = Environment2D(shape=(600, 600))
-        channelType = Udg(env)
+        rangeType = UdgRangeType(env)
         algorithms = (ReadSensors,)
         sensors = (NeighborsSensor,)
         self.in_out = [
@@ -254,14 +253,14 @@ class TestNetworkGeneration(PyDistSimTestCase):
                     "n_min": 0,
                     "n_max": 100,
                     "enforce_connected": False,
-                    "channelType": channelType,
+                    "rangeType": rangeType,
                     "algorithms": algorithms,
                     "commRange": 100,
                     "sensors": sensors,
                 },
                 {
                     "count": 10,
-                    "channelType": channelType,
+                    "rangeType": rangeType,
                     "algorithms": algorithms,
                     "commRange": 100,
                     "sensors": sensors,
@@ -281,9 +280,7 @@ class TestNetworkGeneration(PyDistSimTestCase):
                         continue
                     net_gen = NetworkGenerator(directed=directed, **input)
                     if output is None:
-                        self.assertEqual(
-                            None, net_gen.generate_random_network(max_steps=500)
-                        )
+                        self.assertEqual(None, net_gen.generate_random_network(max_steps=500))
                     elif isinstance(output, dict):
                         net = net_gen.generate_random_network(max_steps=2000)
                         assert directed == net.is_directed()
@@ -314,15 +311,9 @@ class TestNotConnectedNetworkGeneration(unittest.TestCase):
 
 class TestOtherGenerators(unittest.TestCase):
     def setUp(self) -> None:
-        self.gen1 = NetworkGenerator(
-            n_count=10, n_min=0, n_max=100, enforce_connected=True
-        )
-        self.gen2 = NetworkGenerator(
-            n_count=10, n_min=10, n_max=10, enforce_connected=True
-        )
-        self.gen3 = NetworkGenerator(
-            n_count=99, n_min=99, n_max=99, enforce_connected=True
-        )
+        self.gen1 = NetworkGenerator(n_count=10, n_min=0, n_max=100, enforce_connected=True)
+        self.gen2 = NetworkGenerator(n_count=10, n_min=10, n_max=10, enforce_connected=True)
+        self.gen3 = NetworkGenerator(n_count=99, n_min=99, n_max=99, enforce_connected=True)
         self.gen4 = NetworkGenerator(
             n_count=10,
             n_min=10,

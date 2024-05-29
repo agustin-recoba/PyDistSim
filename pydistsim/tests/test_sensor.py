@@ -2,8 +2,7 @@ import unittest
 
 import scipy.stats
 
-from pydistsim.network import Network
-from pydistsim.node import Node
+from pydistsim.network import Network, Node
 from pydistsim.sensor import DistSensor, NeighborsSensor
 
 
@@ -29,9 +28,7 @@ class TestSensor(unittest.TestCase):
         self.assertTrue(len(node.compositeSensor.sensors) == 3)
         readings = node.compositeSensor.read()
         self.assertTrue(
-            "Neighbors" in list(readings.keys())
-            and "AoA" in list(readings.keys())
-            and "Dist" in list(readings.keys())
+            "Neighbors" in list(readings.keys()) and "AoA" in list(readings.keys()) and "Dist" in list(readings.keys())
         )
 
         # TODO: check normal distribution

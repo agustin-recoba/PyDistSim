@@ -36,11 +36,12 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.todo",
     "sphinx.ext.doctest",
-    "sphinx.ext.intersphinx",
     "sphinx.ext.coverage",
     "sphinx.ext.imgmath",
     "sphinx.ext.ifconfig",
     "sphinx.ext.viewcode",
+    "sphinx.ext.graphviz",
+    "sphinx.ext.inheritance_diagram",
     "nbsphinx",  # Integrate Jupyter Notebooks and Sphinx
     "IPython.sphinxext.ipython_console_highlighting",
 ]
@@ -261,7 +262,7 @@ texinfo_documents = [
         "PyDistSim Documentation",
         "Agustin Recoba",
         "PyDistSim",
-        "One line description of project.",
+        "Distributed Algorithm simulation in Python 3.",
         "Miscellaneous",
     ),
 ]
@@ -274,14 +275,3 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 # texinfo_show_urls = 'footnote'
-
-
-# Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {
-    "scipy": ("http://docs.scipy.org/doc/scipy/reference/", None),
-    "IPython": ("https://ipython.readthedocs.io/en/stable/", None),
-    "matplotlib": ("https://matplotlib.org/", None),
-    "numpy": ("https://docs.scipy.org/doc/numpy/", None),
-    "pandas": ("https://pandas.pydata.org/docs/", None),
-    "python": ("https://docs.python.org/3/", None),
-}

@@ -113,10 +113,7 @@ class LazySettings:
 
         """
         if self._wrapped is not None:
-            raise RuntimeError(
-                "Settings already configured or accessed no"
-                " further configuration allowed."
-            )
+            raise RuntimeError("Settings already configured or accessed no further configuration allowed.")
         holder = UserSettingsHolder(default_settings)
         for name, value in list(options.items()):
             setattr(holder, name, value)
@@ -156,8 +153,7 @@ class Settings:
                 mod = import_module(self.SETTINGS_MODULE)
             except ImportError as e:
                 raise ImportError(
-                    "Could not import settings '{}' (Is it on "
-                    "sys.path? Does it have syntax errors?): {}",
+                    "Could not import settings '{}' (Is it on sys.path? Does it have syntax errors?): {}",
                     self.SETTINGS_MODULE,
                     e,
                 )
@@ -208,7 +204,7 @@ def _resolve_name(name, package, level):
         try:
             dot = package.rindex(".", 0, dot)
         except ValueError:
-            raise ValueError("attempted relative import beyond top-level " "package")
+            raise ValueError("attempted relative import beyond top-level package")
     return f"{package[:dot]}.{name}"
 
 

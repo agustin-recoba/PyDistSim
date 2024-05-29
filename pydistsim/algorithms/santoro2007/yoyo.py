@@ -96,10 +96,7 @@ class YoYo(NodeAlgorithm):
             elif received_id == min_id:
                 # Send YES responses to all inNeighbors that send min_id
 
-                if (
-                    len(received_ids) == 1
-                    and len(node.memory[self.outNeighborsKey]) == 0
-                ):
+                if len(received_ids) == 1 and len(node.memory[self.outNeighborsKey]) == 0:
                     # If node received only min_id and has no outNeighbors
                     # remaining after inverting and pruning
                     # it will become a LEAF SINK,
@@ -231,9 +228,7 @@ class YoYo(NodeAlgorithm):
             responses = node.memory[self.RECEIVED_RESPONSES_KEY]
 
             # If responses received for all sent ids handle them
-            num_of_responses = sum(
-                [len(sources) for sources in list(responses.values())]
-            )
+            num_of_responses = sum([len(sources) for sources in list(responses.values())])
 
             if num_of_responses >= node.memory[self.SENT_IDS_KEY]:
 
@@ -253,9 +248,7 @@ class YoYo(NodeAlgorithm):
                 node.memory[self.RECEIVED_RESPONSES_KEY] = {}
                 node.memory[self.REQUESTED_PRUNING_KEY] = []
                 node.memory[self.SENT_IDS_KEY] = 0
-                node.memory[self.RECEIVED_IDS_KEY] = node.memory[
-                    self.RECEIVED_IDS_WHILE_WAITING_RESPONSE_KEY
-                ]
+                node.memory[self.RECEIVED_IDS_KEY] = node.memory[self.RECEIVED_IDS_WHILE_WAITING_RESPONSE_KEY]
                 node.memory[self.RECEIVED_IDS_WHILE_WAITING_RESPONSE_KEY] = {}
 
                 # End iteration and change status if needed
@@ -292,9 +285,7 @@ class YoYo(NodeAlgorithm):
             responses = node.memory[self.RECEIVED_RESPONSES_KEY]
 
             # If responses received for all sent ids handle them
-            num_of_responses = sum(
-                [len(sources) for sources in list(responses.values())]
-            )
+            num_of_responses = sum([len(sources) for sources in list(responses.values())])
 
             if num_of_responses >= node.memory[self.SENT_IDS_KEY]:
                 if False in responses:
@@ -314,9 +305,7 @@ class YoYo(NodeAlgorithm):
 
                 # Add edges to invert from NO responses sent
                 # Add nodes to prune from PRUNE requests sent
-                no_response_nodes, prune_nodes = self.send_responses(
-                    node, no_received=no_received
-                )
+                no_response_nodes, prune_nodes = self.send_responses(node, no_received=no_received)
 
                 # Invert edges
                 self.invert_edges(node, no_response_nodes, "inNeighbors")
@@ -326,9 +315,7 @@ class YoYo(NodeAlgorithm):
 
                 node.memory[self.RECEIVED_RESPONSES_KEY] = {}
                 node.memory[self.REQUESTED_PRUNING_KEY] = []
-                node.memory[self.RECEIVED_IDS_KEY] = node.memory[
-                    self.RECEIVED_IDS_WHILE_WAITING_RESPONSE_KEY
-                ]
+                node.memory[self.RECEIVED_IDS_KEY] = node.memory[self.RECEIVED_IDS_WHILE_WAITING_RESPONSE_KEY]
                 node.memory[self.RECEIVED_IDS_WHILE_WAITING_RESPONSE_KEY] = {}
                 node.memory[self.SENT_IDS_KEY] = 0
 
@@ -350,9 +337,7 @@ class YoYo(NodeAlgorithm):
             # Prune nodes
             self.prune_nodes(node, prune_nodes, "inNeighbors")
 
-            node.memory[self.RECEIVED_IDS_KEY] = node.memory[
-                self.RECEIVED_IDS_WHILE_WAITING_RESPONSE_KEY
-            ]
+            node.memory[self.RECEIVED_IDS_KEY] = node.memory[self.RECEIVED_IDS_WHILE_WAITING_RESPONSE_KEY]
             node.memory[self.RECEIVED_IDS_WHILE_WAITING_RESPONSE_KEY] = {}
             node.memory[self.SENT_IDS_KEY] = 0
 

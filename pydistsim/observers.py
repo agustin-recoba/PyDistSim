@@ -5,7 +5,7 @@ from pydistsim.logger import logger
 if TYPE_CHECKING:
     from pydistsim.algorithm import Algorithm
     from pydistsim.message import Message
-    from pydistsim.node import Node
+    from pydistsim.network import Node
     from pydistsim.simulation import Simulation
 
 
@@ -76,8 +76,7 @@ class Observer:
         allowed_events = self.__get_allowed_events__()
         if event not in allowed_events:
             logger.debug(
-                "Invalid event name '{}' for observer type {}. "
-                "Valid events are: {}.",
+                "Invalid event name '{}' for observer type {}. Valid events are: {}.",
                 event,
                 self.__class__.__name__,
                 ", ".join(allowed_events),
@@ -151,9 +150,7 @@ class NodeObserver(Observer):
         ObservableEvents.message_sent,
     ]
 
-    def on_node_status_changed(
-        self, node: "Node", previous_status: str, new_status: str
-    ) -> None: ...
+    def on_node_status_changed(self, node: "Node", previous_status: str, new_status: str) -> None: ...
 
     def on_message_delivered(self, message: "Message") -> None: ...
 

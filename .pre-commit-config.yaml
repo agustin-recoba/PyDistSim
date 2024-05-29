@@ -6,7 +6,6 @@ repos:
       - id: check-toml
       - id: check-json
       - id: check-ast
-      - id: check-docstring-first
       - id: end-of-file-fixer
       - id: trailing-whitespace
       - id: mixed-line-ending

@@ -1,3 +1,5 @@
+# flake8: noqa: F401
+
 from importlib import metadata
 
 try:
@@ -16,11 +18,9 @@ os.environ["QT_API"] = "pyside"
 from pkgutil import extend_path  # @Reimport
 
 from pydistsim.conf import settings
-from pydistsim.environment import Environment
 from pydistsim.logger import set_log_level
-from pydistsim.network import BidirectionalNetwork, Network
-from pydistsim.networkgenerator import NetworkGenerator
-from pydistsim.node import Node
+from pydistsim.network import BidirectionalNetwork, Network, NetworkGenerator, Node
+from pydistsim.network.environment import Environment
 from pydistsim.npickle import *
 from pydistsim.sensor import CompositeSensor
 from pydistsim.simulation import Simulation

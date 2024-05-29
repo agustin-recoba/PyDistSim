@@ -50,11 +50,7 @@ class Message:
         destination = self.destination
         if self.destination is None:
             destination = "Broadcasted"
-        elif (
-            isinstance(self.destination, list)
-            and len(self.destination) == 1
-            and self.destination[0] is None
-        ):
+        elif isinstance(self.destination, list) and len(self.destination) == 1 and self.destination[0] is None:
             destination = "Broadcasting"
         return (
             "\n------ Message '%s' ------ \n     source = %s \ndestination = %s"

@@ -1,8 +1,9 @@
+from typing import TYPE_CHECKING
+
 from PySide6.QtCore import SIGNAL, QThread
 
 from pydistsim.algorithm import Algorithm
 from pydistsim.logger import logger
-from pydistsim.network import Network
 from pydistsim.observers import (
     AlgorithmObserver,
     NetworkObserver,
@@ -11,6 +12,9 @@ from pydistsim.observers import (
     SimulationObserver,
 )
 
+if TYPE_CHECKING:
+    from pydistsim.network import Network
+
 
 class Simulation(ObserverManagerMixin, QThread):
     """
@@ -18,7 +22,7 @@ class Simulation(ObserverManagerMixin, QThread):
     It is responsible for visualization and logging, also.
     """
 
-    def __init__(self, network: Network, **kwargs):
+    def __init__(self, network: "Network", **kwargs):
         """
         Initialize a Simulation object.
 
@@ -133,7 +137,7 @@ class Simulation(ObserverManagerMixin, QThread):
         return self._network
 
     @network.setter
-    def network(self, network: Network):
+    def network(self, network: "Network"):
         """
         Set the network for the simulation.
 
@@ -144,9 +148,7 @@ class Simulation(ObserverManagerMixin, QThread):
         :rtype: None
 
         """
-        self._network.simulation = (
-            None  # remove reference to this simulation in the old network
-        )
+        self._network.simulation = None  # remove reference to this simulation in the old network
         self._network.clear_observers()
 
         self._network = network
@@ -159,13 +161,7 @@ class Simulation(ObserverManagerMixin, QThread):
         self._copy_observers_to_network()
 
     def _copy_observers_to_network(self):
-        self.network.add_observers(
-            *(
-                observer
-                for observer in self.observers
-                if isinstance(observer, NetworkObserver)
-            )
-        )
+        self.network.add_observers(*(observer for observer in self.observers if isinstance(observer, NetworkObserver)))
 
 
 class QThreadObserver(AlgorithmObserver, SimulationObserver):
@@ -185,9 +181,7 @@ class QThreadObserver(AlgorithmObserver, SimulationObserver):
         self.q_thread.emit(SIGNAL("redraw()"))
 
     def on_algorithm_finished(self, algorithm: Algorithm) -> None:
-        self.q_thread.emit(
-            SIGNAL("updateLog(QString)"), "[%s] Algorithm finished" % (algorithm.name)
-        )
+        self.q_thread.emit(SIGNAL("updateLog(QString)"), "[%s] Algorithm finished" % (algorithm.name))
 
     def on_network_changed(self, simulation: Simulation) -> None:
         self.q_thread.emit(SIGNAL("updateLog(QString)"), "Network loaded")
