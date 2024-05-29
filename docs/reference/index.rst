@@ -6,12 +6,13 @@ Reference
 .. toctree::
    :maxdepth: 2
 
-   sensors
-   networkgenerator
    networkmixin
+   networkgenerator
+   rangenetwork
+   observers
+   sensors
    conf
    modules
-.. introduction
 
 
 Build date: |today|

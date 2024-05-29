@@ -142,7 +142,3 @@ class TestStitchers(unittest.TestCase):
 
             for node, pos in list(sub.items()):
                 sub[node] = concatenate((dot(dot(s, R), pos[:2]) + t, [nan]))
-
-
-suite = unittest.TestLoader().loadTestsFromTestCase(TestStitchers)
-unittest.TextTestRunner(verbosity=2).run(suite)

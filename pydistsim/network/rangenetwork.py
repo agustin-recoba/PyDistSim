@@ -159,13 +159,8 @@ class SquareDiscRangeType(RangeType):
 
 class RangeNetworkMixin(with_typehint(Network)):
     """
-    Type of network that decides which nodes are connected based on their communication range.
-
-    Aims to represent a wireless network where nodes can only communicate with each other if they
-    are within a certain range.
-
-    Manual edge modification is not recommended. Edges are automatically calculated and any edge
-    can be removed by moving the nodes out of communication range or by addition/removal of nodes.
+    Mixin to define a type of network that decides which nodes are connected based on their
+    communication range.
     """
 
     def __init__(
@@ -178,6 +173,8 @@ class RangeNetworkMixin(with_typehint(Network)):
         **kwargs,
     ):
         """
+        Class constructor for RangeNetworkMixin.
+
         :param environment: The environment in which the network operates. If not provided, a new Environment instance will be created.
         :type environment: Environment, optional
         :param rangeType: The type of channel to be used for communication. If not provided, a new RangeType instance will be created using the environment.
@@ -259,11 +256,22 @@ class RangeNetworkMixin(with_typehint(Network)):
 
 
 class RangeNetwork(RangeNetworkMixin, Network):
-    pass
+    """
+    Type of network that decides which nodes are connected based on their communication range.
+
+    Aims to represent a wireless network where nodes can only communicate with each other if they
+    are within a certain range.
+
+    Manual edge modification is not recommended. Edges are automatically calculated and any edge
+    can be removed by moving the nodes out of communication range or by addition/removal of nodes.
+    """
 
 
 class BidirectionalRangeNetwork(RangeNetworkMixin, BidirectionalNetwork):
-    pass
+    """
+    Same as RangeNetwork but with bidirectional edges (undirected graph).
+    """
 
 
 RangeNetworkType = RangeNetwork | BidirectionalRangeNetwork
+"Type of network that decides which nodes are connected based on their communication range."

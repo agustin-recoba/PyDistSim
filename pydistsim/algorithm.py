@@ -115,10 +115,10 @@ class Algorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
 
     Params in algorithm subclasses are inherited from its base classes, that
     is, required params are extended and default are updated:
-        * required_params are union of all required params of their ancestor
-            classes.
-        * default_params are updated so default values are overridden in
-            subclasses
+    * required_params are union of all required params of their ancestor
+      classes.
+    * default_params are updated so default values are overridden in
+      subclasses
 
     """
 

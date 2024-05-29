@@ -1,7 +1,6 @@
 import inspect
 import random
 from copy import deepcopy
-from enum import StrEnum
 from typing import TYPE_CHECKING, Optional
 
 from networkx import (
@@ -22,6 +21,11 @@ from pydistsim.algorithm import Algorithm
 from pydistsim.conf import settings
 from pydistsim.logger import logger
 from pydistsim.network.environment import Environment
+from pydistsim.network.exceptions import (
+    MessageUndeliverableException,
+    NetworkErrorMsg,
+    NetworkException,
+)
 from pydistsim.network.node import Node
 from pydistsim.observers import NodeObserver, ObserverManagerMixin
 from pydistsim.sensor import CompositeSensor
@@ -734,39 +738,4 @@ class BidirectionalNetwork(NetworkMixin, Graph):
 
 
 NetworkType = Network | BidirectionalNetwork
-
-
-class MessageUndeliverableException(Exception):
-    def __init__(self, e, message):
-        self.e = e
-        self.message = message
-
-    def __str__(self):
-        return self.e + repr(self.message)
-
-
-class NetworkErrorMsg(StrEnum):
-    ALGORITHM = (
-        "Algorithms must be in tuple (AlgorithmClass,)"
-        " or in form: ((AlgorithmClass, params_dict),)."
-        "AlgorithmClass should be subclass of Algorithm"
-    )
-    NODE = "Node is already in another network."
-    NODE_SPACE = "Given position is not free space."
-    NODE_NOT_IN_NET = "Node not in network."
-    ALGORITHM_NOT_FOUND = "Algorithm not found in network."
-    LIST_TREE_DOWNSTREAM_ONLY = (
-        "Downstream only is not supported for list tree. It's impossible to determine direction."
-    )
-
-
-class NetworkException(Exception):
-
-    def __init__(self, type_):
-        if isinstance(type_, NetworkErrorMsg):
-            self.message = type_.value
-        else:
-            self.message = "Unknown error."
-
-    def __str__(self):
-        return self.message
+"A network in a distributed simulation."
