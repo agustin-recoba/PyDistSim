@@ -1,8 +1,8 @@
 import unittest
 
 from pydistsim import Network, NetworkGenerator, Simulation
-from pydistsim.algorithms.santoro2007.traversal import DFT, DFStar
-from pydistsim.algorithms.santoro2007.yoyo import YoYo
+from pydistsim.demo_algorithms.santoro2007.traversal import DFT, DFStar
+from pydistsim.demo_algorithms.santoro2007.yoyo import YoYo
 from pydistsim.network import RangeNetwork
 
 

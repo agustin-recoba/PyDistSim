@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 
-from pydistsim.algorithms.broadcast import Flood
+from pydistsim.demo_algorithms.broadcast import Flood
 from pydistsim.network import NetworkGenerator
 from pydistsim.observers import (
     AlgorithmObserver,
