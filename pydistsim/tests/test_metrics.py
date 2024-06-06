@@ -47,7 +47,7 @@ class TestMetricCollector(PyDistSimTestCase):
 
     def test_all(self):
         self.sim.add_observers(self.observer)
-        self.sim.run()
+        self.sim.run(100_000)
         report = self.observer.make_report()
 
         assert "messages_sent" in report and report["messages_sent"] > 0
@@ -81,7 +81,7 @@ class TestCustomMetricCollector(PyDistSimTestCase):
 
     def test_all(self):
         self.sim.add_observers(self.observer)
-        self.sim.run()
+        self.sim.run(100_000)
         report = self.observer.make_report()
 
         assert "messages_sent" in report and report["messages_sent"] > 0

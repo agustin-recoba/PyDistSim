@@ -58,7 +58,7 @@ class Simulation(ObserverManagerMixin, QThread):
         :return: None
         """
         self.stepsLeft = steps
-        while True:
+        for _ in range(len(self.network.algorithms) * len(self.network.nodes())):
             algorithm: "Algorithm" = self.network.get_current_algorithm()
             if not algorithm:
                 logger.info(
@@ -71,7 +71,7 @@ class Simulation(ObserverManagerMixin, QThread):
             algorithm.add_observers(*self.observers)
             self._run_algorithm(algorithm)
             self.notify_observers(ObservableEvents.sim_state_changed, self)
-            if self.stepsLeft >= 0:
+            if self.stepsLeft <= 0:
                 break
 
     def run_step(self):
@@ -93,14 +93,14 @@ class Simulation(ObserverManagerMixin, QThread):
 
         :param algorithm: The algorithm to run on the network.
         """
-        while True:
+        for _ in range(1000 * len(self.network.nodes())):
             algorithm.step()
             self.stepsLeft -= 1
-            if self.stepsLeft == 0:
-                return  # not finished
 
             if algorithm.is_halted():
-                break
+                break  # algorithm finished
+            if self.stepsLeft == 0:
+                return  # stepped execution finished
 
         self.notify_observers(ObservableEvents.algorithm_finished, algorithm)
         logger.debug("[{}] Algorithm finished", algorithm.name)

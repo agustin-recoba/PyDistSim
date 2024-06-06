@@ -118,7 +118,7 @@ class TestObserver(PyDistSimTestCase):
         self.sim.add_observers(self.observer)
         with self.observer.do_raise(ObservableEvents.algorithm_finished):
             with self.assertRaises(ObserverForTests.ObserverNotified) as context:
-                self.sim.run()
+                self.sim.run(100_000)
 
         self.assertEqual(context.exception.event, ObservableEvents.algorithm_finished)
 
@@ -134,7 +134,7 @@ class TestObserver(PyDistSimTestCase):
         self.sim.add_observers(self.observer)
         with self.observer.do_raise(ObservableEvents.sim_state_changed):
             with self.assertRaises(ObserverForTests.ObserverNotified) as context:
-                self.sim.run()
+                self.sim.run(100_000)
 
         self.assertEqual(context.exception.event, ObservableEvents.sim_state_changed)
 

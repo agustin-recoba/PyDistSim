@@ -36,7 +36,7 @@ class TestYoYo(unittest.TestCase):
 
                 net.algorithms = (YoYo,)
                 sim = Simulation(net)
-                sim.run()
+                sim.run(100_000)
 
                 min_id = min(sim.network.nodes(), key=lambda node: node.id).id
                 for node in sim.network.nodes():
@@ -70,7 +70,7 @@ class TestYoYo(unittest.TestCase):
 
                     net.algorithms = (YoYo,)
                     sim = Simulation(net)
-                    sim.run()
+                    sim.run(100_000)
 
                     min_id = min(sim.network.nodes(), key=lambda node: node.id).id
                     for node in sim.network.nodes():
@@ -104,7 +104,7 @@ class TestTraversalDFT(unittest.TestCase):
     def test_traversal(self):
         sim = Simulation(self.net)
 
-        sim.run()
+        sim.run(100_000)
 
         for node in self.net.nodes():
             assert node.status == DFT.Status.DONE, "Node %d is not DONE" % node.id
@@ -126,7 +126,7 @@ class TestTraversalDFStar(unittest.TestCase):
     def test_traversal(self):
         sim = Simulation(self.net)
 
-        sim.run()
+        sim.run(100_000)
 
         for node in self.net.nodes():
             assert node.status == DFStar.Status.DONE, "Node %d is not DONE" % node.id
