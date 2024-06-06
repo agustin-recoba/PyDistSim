@@ -4,6 +4,7 @@ from pydistsim import Network, NetworkGenerator, Simulation
 from pydistsim.demo_algorithms.santoro2007.traversal import DFT, DFStar
 from pydistsim.demo_algorithms.santoro2007.yoyo import YoYo
 from pydistsim.network import RangeNetwork
+from pydistsim.utils.testing import PyDistSimTestCase
 
 
 class TestYoYo(unittest.TestCase):
@@ -112,7 +113,7 @@ class TestTraversalDFT(unittest.TestCase):
         assert sorted(node.id for node in self.net.nodes()) == sorted(self.visited)
 
 
-class TestTraversalDFStar(unittest.TestCase):
+class TestTraversalDFStar(PyDistSimTestCase):
 
     def setUp(self):
         net_gen = NetworkGenerator(100, directed=False)
