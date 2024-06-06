@@ -1,7 +1,7 @@
-from pydistsim.algorithm.base_algorithm import Algorithm
+from pydistsim.algorithm.base_algorithm import BaseAlgorithm
 
 
-class NetworkAlgorithm(Algorithm):
+class NetworkAlgorithm(BaseAlgorithm):
     """
     Abstract base class for specific centralized algorithms.
 

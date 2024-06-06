@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from pydistsim.logger import logger
 
 if TYPE_CHECKING:
-    from pydistsim.algorithm import Algorithm
+    from pydistsim.algorithm import BaseAlgorithm
     from pydistsim.message import Message
     from pydistsim.network import Node
     from pydistsim.simulation import Simulation
@@ -106,9 +106,9 @@ class AlgorithmObserver(Observer):
         ObservableEvents.algorithm_started,
     ]
 
-    def on_step_done(self, algorithm: "Algorithm") -> None: ...
+    def on_step_done(self, algorithm: "BaseAlgorithm") -> None: ...
 
-    def on_algorithm_started(self, algorithm: "Algorithm") -> None: ...
+    def on_algorithm_started(self, algorithm: "BaseAlgorithm") -> None: ...
 
 
 class SimulationObserver(Observer):
@@ -124,7 +124,7 @@ class SimulationObserver(Observer):
 
     def on_sim_state_changed(self, simulation: "Simulation") -> None: ...
 
-    def on_algorithm_finished(self, algorithm: "Algorithm") -> None: ...
+    def on_algorithm_finished(self, algorithm: "BaseAlgorithm") -> None: ...
 
     def on_network_changed(self, simulation: "Simulation") -> None: ...
 

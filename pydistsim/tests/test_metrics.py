@@ -30,7 +30,7 @@ class CustomAlgorithm(Flood):
 
     @Flood.Status.IDLE
     def receiving(self, node, message):
-        Flood.receiving(self, node, message)
+        super().receiving_IDLE(node, message)
         self.notify_observers("example_custom_event", message)
 
 

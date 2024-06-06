@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import SIGNAL, QThread
 
-from pydistsim.algorithm import Algorithm
+from pydistsim.algorithm import BaseAlgorithm
 from pydistsim.logger import logger
 from pydistsim.observers import (
     AlgorithmObserver,
@@ -59,7 +59,7 @@ class Simulation(ObserverManagerMixin, QThread):
         """
         self.stepsLeft = steps
         for _ in range(len(self.network.algorithms) * len(self.network.nodes())):
-            algorithm: "Algorithm" = self.network.get_current_algorithm()
+            algorithm: "BaseAlgorithm" = self.network.get_current_algorithm()
             if not algorithm:
                 logger.info(
                     "Simulation has finished. There are no "
@@ -84,7 +84,7 @@ class Simulation(ObserverManagerMixin, QThread):
         """
         self.run(1)
 
-    def _run_algorithm(self, algorithm: Algorithm):
+    def _run_algorithm(self, algorithm: BaseAlgorithm):
         """
         Run the given algorithm on the given network.
 
@@ -126,7 +126,7 @@ class Simulation(ObserverManagerMixin, QThread):
         :return: True if the algorithm is halted, False otherwise.
         :rtype: bool
         """
-        algorithm: "Algorithm" = self.network.get_current_algorithm()
+        algorithm: "BaseAlgorithm" = self.network.get_current_algorithm()
         return algorithm is None or algorithm.is_halted()
 
     @property
@@ -169,7 +169,7 @@ class QThreadObserver(AlgorithmObserver, SimulationObserver):
         self.q_thread = q_thread
         super().__init__(*args, **kwargs)
 
-    def on_step_done(self, algorithm: Algorithm) -> None:
+    def on_step_done(self, algorithm: BaseAlgorithm) -> None:
         self.q_thread.emit(
             SIGNAL("updateLog(QString)"),
             "[{}] Step {} finished",
@@ -180,7 +180,7 @@ class QThreadObserver(AlgorithmObserver, SimulationObserver):
     def on_state_changed(self, simulation: Simulation) -> None:
         self.q_thread.emit(SIGNAL("redraw()"))
 
-    def on_algorithm_finished(self, algorithm: Algorithm) -> None:
+    def on_algorithm_finished(self, algorithm: BaseAlgorithm) -> None:
         self.q_thread.emit(SIGNAL("updateLog(QString)"), "[%s] Algorithm finished" % (algorithm.name))
 
     def on_network_changed(self, simulation: Simulation) -> None:

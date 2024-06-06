@@ -1,9 +1,10 @@
-from collections.abc import Callable, Iterable
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from types import MethodType
+from typing import TYPE_CHECKING, Any
 
-from pydistsim.algorithm.base_algorithm import Algorithm
+from pydistsim.algorithm.base_algorithm import BaseAlgorithm
 from pydistsim.logger import logger
 from pydistsim.message import Message
 from pydistsim.message import MetaHeader as MessageMetaHeader
@@ -13,20 +14,6 @@ if TYPE_CHECKING:
     from pydistsim.network import Node
 
 
-class ActionEnum(StrEnum):
-    default = "default"
-    receiving = "receiving"
-    spontaneously = "spontaneously"
-    alarm = "alarm"
-
-
-MSG_META_HEADER_MAP = {
-    MessageMetaHeader.NORMAL_MESSAGE: ActionEnum.receiving,
-    MessageMetaHeader.INITIALIZATION_MESSAGE: ActionEnum.spontaneously,
-    MessageMetaHeader.ALARM_MESSAGE: ActionEnum.alarm,
-}
-
-
 @dataclass
 class Alarm:
     time: int
@@ -34,20 +21,37 @@ class Alarm:
     node: "Node"
 
 
-class StatusValues(StrEnum):
-    def __call__(self, func: Callable):
-        assert (
-            func.__name__ in ActionEnum.__members__
-        ), f"Invalid function name '{func.__name__}', please make sure it is one of {list(ActionEnum.__members__)}."
+class Actions(StrEnum):
+    default = "default"
+    receiving = "receiving"
+    spontaneously = "spontaneously"
+    alarm = "alarm"
 
+
+MSG_META_HEADER_MAP = {
+    MessageMetaHeader.NORMAL_MESSAGE: Actions.receiving,
+    MessageMetaHeader.INITIALIZATION_MESSAGE: Actions.spontaneously,
+    MessageMetaHeader.ALARM_MESSAGE: Actions.alarm,
+}
+
+
+class StatusValues(StrEnum):
+    def __call__(self, func: MethodType):
+        assert (
+            func.__name__ in Actions.__members__
+        ), f"Invalid function name '{func.__name__}', please make sure it is one of {list(Actions.__members__)}."
         setattr(self, func.__name__, func)
+
         return func
 
-    def implements(self, action: ActionEnum | str):
+    def implements(self, action: Actions):
         return hasattr(self, str(action))
 
+    def get_method(self, action: Actions):
+        return getattr(self, str(action))
 
-class NodeAlgorithm(Algorithm):
+
+class NodeAlgorithm(BaseAlgorithm):
     """
     Abstract base class for specific distributed algorithms.
 
@@ -71,6 +75,7 @@ class NodeAlgorithm(Algorithm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.alarms: list[Alarm] = []
 
     def step(self):
@@ -120,9 +125,7 @@ class NodeAlgorithm(Algorithm):
             logger.debug("Processing step at node {}.", node.id)
             if message.destination is None or message.destination == node:
                 # when destination is None it is broadcast message
-                processed = self._process_message(node, message)
-                if not processed:
-                    node.push_to_inbox(message)  # put back to start of queue
+                self._process_message(node, message)
             elif message.nexthop == node.id:
                 self._forward_message(node, message)
 
@@ -214,19 +217,24 @@ class NodeAlgorithm(Algorithm):
             alarm.node.inbox.remove(alarm.message)
 
     def _process_message(self, node: "Node", message: Message):
-        status: StatusValues = getattr(self.Status, node.status.value)
         logger.debug("Processing message: 0x%x" % id(message))
         method_name = MSG_META_HEADER_MAP[message.meta_header]
+        return self._process_action(method_name, node, message)
 
-        if status.implements(method_name):
-            method = getattr(status, method_name)
-            method(self, node, message)
-        elif status.implements(ActionEnum.default):
-            method = getattr(status, ActionEnum.default)
-            method(self, node, message)
-        else:
-            logger.error(f"Method {method_name} not implemented for status {node.status}.")
-        return True
+    def _process_action(self, action: Actions, node: "Node", message: Message):
+        status: StatusValues = getattr(self.Status, node.status.value)
+
+        method_name = f"{action}_{status}"
+        default_name = f"{Actions.default}_{status}"
+
+        if hasattr(self, method_name):
+            method = getattr(self, method_name)
+            return method(node, message)
+        elif hasattr(self, default_name):
+            method = getattr(self, default_name)
+            return method(node, message)
+
+        logger.error(f"Method {self.name}.{action} not implemented for status {node.status}.")
 
     def is_halted(self):
         """
@@ -242,3 +250,42 @@ class NodeAlgorithm(Algorithm):
             all((len(node.inbox) == 0 and len(node.outbox) == 0) for node in self.network.nodes())
             and len(self.alarms) == 0
         )
+
+    def __configure_class__(clsname: str, bases: tuple[type, ...], dct: dict):
+        """
+        Metaclass method that configures the class by adding methods for all possible actions and statuses.
+
+        :param clsname: The name of the class.
+        :type clsname: str
+        :param bases: The base classes of the class.
+        :type bases: tuple[type, ...]
+        :param dct: The dictionary of the class.
+        :type dct: dict
+        """
+
+        # Search for the Status class in the bases or in the dct
+        status_class = None
+        if "Status" in dct:
+            status_class: StatusValues = dct["Status"]
+        else:
+            for base in bases:
+                if hasattr(base, "Status") and issubclass(base.Status, StatusValues):
+                    status_class = base.Status
+                    break
+        assert status_class is not None, "Status class not found in bases or in dct."
+
+        # Create methods for all possible actions and statuses
+        for action in Actions:
+
+            # Create a method for invocations like `self.default(node, message)`
+            # CAUTION: the resolution of the method is deferred to the instance, super() will not work
+            def __unresolved_action_method__(alg_instance: "NodeAlgorithm", node: "Node", message: Message):
+                alg_instance._process_action(action, node, message)
+
+            dct[action] = __unresolved_action_method__
+
+            for status in status_class:
+                if status.implements(action):
+                    # Create a method for invocations like `self.default_IDLE(node, message)`
+                    # As the method is created in the class, super() will work.
+                    dct[f"{action}_{status}"] = status.get_method(action)

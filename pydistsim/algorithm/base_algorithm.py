@@ -38,10 +38,27 @@ class AlgorithmMeta(type):
 
         dct["required_params"] = tuple(rps)
         dct["default_params"] = dps
+
+        logger.trace(f"Checking for __configure_class__ in dct of {clsname}")
+        __configure_class__ = None
+        if "__configure_class__" in dct:
+            logger.trace("Found __configure_class__ in dct")
+            __configure_class__ = dct["__configure_class__"]
+        else:
+            logger.trace("Did not find __configure_class__ in dct")
+            for base in bases:
+                if hasattr(base, "__configure_class__"):
+                    logger.trace(f"Found __configure_class__ in base {base.__name__}")
+                    __configure_class__ = base.__configure_class__
+                    break
+        if __configure_class__:
+            logger.trace(f"Calling __configure_class__ for {clsname}")
+            __configure_class__(clsname, bases, dct)
+
         return super().__new__(cls, clsname, bases, dct)
 
 
-class Algorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
+class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
     """
     Abstract base class for all algorithms.
 
@@ -94,7 +111,7 @@ class Algorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
 
         for required_param in self.required_params:
             if required_param not in list(kwargs.keys()):
-                raise PyDistSimAlgorithmException("Missing required param.")
+                raise AlgorithmException("Missing required param.")
 
         # set default params
         for dp, val in list(self.default_params.items()):
@@ -123,5 +140,5 @@ class Algorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
         raise NotImplementedError
 
 
-class PyDistSimAlgorithmException(Exception):
+class AlgorithmException(Exception):
     pass
