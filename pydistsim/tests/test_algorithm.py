@@ -189,10 +189,10 @@ class TestStatusValues(unittest.TestCase):
         def alarm(): ...
 
         # Using correct ActionEnum
-        assert self.Status.DONE.implements(ActionEnum.alarm)
+        assert self.Status.DONE.implements(Actions.alarm)
 
         # Using wrong ActionEnum
-        assert not self.Status.DONE.implements(ActionEnum.spontaneously)
+        assert not self.Status.DONE.implements(Actions.spontaneously)
 
         # Using string
         assert self.Status.DONE.implements("alarm")

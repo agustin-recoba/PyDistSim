@@ -2,7 +2,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 from types import MethodType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pydistsim.algorithm.base_algorithm import BaseAlgorithm
 from pydistsim.logger import logger
@@ -16,12 +16,18 @@ if TYPE_CHECKING:
 
 @dataclass
 class Alarm:
+    "Dataclass that represents an alarm set for a node."
+
     time: int
     message: Message
     node: "Node"
 
 
 class Actions(StrEnum):
+    """
+    Enum that defines the possible actions that can be triggered by a message.
+    """
+
     default = "default"
     receiving = "receiving"
     spontaneously = "spontaneously"
@@ -40,7 +46,8 @@ class StatusValues(StrEnum):
         assert (
             func.__name__ in Actions.__members__
         ), f"Invalid function name '{func.__name__}', please make sure it is one of {list(Actions.__members__)}."
-        setattr(self, func.__name__, func)
+
+        self.set_method(func)
 
         return func
 
@@ -50,22 +57,21 @@ class StatusValues(StrEnum):
     def get_method(self, action: Actions):
         return getattr(self, str(action))
 
+    def set_method(self, method: MethodType):
+        setattr(self, method.__name__, method)
+
 
 class NodeAlgorithm(BaseAlgorithm):
     """
-    Abstract base class for specific distributed algorithms.
+    Base class for distributed algorithms.
 
-    In subclass following functions and attributes should be defined:
+    In subclass, the following functions and attributes should be defined:
 
-    - class attribute STATUS - dictionary in which keys are all possible
-      node statuses and values are functions defining what node should do
-      if in that status.
+    - Class attribute Status - subclass of StatusValues that defines all the possible statuses of the nodes
       STATUS must be written at the bottom after all functions are defined
-    - all functions in STATUS.values() should be defined as class methods
-    - initializer: (optionally) Pass INI message to nodes that should
+    - Initializer: (optionally) Pass INI message to nodes that should
       start the algorithm and set some attributes needed by the specific
       algorithm
-
     """
 
     INI = MessageMetaHeader.INITIALIZATION_MESSAGE
@@ -87,9 +93,9 @@ class NodeAlgorithm(BaseAlgorithm):
         if not self.is_initialized():
             self.notify_observers(ObservableEvents.algorithm_started, self)
             self.initializer()
-            # TODO: log a warning when initializer does not send any message
-            # if not self.network.network_outbox:
-            #     logger.warning("Initializer didn't send any message (even INI).")
+
+            if not any(len(node.outbox) + len(node.inbox) > 0 for node in self.network.nodes()):
+                logger.warning("Initializer didn't send any message.")
         else:
             self.network.communicate()
             self._process_alarms()
@@ -104,6 +110,21 @@ class NodeAlgorithm(BaseAlgorithm):
 
         self.notify_observers(ObservableEvents.step_done, self)
 
+    def is_halted(self):
+        """
+        Check if the distributed algorithm has come to an end or deadlock,
+        i.e. there are no messages to pass and no alarms set.
+
+        A not-started algorithm is considered halted.
+
+        :return: True if the algorithm is halted, False otherwise.
+        :rtype: bool
+        """
+        return (
+            all((len(node.inbox) == 0 and len(node.outbox) == 0) for node in self.network.nodes())
+            and len(self.alarms) == 0
+        )
+
     def initializer(self):
         """
         Method used to initialize the algorithm. Is always called first.
@@ -116,26 +137,6 @@ class NodeAlgorithm(BaseAlgorithm):
         node.push_to_inbox(Message(meta_header=NodeAlgorithm.INI))
         for node in self.network.nodes_sorted():
             node.status = self.Status.IDLE
-
-    def _node_step(self, node: "Node"):
-        """Executes one step of the algorithm for given node."""
-        message: Message = node.receive()
-
-        if message:
-            logger.debug("Processing step at node {}.", node.id)
-            if message.destination is None or message.destination == node:
-                # when destination is None it is broadcast message
-                self._process_message(node, message)
-            elif message.nexthop == node.id:
-                self._forward_message(node, message)
-
-    def _forward_message(self, node: "Node", message: Message):
-        try:
-            message.nexthop = node.memory["routing"][message.destination]
-        except KeyError:
-            logger.warning("Missing routing table or destination node not in it.")
-        else:
-            self.send(node, message)
 
     def send(self, source_node: "Node", message: Message):
         """
@@ -154,14 +155,6 @@ class NodeAlgorithm(BaseAlgorithm):
             message.destination = [message.destination]
         for destination in message.destination:
             source_node.push_to_outbox(message.copy(), destination)
-
-    def _process_alarms(self):
-        for alarm in self.alarms.copy():
-            # copy to avoid errors produced by modifying the list while iterating
-            alarm.time -= 1
-            if alarm.time == 0:
-                self.alarms.remove(alarm)
-                alarm.node.push_to_inbox(alarm.message)
 
     def set_alarm(self, node: "Node", time: int, message: Message | None = None):
         """
@@ -216,6 +209,34 @@ class NodeAlgorithm(BaseAlgorithm):
         if alarm.message in alarm.node.inbox:
             alarm.node.inbox.remove(alarm.message)
 
+    def _node_step(self, node: "Node"):
+        """Executes one step of the algorithm for given node."""
+        message: Message = node.receive()
+
+        if message:
+            logger.debug("Processing step at node {}.", node.id)
+            if message.destination is None or message.destination == node:
+                # when destination is None it is broadcast message
+                self._process_message(node, message)
+            elif message.nexthop == node.id:
+                self._forward_message(node, message)
+
+    def _forward_message(self, node: "Node", message: Message):
+        try:
+            message.nexthop = node.memory["routing"][message.destination]
+        except KeyError:
+            logger.warning("Missing routing table or destination node not in it.")
+        else:
+            self.send(node, message)
+
+    def _process_alarms(self):
+        for alarm in self.alarms.copy():
+            # copy to avoid errors produced by modifying the list while iterating
+            alarm.time -= 1
+            if alarm.time == 0:
+                self.alarms.remove(alarm)
+                alarm.node.push_to_inbox(alarm.message)
+
     def _process_message(self, node: "Node", message: Message):
         logger.debug("Processing message: 0x%x" % id(message))
         method_name = MSG_META_HEADER_MAP[message.meta_header]
@@ -235,21 +256,6 @@ class NodeAlgorithm(BaseAlgorithm):
             return method(node, message)
 
         logger.error(f"Method {self.name}.{action} not implemented for status {node.status}.")
-
-    def is_halted(self):
-        """
-        Check if the distributed algorithm has come to an end or deadlock,
-        i.e. there are no messages to pass and no alarms set.
-
-        A not-started algorithm is considered halted.
-
-        :return: True if the algorithm is halted, False otherwise.
-        :rtype: bool
-        """
-        return (
-            all((len(node.inbox) == 0 and len(node.outbox) == 0) for node in self.network.nodes())
-            and len(self.alarms) == 0
-        )
 
     def __configure_class__(clsname: str, bases: tuple[type, ...], dct: dict):
         """
