@@ -7,6 +7,7 @@ Reference
    :maxdepth: 2
 
    networkmixin
+   nodealgorithm
    networkgenerator
    rangenetwork
    observers

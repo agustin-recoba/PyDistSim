@@ -1,4 +1,4 @@
-.. _networkmixin:
+.. _observers:
 .. currentmodule:: pydistsim.observers
 
 Observers
