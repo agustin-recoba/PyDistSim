@@ -1,4 +1,4 @@
-from pydistsim.algorithms.broadcast import Flood
+from pydistsim.demo_algorithms.broadcast import Flood
 from pydistsim.message import Message
 from pydistsim.metrics import MetricCollector
 from pydistsim.network import NetworkGenerator
@@ -30,7 +30,7 @@ class CustomAlgorithm(Flood):
 
     @Flood.Status.IDLE
     def receiving(self, node, message):
-        Flood.receiving(self, node, message)
+        super().receiving_IDLE(node, message)
         self.notify_observers("example_custom_event", message)
 
 
@@ -47,7 +47,7 @@ class TestMetricCollector(PyDistSimTestCase):
 
     def test_all(self):
         self.sim.add_observers(self.observer)
-        self.sim.run()
+        self.sim.run(100_000)
         report = self.observer.make_report()
 
         assert "messages_sent" in report and report["messages_sent"] > 0
@@ -81,7 +81,7 @@ class TestCustomMetricCollector(PyDistSimTestCase):
 
     def test_all(self):
         self.sim.add_observers(self.observer)
-        self.sim.run()
+        self.sim.run(100_000)
         report = self.observer.make_report()
 
         assert "messages_sent" in report and report["messages_sent"] > 0

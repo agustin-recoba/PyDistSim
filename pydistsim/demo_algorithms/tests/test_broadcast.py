@@ -1,4 +1,4 @@
-from pydistsim.algorithms.broadcast import Flood
+from pydistsim.demo_algorithms.broadcast import Flood
 from pydistsim.network import NetworkGenerator
 from pydistsim.simulation import Simulation
 from pydistsim.utils.testing import PyDistSimTestCase
@@ -29,7 +29,7 @@ class TestBroadcastSimple(PyDistSimTestCase):
             else:
                 assert "greet" not in node.memory
 
-        sim.run()
+        sim.run(100_000)
 
         for node in self.net.nodes():
             self.assertEqual(node.memory["greet"], HELLO)
@@ -69,7 +69,7 @@ class TestBroadcastConcatenated(PyDistSimTestCase):
                     assert "greet" not in node.memory
                     assert "bye" not in node.memory
 
-        sim.run()
+        sim.run(100_000)
 
         for node in self.net.nodes():
             with self.subTest(node=node):

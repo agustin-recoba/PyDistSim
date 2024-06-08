@@ -18,7 +18,7 @@ os.environ["QT_API"] = "pyside"
 from pkgutil import extend_path  # @Reimport
 
 from pydistsim.conf import settings
-from pydistsim.logger import set_log_level
+from pydistsim.logger import logger, set_log_level
 from pydistsim.network import BidirectionalNetwork, Network, NetworkGenerator, Node
 from pydistsim.network.environment import Environment
 from pydistsim.npickle import *

@@ -14,6 +14,7 @@ Explore the documentation
    install/starting
    tutorials/index
    reference/index
+   models/index
    developer/index
 .. extending/algorithms
 

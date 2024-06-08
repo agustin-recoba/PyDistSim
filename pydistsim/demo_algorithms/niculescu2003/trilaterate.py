@@ -1,6 +1,6 @@
 from numpy import array, average, diag, dot, linalg, ones, sqrt
 
-from pydistsim.algorithms.niculescu2003.floodingupdate import FloodingUpdate
+from pydistsim.demo_algorithms.niculescu2003.floodingupdate import FloodingUpdate
 
 
 class Trilaterate(FloodingUpdate):

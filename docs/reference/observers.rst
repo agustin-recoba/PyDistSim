@@ -1,4 +1,4 @@
-.. _networkmixin:
+.. _observers:
 .. currentmodule:: pydistsim.observers
 
 Observers
@@ -26,7 +26,7 @@ Standardize the use of observers in the framework, we implemented a mixin class 
 can be used to add observer functionality to any class. The mixin class provides methods to add and remove observers,
 and to notify the observers of changes in the observable object.
 
-.. inheritance-diagram:: ObserverManagerMixin pydistsim.algorithm.Algorithm pydistsim.simulation.Simulation pydistsim.network.network.Network pydistsim.network.network.BidirectionalNetwork pydistsim.network.node.Node
+.. inheritance-diagram:: ObserverManagerMixin pydistsim.algorithm.BaseAlgorithm pydistsim.simulation.Simulation pydistsim.network.network.Network pydistsim.network.network.BidirectionalNetwork pydistsim.network.node.Node
    :top-classes: ObserverManagerMixin
    :parts: 1
    :caption: ObserverManagerMixin inheritance diagram

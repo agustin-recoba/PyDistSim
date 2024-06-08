@@ -97,7 +97,7 @@ class TestRunNotImplementedNetworkAlgorithm(unittest.TestCase):
         sim = Simulation(self.net)
 
         with self.assertRaises(NotImplementedError):
-            sim.run()
+            sim.run(100_000)
 
         assert sim.is_halted()
 

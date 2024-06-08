@@ -9,7 +9,7 @@ from pydistsim.observers import (
 )
 
 if TYPE_CHECKING:
-    from pydistsim.algorithm import Algorithm
+    from pydistsim.algorithm import BaseAlgorithm
     from pydistsim.message import Message
     from pydistsim.network import Node
     from pydistsim.simulation import Simulation
@@ -53,7 +53,7 @@ class MetricCollector(NodeNetworkObserver, AlgorithmObserver, SimulationObserver
         self.metrics.append((time(), event_type, event_data))
 
     # AlgorithmObserver methods
-    def on_step_done(self, algorithm: "Algorithm") -> None: ...
+    def on_step_done(self, algorithm: "BaseAlgorithm") -> None: ...
 
     def on_message_sent(self, message: "Message") -> None:
         self._add_metric(
@@ -61,7 +61,7 @@ class MetricCollector(NodeNetworkObserver, AlgorithmObserver, SimulationObserver
             {"message": message},
         )
 
-    def on_algorithm_started(self, algorithm: "Algorithm") -> None:
+    def on_algorithm_started(self, algorithm: "BaseAlgorithm") -> None:
         self._add_metric(
             ObservableEvents.algorithm_started,
             {"algorithm": algorithm},
@@ -70,7 +70,7 @@ class MetricCollector(NodeNetworkObserver, AlgorithmObserver, SimulationObserver
     # SimulationObserver methods
     def on_state_changed(self, simulation: "Simulation") -> None: ...
 
-    def on_algorithm_finished(self, algorithm: "Algorithm") -> None:
+    def on_algorithm_finished(self, algorithm: "BaseAlgorithm") -> None:
         self._add_metric(
             ObservableEvents.algorithm_finished,
             {"algorithm": algorithm},

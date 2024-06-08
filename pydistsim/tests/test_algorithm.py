@@ -2,10 +2,10 @@ import unittest
 
 from pydistsim import Node
 from pydistsim.algorithm import (
-    ActionEnum,
+    Actions,
+    AlgorithmException,
     NetworkAlgorithm,
     NodeAlgorithm,
-    PyDistSimAlgorithmException,
     StatusValues,
 )
 from pydistsim.message import Message
@@ -93,7 +93,7 @@ class TestAlgorithmsSetter(unittest.TestCase):
             (NetworkException, ((Node, {}),)),
             # missing_req_params
             (
-                PyDistSimAlgorithmException,
+                AlgorithmException,
                 (
                     (
                         SomeNodeAlgorithm,
@@ -104,7 +104,7 @@ class TestAlgorithmsSetter(unittest.TestCase):
                 ),
             ),
             (
-                PyDistSimAlgorithmException,
+                AlgorithmException,
                 (
                     (
                         SomeAlgorithmWithInheritance,
@@ -189,10 +189,10 @@ class TestStatusValues(unittest.TestCase):
         def alarm(): ...
 
         # Using correct ActionEnum
-        assert self.Status.DONE.implements(ActionEnum.alarm)
+        assert self.Status.DONE.implements(Actions.alarm)
 
         # Using wrong ActionEnum
-        assert not self.Status.DONE.implements(ActionEnum.spontaneously)
+        assert not self.Status.DONE.implements(Actions.spontaneously)
 
         # Using string
         assert self.Status.DONE.implements("alarm")
@@ -250,6 +250,7 @@ class TestAlarms(unittest.TestCase):
         self.net.algorithms = (algo_class,)
 
         sim = Simulation(self.net)
+        algorithm = sim.network.get_current_algorithm()
         some_n = first(self.net.nodes())
 
         assert sim.is_halted()
@@ -257,26 +258,26 @@ class TestAlarms(unittest.TestCase):
         # 1 step for initialization, 3 steps for alarms, 1 step for processing alarm messages
         sim.run(1)
 
-        assert len(sim.network.get_current_algorithm().alarms) == 3 * len(self.net.nodes())
+        assert len(algorithm.alarms) == 3 * len(self.net.nodes())
         assert len(some_n.inbox) == 0
 
         sim.run(1)  # alarm tic
 
-        assert len(sim.network.get_current_algorithm().alarms) == 3 * len(self.net.nodes())
+        assert len(algorithm.alarms) == 3 * len(self.net.nodes())
         assert len(some_n.inbox) == 0
 
         sim.run(1)  # alarm tic
 
-        assert len(sim.network.get_current_algorithm().alarms) == 3 * len(self.net.nodes())
+        assert len(algorithm.alarms) == 3 * len(self.net.nodes())
         assert len(some_n.inbox) == 0
 
         sim.run(1)  # alarm tic
 
-        assert len(sim.network.get_current_algorithm().alarms) == 2 * len(self.net.nodes())
+        assert len(algorithm.alarms) == 2 * len(self.net.nodes())
         assert all(len(node.inbox) == 1 for node in self.net.nodes())
 
         sim.run(1)  # 1 step for processing alarm messages
 
         assert all([data_test(node) for node in self.net.nodes()])
-        assert len(sim.network.get_current_algorithm().alarms) == 0
+        assert len(algorithm.alarms) == 0
         assert sim.is_halted()

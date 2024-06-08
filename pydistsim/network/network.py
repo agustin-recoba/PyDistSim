@@ -17,7 +17,7 @@ from numpy.core.numeric import Inf, allclose
 from numpy.lib.function_base import average
 from numpy.random import rand
 
-from pydistsim.algorithm import Algorithm
+from pydistsim.algorithm import BaseAlgorithm
 from pydistsim.conf import settings
 from pydistsim.logger import logger
 from pydistsim.network.environment import Environment
@@ -32,10 +32,10 @@ from pydistsim.sensor import CompositeSensor
 from pydistsim.utils.helpers import pydistsim_equal_objects, with_typehint
 
 if TYPE_CHECKING:
-    from pydistsim.algorithm import Algorithm
+    from pydistsim.algorithm import BaseAlgorithm
     from pydistsim.message import Message
 
-AlgorithmsParam = tuple[type[Algorithm] | tuple[type[Algorithm], dict]]
+AlgorithmsParam = tuple[type["BaseAlgorithm"] | tuple[type["BaseAlgorithm"], dict]]
 
 
 class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
@@ -160,12 +160,12 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         if not isinstance(algorithms, tuple):
             raise NetworkException(NetworkErrorMsg.ALGORITHM)
         for algorithm in algorithms:
-            if inspect.isclass(algorithm) and issubclass(algorithm, Algorithm):
+            if inspect.isclass(algorithm) and issubclass(algorithm, BaseAlgorithm):
                 self._algorithms += (algorithm(self),)
             elif (
                 isinstance(algorithm, tuple)
                 and len(algorithm) == 2
-                and issubclass(algorithm[0], Algorithm)
+                and issubclass(algorithm[0], BaseAlgorithm)
                 and isinstance(algorithm[1], dict)
             ):
                 self._algorithms += (algorithm[0](self, **algorithm[1]),)
@@ -354,7 +354,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         Try to return the current algorithm based on the algorithmState.
 
         :return: The current algorithm.
-        :rtype: Algorithm or None
+        :rtype: BaseAlgorithm or None
 
         :raises NetworkException: If there are no algorithms defined in the network.
         """
@@ -539,7 +539,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         :return: None
         """
-        logger.debug("Communicating messages in the network.")
+        logger.info("Communicating messages in the network.")
 
         while self.communication_step():
             ...

@@ -1,9 +1,10 @@
 import unittest
 
 from pydistsim import Network, NetworkGenerator, Simulation
-from pydistsim.algorithms.santoro2007.traversal import DFT, DFStar
-from pydistsim.algorithms.santoro2007.yoyo import YoYo
+from pydistsim.demo_algorithms.santoro2007.traversal import DFT, DFStar
+from pydistsim.demo_algorithms.santoro2007.yoyo import YoYo
 from pydistsim.network import RangeNetwork
+from pydistsim.utils.testing import PyDistSimTestCase
 
 
 class TestYoYo(unittest.TestCase):
@@ -36,7 +37,7 @@ class TestYoYo(unittest.TestCase):
 
                 net.algorithms = (YoYo,)
                 sim = Simulation(net)
-                sim.run()
+                sim.run(100_000)
 
                 min_id = min(sim.network.nodes(), key=lambda node: node.id).id
                 for node in sim.network.nodes():
@@ -70,7 +71,7 @@ class TestYoYo(unittest.TestCase):
 
                     net.algorithms = (YoYo,)
                     sim = Simulation(net)
-                    sim.run()
+                    sim.run(100_000)
 
                     min_id = min(sim.network.nodes(), key=lambda node: node.id).id
                     for node in sim.network.nodes():
@@ -104,7 +105,7 @@ class TestTraversalDFT(unittest.TestCase):
     def test_traversal(self):
         sim = Simulation(self.net)
 
-        sim.run()
+        sim.run(100_000)
 
         for node in self.net.nodes():
             assert node.status == DFT.Status.DONE, "Node %d is not DONE" % node.id
@@ -112,7 +113,7 @@ class TestTraversalDFT(unittest.TestCase):
         assert sorted(node.id for node in self.net.nodes()) == sorted(self.visited)
 
 
-class TestTraversalDFStar(unittest.TestCase):
+class TestTraversalDFStar(PyDistSimTestCase):
 
     def setUp(self):
         net_gen = NetworkGenerator(100, directed=False)
@@ -126,7 +127,7 @@ class TestTraversalDFStar(unittest.TestCase):
     def test_traversal(self):
         sim = Simulation(self.net)
 
-        sim.run()
+        sim.run(100_000)
 
         for node in self.net.nodes():
             assert node.status == DFStar.Status.DONE, "Node %d is not DONE" % node.id
