@@ -29,8 +29,11 @@ In order to implement a distributed algorithm, the class must fulfill these requ
 "The Santoro's interface"
 -------------------------
 
+TODO RST
 
 
 
 Helper functions and the extended interface
 -------------------------------------------
+
+TODO RST

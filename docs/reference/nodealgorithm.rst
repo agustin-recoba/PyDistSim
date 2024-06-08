@@ -4,4 +4,4 @@
 Implementation details of :class:`NodeAlgorithm`
 ================================================
 
-test
+TODO RST
