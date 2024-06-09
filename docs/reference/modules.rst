@@ -1,7 +1,8 @@
 .. _modules:
 
+############################
 Modules, classes and methods
-============================
+############################
 
 .. autosummary::
    :toctree: _autosummary

@@ -18,9 +18,10 @@ if TYPE_CHECKING:
 class Alarm:
     "Dataclass that represents an alarm set for a node."
 
-    time: int
+    time_left: int
     message: Message
     node: "Node"
+    triggered: bool = False
 
 
 class Actions(StrEnum):
@@ -42,6 +43,12 @@ MSG_META_HEADER_MAP = {
 
 
 class StatusValues(StrEnum):
+    """
+    Enum that defines the possible statuses of the nodes.
+
+    Instances of this class should be used as decorators for methods in subclasses of NodeAlgorithm.
+    """
+
     def __call__(self, func: MethodType):
         assert (
             func.__name__ in Actions.__members__
@@ -77,12 +84,15 @@ class NodeAlgorithm(BaseAlgorithm):
     INI = MessageMetaHeader.INITIALIZATION_MESSAGE
 
     class Status(StatusValues):
+        "Example of StatusValues subclass that defines the possible statuses of the nodes."
         IDLE = "IDLE"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.alarms: list[Alarm] = []
+
+    ### BaseAlgorithm interface methods ###
 
     def step(self):
         logger.debug(
@@ -125,6 +135,8 @@ class NodeAlgorithm(BaseAlgorithm):
             and len(self.alarms) == 0
         )
 
+    ### Algorithm methods ###
+
     def initializer(self):
         """
         Method used to initialize the algorithm. Is always called first.
@@ -156,12 +168,16 @@ class NodeAlgorithm(BaseAlgorithm):
         for destination in message.destination:
             source_node.push_to_outbox(message.copy(), destination)
 
+    ### Alarm methods ###
+
     def set_alarm(self, node: "Node", time: int, message: Message | None = None):
         """
         Set an alarm for the node.
         One unit of time is one step of the algorithm.
         After the time has passed, the alarm will trigger and the message will be sent to the node.
         When will that message be processed is not guaranteed to be immediate.
+
+        Returns the alarm that was set, useful for disabling it later.
 
         :param node: The node for which the alarm is set.
         :type node: Node
@@ -183,7 +199,7 @@ class NodeAlgorithm(BaseAlgorithm):
         self.alarms.append(alarm)
         return alarm
 
-    def disable_node_alarms(self, node: "Node"):
+    def disable_all_node_alarms(self, node: "Node"):
         """
         Disable all alarms set for the node.
 
@@ -206,8 +222,30 @@ class NodeAlgorithm(BaseAlgorithm):
         """
         if alarm in self.alarms:
             self.alarms.remove(alarm)
-        if alarm.message in alarm.node.inbox:
+        elif alarm.message in alarm.node.inbox:
             alarm.node.inbox.remove(alarm.message)
+
+    def update_alarm_time(self, alarm: Alarm, time_diff: int):
+        """
+        Update the time of an alarm by adding a time difference.
+        The time difference can be negative.
+
+        :param alarm: The alarm for which the time is updated.
+        :type alarm: Alarm
+        :param time_diff: The time difference to be added to the alarm's time.
+        :type time_diff: int
+        """
+        if alarm in self.alarms:
+            alarm.time_left += time_diff
+        elif alarm.message in alarm.node.inbox:
+            alarm.node.inbox.remove(alarm.message)
+            alarm.time_left += time_diff
+            alarm.triggered = False
+            self.alarms.append(alarm)
+        else:
+            raise ValueError("Alarm not found.")
+
+    ### Private methods for algorithm execution ###
 
     def _node_step(self, node: "Node"):
         """Executes one step of the algorithm for given node."""
@@ -232,9 +270,10 @@ class NodeAlgorithm(BaseAlgorithm):
     def _process_alarms(self):
         for alarm in self.alarms.copy():
             # copy to avoid errors produced by modifying the list while iterating
-            alarm.time -= 1
-            if alarm.time == 0:
+            alarm.time_left -= 1
+            if alarm.time_left <= 0:
                 self.alarms.remove(alarm)
+                alarm.triggered = True
                 alarm.node.push_to_inbox(alarm.message)
 
     def _process_message(self, node: "Node", message: Message):
@@ -257,6 +296,8 @@ class NodeAlgorithm(BaseAlgorithm):
 
         logger.error(f"Method {self.name}.{action} not implemented for status {node.status}.")
 
+    ### Metaclass methods ###
+
     def __configure_class__(clsname: str, bases: tuple[type, ...], dct: dict):
         """
         Metaclass method that configures the class by adding methods for all possible actions and statuses.
@@ -276,7 +317,7 @@ class NodeAlgorithm(BaseAlgorithm):
         else:
             for base in bases:
                 if hasattr(base, "Status") and issubclass(base.Status, StatusValues):
-                    status_class = base.Status
+                    status_class: StatusValues = base.Status
                     break
         assert status_class is not None, "Status class not found in bases or in dct."
 

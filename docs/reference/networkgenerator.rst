@@ -1,7 +1,9 @@
 .. _networkgenerator:
 
+#################
 Network Generator
-=================
+#################
+
 Implementation of different methods for automated network creation.
 It defines parameters (conditions) that generated network must satisfy.
 
@@ -9,13 +11,17 @@ It defines parameters (conditions) that generated network must satisfy.
 .. automodule:: pydistsim.network.generator
 .. autoclass:: NetworkGenerator
 
+*******
 Methods
--------
+*******
+
 .. automethod:: pydistsim.network.generator.NetworkGenerator.generate_random_network
 .. automethod:: pydistsim.network.generator.NetworkGenerator.generate_neigborhood_network
 
+*****************
 Default procedure
------------------
+*****************
+
 For any generator method network attributes take default priorities
 which are defined like this:
 

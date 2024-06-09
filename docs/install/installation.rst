@@ -1,7 +1,10 @@
+############
 Installation
 ############
+
 This document assumes you are familiar with using command prompt or shell. It should outline the necessary steps to install software needed for using PyDistSim.
 
+************
 Requirements
 ************
 
@@ -43,10 +46,13 @@ Alternatively, if none of the above is your concern, although not recommended, a
     $ pip install pydistsim
 
 
+*******
 Windows
 *******
+
 Windows version should be as simple as installing `Python 3.11 for windows <https://www.python.org/downloads/release/python-3110/>`_ and running ``pip install pydistsim``.
 
+*****************************
 Linux (tested only on Ubuntu)
 *****************************
 
@@ -58,8 +64,9 @@ Depending of the version of Ubuntu, some packages are required for getting and c
 
     $ sudo apt-get install libxkbcommon-x11-0 libegl1 opencv-python-headless libgl1-mesa-glx
 
+**********
 Virtualenv
-==========
+**********
 
 pip and virtualenv (venv) are included in Python 3.11. To create a new virtual environment run::
 
@@ -78,8 +85,10 @@ Activate virtual environment on Windows::
     $ pydistsim_env\Scripts\activate
 
 
+*********
 PyDistSim
-=========
+*********
+
 Finally, in order to download and install PyDistSim and all other required packages there are two available options, use one of them:
 
 #. *Stable*: for latest stable version use package from PyPI::
