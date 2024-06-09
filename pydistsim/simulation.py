@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from PySide6.QtCore import SIGNAL, QThread
 
@@ -58,8 +58,8 @@ class Simulation(ObserverManagerMixin, QThread):
         :return: None
         """
         self.stepsLeft = steps
-        for _ in range(len(self.network.algorithms) * len(self.network.nodes())):
-            algorithm: "BaseAlgorithm" = self.network.get_current_algorithm()
+        for _ in range(len(self.network.algorithms) * len(self.network)):
+            algorithm: Optional["BaseAlgorithm"] = self.network.get_current_algorithm()
             if not algorithm:
                 logger.info(
                     "Simulation has finished. There are no "
@@ -93,7 +93,7 @@ class Simulation(ObserverManagerMixin, QThread):
 
         :param algorithm: The algorithm to run on the network.
         """
-        for _ in range(1000 * len(self.network.nodes())):
+        for _ in range(1000 * len(self.network)):
             algorithm.step()
             self.stepsLeft -= 1
 
@@ -126,7 +126,7 @@ class Simulation(ObserverManagerMixin, QThread):
         :return: True if the algorithm is halted, False otherwise.
         :rtype: bool
         """
-        algorithm: "BaseAlgorithm" = self.network.get_current_algorithm()
+        algorithm: Optional["BaseAlgorithm"] = self.network.get_current_algorithm()
         return algorithm is None or algorithm.is_halted()
 
     @property
