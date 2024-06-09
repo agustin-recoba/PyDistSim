@@ -31,11 +31,44 @@ In order to implement a distributed algorithm, the class must fulfill these requ
 "The Santoro's interface"
 *************************
 
-TODO RST
+Send a message
+==============
 
+Set an alarm
+============
+The :meth:`NodeAlgorithm.set_alarm` method receives a node and a time. An empty message will be sent to the node after
+the time has passed. The time is in algorithm steps, which behavior varies according to the algorithm and the simulation\
+parameters.
+
+
+Check the extended interface methods for advanced use of the alarm mechanism.
 
 *******************************************
 Helper functions and the extended interface
 *******************************************
 
-TODO RST
+Alarm management
+================
+
+The :meth:`NodeAlgorithm.set_alarm` method receives an extra, optional, parameter, the message. This message will be
+sent to the node when the alarm goes off. The message must be an instance of :class:`Message`. This, however, is not
+meant to be used to send messages to other nodes, but to the node itself.
+
+.. note::
+    To schedule a message to be sent to another node, we recommend using the :meth:`NodeAlgorithm.send` method inside
+    the callback of the alarm.
+
+The :meth:`NodeAlgorithm.set_alarm` method returns an object that represents the alarm. This object can be used to
+disable the alarm, update the time, check the time left for the alarm to go off and check if the alarm is active.
+
+
+To disable alarms, the following methods are available:
+
+    *   :meth:`NodeAlgorithm.disable_all_node_alarms` which disables all alarms of the node.
+    *   :meth:`NodeAlgorithm.disable_alarm` which disables a specific alarm. The argument is the alarm object itself,
+        which is returned by the :meth:`NodeAlgorithm.set_alarm` method.
+
+And finally, to add or subtract time from a pending alarm, :meth:`NodeAlgorithm.update_alarm_time` can be used. The
+arguments are the alarm object and the time to be added or subtracted. If the time subtracted is greater than the time
+left for the alarm to go off, the alarm will be triggered the next "alarm triggering event" (usually the next step of
+the algorithm).
