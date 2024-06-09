@@ -204,45 +204,72 @@ class TestStatusValues(unittest.TestCase):
         assert not self.Status.DONE.implements("ALARM")
 
 
+class TimerAlgorithm(NodeAlgorithm):
+    class Status(StatusValues):
+        IDLE = "IDLE"
+        DONE = "DONE"
+
+    def initializer(self):
+        for node in self.network.nodes():
+            node.status = self.Status.IDLE
+            self.set_alarm(node, 3, Message(data=f"ALARM{node.id}"))
+            self.set_alarm(node, 6, Message(data=f"ALARM{node.id}"))
+            node.memory["LAST_ALARM"] = self.set_alarm(node, 9, Message(data=f"ALARM{node.id}"))
+
+    @Status.IDLE
+    def alarm(self, node, message):
+        node.memory["alarm"] = message.data
+
+        self.disable_alarm(node.memory["LAST_ALARM"])
+        self.disable_all_node_alarms(node)
+        node.status = self.Status.DONE
+
+
+class TimerDefaultMessage(TimerAlgorithm):
+    def initializer(self):
+        for node in self.network.nodes():
+            node.status = self.Status.IDLE
+            self.set_alarm(node, 3)
+            self.set_alarm(node, 6)
+            node.memory["LAST_ALARM"] = self.set_alarm(node, 9)
+
+
+class TimerDefaultMessageDecreasedTime(TimerAlgorithm):
+
+    @TimerAlgorithm.Status.IDLE
+    def alarm(self, node, message):
+        node.memory["alarm"] = message.data
+
+        self.disable_alarm(node.memory["LAST_ALARM"])
+        self.disable_all_node_alarms(node)
+        node.status = self.Status.DONE
+
+    @TimerAlgorithm.Status.IDLE
+    def spontaneously(self, node, message):
+        self.update_alarm_time(node.memory["FIRST_ALARM"], -100)
+        self.disable_alarm(node.memory["LAST_ALARM"])
+
+    def initializer(self):
+        for node in self.network.nodes():
+            node.status = self.Status.IDLE
+            node.memory["FIRST_ALARM"] = self.set_alarm(node, 4)
+            node.memory["SECOND_ALARM"] = self.set_alarm(node, 6)
+            node.memory["LAST_ALARM"] = self.set_alarm(node, 9)
+            node.push_to_inbox(Message(meta_header=NodeAlgorithm.INI))
+
+
 class TestAlarms(unittest.TestCase):
-    class TimerAlgorithm(NodeAlgorithm):
-        class Status(StatusValues):
-            IDLE = "IDLE"
-            DONE = "DONE"
-
-        def initializer(self):
-            for node in self.network.nodes():
-                node.status = self.Status.IDLE
-                self.set_alarm(node, 3, Message(data=f"ALARM{node.id}"))
-                self.set_alarm(node, 6, Message(data=f"ALARM{node.id}"))
-                node.memory["LAST_ALARM"] = self.set_alarm(node, 9, Message(data=f"ALARM{node.id}"))
-
-        @Status.IDLE
-        def alarm(self, node, message):
-            node.memory["alarm"] = message.data
-
-            self.disable_alarm(node.memory["LAST_ALARM"])
-            self.disable_node_alarms(node)
-            node.status = self.Status.DONE
-
-    class TimerDefaultMessage(TimerAlgorithm):
-        def initializer(self):
-            for node in self.network.nodes():
-                node.status = self.Status.IDLE
-                self.set_alarm(node, 3)
-                self.set_alarm(node, 6)
-                node.memory["LAST_ALARM"] = self.set_alarm(node, 9)
 
     def test_run_base_algorithm(self):
         self.aux_test(
-            self.TimerAlgorithm,
-            lambda node: node.status == self.TimerAlgorithm.Status.DONE and node.memory["alarm"] == f"ALARM{node.id}",
+            TimerAlgorithm,
+            lambda node: node.status == TimerAlgorithm.Status.DONE and node.memory["alarm"] == f"ALARM{node.id}",
         )
 
     def test_run_base_algorithm_default_message(self):
         self.aux_test(
-            self.TimerDefaultMessage,
-            lambda node: node.status == self.TimerAlgorithm.Status.DONE and len(node.memory["alarm"]) == 0,
+            TimerDefaultMessage,
+            lambda node: node.status == TimerAlgorithm.Status.DONE and len(node.memory["alarm"]) == 0,
         )
 
     def aux_test(self, algo_class, data_test):
@@ -279,5 +306,44 @@ class TestAlarms(unittest.TestCase):
         sim.run(1)  # 1 step for processing alarm messages
 
         assert all([data_test(node) for node in self.net.nodes()])
+        assert len(algorithm.alarms) == 0
+        assert sim.is_halted()
+
+    def test_update_alarm(self):
+        self.net = NetworkGenerator(10).generate_random_network()
+        self.net.algorithms = (TimerDefaultMessageDecreasedTime,)
+
+        sim = Simulation(self.net)
+        algorithm = sim.network.get_current_algorithm()
+        some_n = first(self.net.nodes())
+
+        assert sim.is_halted()
+
+        # 1 step for initialization, 3 steps for alarms, 1 step for processing alarm messages
+        sim.run(1)
+
+        assert len(algorithm.alarms) == 3 * len(self.net.nodes())
+        assert len(some_n.inbox) == 1  # INI message
+        assert some_n.memory["FIRST_ALARM"].time_left == 4
+
+        sim.run(1)  # alarm tic
+
+        assert len(algorithm.alarms) == 3 * len(self.net.nodes())
+        assert len(some_n.inbox) == 1  # INI message
+        assert some_n.memory["FIRST_ALARM"].time_left == 3
+
+        sim.run(1)  # alarm tic -> processes INI and disables LAST_ALARM
+
+        assert len(algorithm.alarms) == 2 * len(self.net.nodes())
+        assert len(some_n.inbox) == 0
+        assert some_n.memory["FIRST_ALARM"].time_left == -98  # -100 + 2
+
+        sim.run(1)  # alarm tic -> FIRST_ALARM triggered
+
+        assert len(algorithm.alarms) == len(self.net.nodes())  # Only SECOND_ALARM left
+        assert all(len(node.inbox) == 1 for node in self.net.nodes())  # 1 alarm message (generated by FIRST_ALARM)
+
+        sim.run(1)  # 1 step for processing alarm messages, disables SECOND_ALARM
+
         assert len(algorithm.alarms) == 0
         assert sim.is_halted()
