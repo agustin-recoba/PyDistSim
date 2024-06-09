@@ -76,10 +76,12 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         self.simulation = None
         logger.info("Instance of Network has been initialized.")
 
-    def to_directed_class(self):
+    @staticmethod
+    def to_directed_class():
         return Network
 
-    def to_undirected_class(self):
+    @staticmethod
+    def to_undirected_class():
         return BidirectionalNetwork
 
     def copy(self, as_view=False):
