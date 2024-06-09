@@ -12,7 +12,7 @@ from networkx import (
     is_connected,
     is_strongly_connected,
 )
-from numpy import array, max, min, pi, sign
+from numpy import array, max, min, pi
 from numpy.core.numeric import Inf, allclose
 from numpy.lib.function_base import average
 from numpy.random import rand
@@ -42,7 +42,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
     """
     Mixin to extend Graph and DiGraph. The result represents a network in a distributed simulation.
 
-    The Network classes (:class:`.Network` and :class:`.BidirectionalNetwork`) extend the Graph class and provides additional functionality
+    The Network classes (:class:`Network` and :class:`BidirectionalNetwork`) extend the Graph class and provides additional functionality
     for managing nodes, algorithms, and network properties.
     """
 
@@ -76,6 +76,8 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         self.simulation = None
         logger.info("Instance of Network has been initialized.")
 
+    #### Overriding methods from Graph and DiGraph ####
+
     @staticmethod
     def to_directed_class():
         return Network
@@ -87,113 +89,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
     def copy(self, as_view=False):
         """Return a copy of the graph."""
         return deepcopy(self)
-
-    def is_connected(self):
-        if self.is_directed():
-            return is_strongly_connected(self)
-        return is_connected(self)
-
-    def subnetwork(self, nbunch, pos=None):
-        """
-        Returns a Network instance with the specified nodes.
-
-        :param nbunch: A list of nodes to include in the subnetwork.
-        :type nbunch: list
-        :param pos: Optional dictionary of node positions.
-        :type pos: dict, optional
-        :return: A Network instance representing the subnetwork.
-        :rtype: Network
-        """
-        if not pos:
-            pos = self.pos
-        H = self.copy()
-        for node in self.nodes():
-            node_H = H.node_by_id(node.id)
-            if node in nbunch:
-                # Copy node attributes
-                H.pos.update({node_H: pos[node][:2]})
-                if len(pos[node]) > 2:
-                    H.ori.update({node_H: pos[node][2]})
-                else:
-                    H.ori.update({node_H: deepcopy(self.ori[node])})
-                H.labels.update({node_H: deepcopy(self.labels[node])})
-                node_H.network = H
-            else:
-                H.remove_node(node_H)
-
-        # Copy network attributes and reinitialize algorithms
-        H.algorithms = deepcopy(self._algorithms_param) or settings.ALGORITHMS
-        H.algorithmState = {"index": 0, "step": 1, "finished": False}
-        H.simulation = None
-        H.clear_observers()
-
-        assert isinstance(H, NetworkMixin)
-        return H
-
-    def nodes_sorted(self):
-        """
-        Sort nodes by id, important for message ordering.
-
-        :param data: A boolean value indicating whether to include node data in the sorted list.
-        :type data: bool
-        :return: A sorted tuple of nodes.
-        :rtype: tuple
-        """
-        return tuple(sorted(self.nodes(), key=lambda k: k.id))
-
-    @property
-    def algorithms(self):
-        """
-        Set algorithms by passing tuple of Algorithm subclasses.
-
-        >>> net.algorithms = (Algorithm1, Algorithm2,)
-
-        For params pass tuples in form (Algorithm, params) like this
-
-        >>> net.algorithms = ((Algorithm1, {'param1': value,}), Algorithm2)
-
-        """
-        return self._algorithms
-
-    @algorithms.setter
-    def algorithms(self, algorithms: AlgorithmsParam):
-        self.reset()
-        self._algorithms = ()
-        if not isinstance(algorithms, tuple):
-            raise NetworkException(NetworkErrorMsg.ALGORITHM)
-        for algorithm in algorithms:
-            if inspect.isclass(algorithm) and issubclass(algorithm, BaseAlgorithm):
-                self._algorithms += (algorithm(self),)
-            elif (
-                isinstance(algorithm, tuple)
-                and len(algorithm) == 2
-                and issubclass(algorithm[0], BaseAlgorithm)
-                and isinstance(algorithm[1], dict)
-            ):
-                self._algorithms += (algorithm[0](self, **algorithm[1]),)
-            else:
-                raise NetworkException(NetworkErrorMsg.ALGORITHM)
-
-        # If everything went ok, set algorithms param for coping
-        self._algorithms_param = algorithms
-
-    @property
-    def environment(self):
-        return self._environment
-
-    def _set_environment(self, environment: Environment):
-        """
-        Setter for environment. Override this method if default
-        behavior is not enough.
-
-        :param environment: The new environment for the network.
-        :type environment: Environment
-        """
-        self._environment = environment
-
-    @environment.setter
-    def environment(self, environment: Environment):
-        self._set_environment(environment)
 
     def remove_node(self, node, skip_check=False):
         """
@@ -258,6 +153,62 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         self._copy_observers_to_nodes(node)
         return node
 
+    #### Network attribute management ####
+
+    @property
+    def algorithms(self):
+        """
+        Set algorithms by passing tuple of Algorithm subclasses.
+
+        >>> net.algorithms = (Algorithm1, Algorithm2,)
+
+        For params pass tuples in form (Algorithm, params) like this
+
+        >>> net.algorithms = ((Algorithm1, {'param1': value,}), Algorithm2)
+
+        """
+        return self._algorithms
+
+    @algorithms.setter
+    def algorithms(self, algorithms: AlgorithmsParam):
+        self.reset()
+        self._algorithms = ()
+        if not isinstance(algorithms, tuple):
+            raise NetworkException(NetworkErrorMsg.ALGORITHM)
+        for algorithm in algorithms:
+            if inspect.isclass(algorithm) and issubclass(algorithm, BaseAlgorithm):
+                self._algorithms += (algorithm(self),)
+            elif (
+                isinstance(algorithm, tuple)
+                and len(algorithm) == 2
+                and issubclass(algorithm[0], BaseAlgorithm)
+                and isinstance(algorithm[1], dict)
+            ):
+                self._algorithms += (algorithm[0](self, **algorithm[1]),)
+            else:
+                raise NetworkException(NetworkErrorMsg.ALGORITHM)
+
+        # If everything went ok, set algorithms param for coping
+        self._algorithms_param = algorithms
+
+    @property
+    def environment(self):
+        return self._environment
+
+    def _set_environment(self, environment: Environment):
+        """
+        Setter for environment. Override this method if default
+        behavior is not enough.
+
+        :param environment: The new environment for the network.
+        :type environment: Environment
+        """
+        self._environment = environment
+
+    @environment.setter
+    def environment(self, environment: Environment):
+        self._set_environment(environment)
+
     def add_observers(self, *observers):
         super().add_observers(*observers)
         self._copy_observers_to_nodes()
@@ -275,6 +226,137 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         super().clear_observers()
         for node in self.nodes():
             node.clear_observers()
+
+    def reset(self):
+        """
+        Reset the network to its initial state.
+
+        Does not reset the observers of the network nor the observers of the nodes.
+        """
+        logger.info("Resetting network.")
+        self.algorithmState = {"index": 0, "step": 1, "finished": False}
+        self.reset_all_nodes()
+
+    def reset_all_nodes(self):
+        """
+        Reset all nodes in the network.
+
+        :return: None
+        """
+        logger.info("Resetting all nodes.")
+        for node in self.nodes():
+            node: "Node"
+            node.reset()
+
+    #### Network methods ####
+
+    def is_connected(self):
+        if self.is_directed():
+            return is_strongly_connected(self)
+        return is_connected(self)
+
+    def subnetwork(self, nbunch, pos=None):
+        """
+        Returns a Network instance with the specified nodes.
+
+        :param nbunch: A list of nodes to include in the subnetwork.
+        :type nbunch: list
+        :param pos: Optional dictionary of node positions.
+        :type pos: dict, optional
+        :return: A Network instance representing the subnetwork.
+        :rtype: Network
+        """
+        if not pos:
+            pos = self.pos
+        H = self.copy()
+        for node in self.nodes():
+            node_H = H.node_by_id(node.id)
+            if node in nbunch:
+                # Copy node attributes
+                H.pos.update({node_H: pos[node][:2]})
+                if len(pos[node]) > 2:
+                    H.ori.update({node_H: pos[node][2]})
+                else:
+                    H.ori.update({node_H: deepcopy(self.ori[node])})
+                H.labels.update({node_H: deepcopy(self.labels[node])})
+                node_H.network = H
+            else:
+                H.remove_node(node_H)
+
+        # Copy network attributes and reinitialize algorithms
+        H.algorithms = deepcopy(self._algorithms_param) or settings.ALGORITHMS
+        H.algorithmState = {"index": 0, "step": 1, "finished": False}
+        H.simulation = None
+        H.clear_observers()
+
+        assert isinstance(H, NetworkMixin)
+        return H
+
+    def get_tree_net(self, treeKey, downstream_only=False):
+        """
+        Returns a new network with edges that are not in a tree removed.
+
+        :param treeKey: The key in the nodes' memory that defines the tree. It can be a list of tree neighbors or a dictionary with 'parent' (node) and 'children' (list) keys.
+        :type treeKey: str
+        :param downstream_only: A flag indicating whether to include only downstream edges in the tree. Defaults to False. Downstream edges are edges from parent to children.
+        :type downstream_only: bool
+
+        :return: A new network object with only the edges that are part of the tree. If downstream_only is True, the network is directed.
+        :rtype: NetworkMixin
+
+        The tree is defined in the nodes' memory under the specified treeKey. The method iterates over all nodes in the network and checks if the treeKey is present in their memory. If it is, it retrieves the tree neighbors or children and adds the corresponding edges to the tree_edges_ids list. It also adds the tree nodes to the tree_nodes list.
+
+        After iterating over all nodes, a subnetwork is created using the tree_nodes. Then, the method removes any edges from the subnetwork that are not present in the tree_edges_ids list.
+
+        Finally, the resulting subnetwork, representing the tree, is returned.
+
+        """
+        tree_edges_ids = []
+        tree_nodes = []
+        for node in self.nodes():
+            print(f"{node.memory=}")
+            neighbors_in_tree = []
+            if treeKey not in node.memory:
+                continue
+            if isinstance(node.memory[treeKey], list):
+                if downstream_only:
+                    raise NetworkException(NetworkErrorMsg.LIST_TREE_DOWNSTREAM_ONLY)
+                neighbors_in_tree = node.memory[treeKey]
+            elif isinstance(node.memory[treeKey], dict) and "children" in node.memory[treeKey]:
+                neighbors_in_tree += node.memory[treeKey]["children"]
+                if (
+                    not downstream_only
+                    and "parent" in node.memory[treeKey]
+                    and node.memory[treeKey]["parent"] is not None
+                ):
+                    neighbors_in_tree.append(node.memory[treeKey]["parent"])
+
+            tree_edges_ids.extend(
+                [(node.id, neighbor.id) for neighbor in neighbors_in_tree if neighbor in self.neighbors(node)]
+            )
+            tree_nodes.extend(neighbor for neighbor in neighbors_in_tree if neighbor in self.neighbors(node))
+            if neighbors_in_tree:
+                print(f"{node}, {tree_edges_ids=}")
+                tree_nodes.append(node)
+
+        treeNet = self.subnetwork(tree_nodes)
+        if downstream_only:
+            treeNet = treeNet.to_directed()
+        for u, v in tuple(treeNet.edges()):
+            if (u.id, v.id) not in tree_edges_ids:
+                treeNet.remove_edge(u, v)
+        return treeNet
+
+    def nodes_sorted(self):
+        """
+        Sort nodes by id, important for message ordering.
+
+        :param data: A boolean value indicating whether to include node data in the sorted list.
+        :type data: bool
+        :return: A sorted tuple of nodes.
+        :rtype: tuple
+        """
+        return tuple(sorted(self.nodes(), key=lambda k: k.id))
 
     def node_by_id(self, id_):
         """
@@ -304,174 +386,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         degree_iter = self.out_degree() if self.is_directed() else self.degree()
         return average(tuple(map(lambda x: x[1], tuple(degree_iter))))
 
-    def modify_avg_degree(self, value):
-        """
-        Modifies (increases) average degree based on the given value by
-        modifying nodes' commRange.
-
-        :param value: The desired average degree value.
-        :type value: float
-
-        :raises AssertionError: If all nodes do not have the same commRange.
-        :raises AssertionError: If the given value is not greater than the current average degree.
-
-        This method increases the average degree of the network by modifying the communication range
-        (`commRange`) of the nodes. It ensures that all nodes have the same communication range.
-
-        The method uses a step-wise approach to gradually increase the average degree until it reaches
-        the desired value. It adjusts the communication range of each node in the network by adding a
-        step size calculated based on the difference between the desired average degree and the current
-        average degree.
-
-        The step size is determined by the `step_factor` parameter, which controls the rate of change
-        in the communication range. If the step size overshoots or undershoots the desired average
-        degree, the `step_factor` is halved to reduce the step size for the next iteration.
-
-        Once the average degree reaches the desired value, the method logs the modified degree.
-
-        Note: This method assumes that the network is initially connected and all nodes have the same
-        communication range.
-
-        Example usage:
-            network.modify_avg_degree(5.0)
-        """
-        # assert all nodes have the same commRange
-        assert allclose([n.commRange for n in self], self.nodes_sorted()[0].commRange)
-        # TODO: implement decreasing of degree, preserve connected network
-        assert value + settings.DEG_ATOL > self.avg_degree()  # only increment
-        step_factor = 7.0
-        steps = [0]
-        # TODO: while condition should call validate
-        while not allclose(self.avg_degree(), value, atol=settings.DEG_ATOL):
-            steps.append((value - self.avg_degree()) * step_factor)
-            for node in self:
-                node.commRange += steps[-1]
-            # variable step_factor for step size for over/undershoot cases
-            if len(steps) > 2 and sign(steps[-2]) != sign(steps[-1]):
-                step_factor /= 2
-        logger.debug("Modified degree to {}", self.avg_degree())
-
-    def get_current_algorithm(self):
-        """
-        Try to return the current algorithm based on the algorithmState.
-
-        :return: The current algorithm.
-        :rtype: BaseAlgorithm or None
-
-        :raises NetworkException: If there are no algorithms defined in the network.
-        """
-        if len(self.algorithms) == 0:
-            logger.error("There is no algorithm defined in the network.")
-            raise NetworkException(NetworkErrorMsg.ALGORITHM_NOT_FOUND)
-
-        if self.algorithmState["finished"]:
-            if len(self.algorithms) > self.algorithmState["index"] + 1:
-                self.algorithmState["index"] += 1
-                self.algorithmState["step"] = 1
-                self.algorithmState["finished"] = False
-            else:
-                return None
-
-        return self.algorithms[self.algorithmState["index"]]
-
-    def reset(self):
-        """
-        Reset the network to its initial state.
-
-        Does not reset the observers of the network nor the observers of the nodes.
-        """
-        logger.info("Resetting network.")
-        self.algorithmState = {"index": 0, "step": 1, "finished": False}
-        self.reset_all_nodes()
-
-    def show(self, *args, **kwargs):
-        fig = self.get_fig(*args, **kwargs)
-        fig.show()
-
-    def savefig(self, fname="network.png", figkwargs={}, *args, **kwargs):
-        self.get_fig(*args, **kwargs).savefig(fname, **figkwargs)
-
-    def get_fig(
-        self,
-        positions=None,
-        edgelist=None,
-        nodeColor="r",
-        show_labels=True,
-        labels=None,
-        dpi=100,
-        node_size=30,
-    ):
-        """
-        Get the figure object representing the network visualization.
-
-        :param positions: A dictionary mapping node IDs to their positions in the network.
-        :type positions: dict, optional
-        :param edgelist: A list of edges to be drawn in the network.
-        :type edgelist: list, optional
-        :param nodeColor: The color of the nodes in the network.
-        :type nodeColor: str, optional
-        :param show_labels: Whether to show labels for the nodes.
-        :type show_labels: bool, optional
-        :param labels: A dictionary mapping node IDs to their labels.
-        :type labels: dict, optional
-        :param dpi: The resolution of the figure in dots per inch.
-        :type dpi: int, optional
-        :param node_size: The size of the nodes in the network.
-        :type node_size: int, optional
-        :return: The figure object representing the network visualization.
-        :rtype: matplotlib.figure.Figure
-        """
-        try:
-            from matplotlib import pyplot as plt
-        except ImportError as e:
-            raise ImportError("Matplotlib required for show()") from e
-
-        # TODO: environment when positions defined
-        fig_size = tuple(array(self._environment.image.shape) / dpi)
-
-        # figsize in inches
-        # default matplotlibrc is dpi=80 for plt and dpi=100 for savefig
-        fig = plt.figure(figsize=fig_size, dpi=dpi, frameon=False)
-        plt.imshow(self._environment.image, cmap="binary_r", vmin=0, origin="lower")
-        if positions:
-            # truncate positions to [x, y], i.e. lose theta
-            for k, v in list(positions.items()):
-                positions[k] = v[:2]
-            pos = positions
-            net = self.subnetwork(list(pos.keys()))
-        else:
-            pos = self.pos
-            net = self
-        labels = labels or net.labels
-        draw_networkx_edges(net, pos, alpha=0.6, edgelist=edgelist)
-        draw_networkx_nodes(net, pos, node_size=node_size, node_color=nodeColor, cmap="YlOrRd")
-        if show_labels:
-            label_pos = {}
-            from math import sqrt
-
-            label_delta = sqrt(node_size * 0.6) * dpi / 100
-            for n in net.nodes():
-                label_pos[n] = pos[n].copy() + label_delta
-            draw_networkx_labels(
-                net,
-                label_pos,
-                labels=labels,
-                horizontalalignment="left",
-                verticalalignment="bottom",
-            )
-        # plt.axis('off')
-        return fig
-
-    def reset_all_nodes(self):
-        """
-        Reset all nodes in the network.
-
-        :return: None
-        """
-        logger.info("Resetting all nodes.")
-        for node in self.nodes():
-            node: "Node"
-            node.reset()
+    #### Node communication methods ####
 
     def get_some_message(self) -> Optional["Message"]:
         nodes_with_messages = [node for node in self.nodes() if len(node.outbox) > 0]
@@ -581,6 +496,111 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         else:
             raise MessageUndeliverableException("Destination not in network.", message)
 
+    #### Algorithm relation methods ####
+
+    def get_current_algorithm(self):
+        """
+        Try to return the current algorithm based on the algorithmState.
+
+        :return: The current algorithm.
+        :rtype: BaseAlgorithm or None
+
+        :raises NetworkException: If there are no algorithms defined in the network.
+        """
+        if len(self.algorithms) == 0:
+            logger.error("There is no algorithm defined in the network.")
+            raise NetworkException(NetworkErrorMsg.ALGORITHM_NOT_FOUND)
+
+        if self.algorithmState["finished"]:
+            if len(self.algorithms) > self.algorithmState["index"] + 1:
+                self.algorithmState["index"] += 1
+                self.algorithmState["step"] = 1
+                self.algorithmState["finished"] = False
+            else:
+                return None
+
+        return self.algorithms[self.algorithmState["index"]]
+
+    #### Visualization methods ####
+
+    def show(self, *args, **kwargs):
+        fig = self.get_fig(*args, **kwargs)
+        fig.show()
+
+    def savefig(self, fname="network.png", figkwargs={}, *args, **kwargs):
+        self.get_fig(*args, **kwargs).savefig(fname, **figkwargs)
+
+    def get_fig(
+        self,
+        positions=None,
+        edgelist=None,
+        nodeColor="r",
+        show_labels=True,
+        labels=None,
+        dpi=100,
+        node_size=30,
+    ):
+        """
+        Get the figure object representing the network visualization.
+
+        :param positions: A dictionary mapping node IDs to their positions in the network.
+        :type positions: dict, optional
+        :param edgelist: A list of edges to be drawn in the network.
+        :type edgelist: list, optional
+        :param nodeColor: The color of the nodes in the network.
+        :type nodeColor: str, optional
+        :param show_labels: Whether to show labels for the nodes.
+        :type show_labels: bool, optional
+        :param labels: A dictionary mapping node IDs to their labels.
+        :type labels: dict, optional
+        :param dpi: The resolution of the figure in dots per inch.
+        :type dpi: int, optional
+        :param node_size: The size of the nodes in the network.
+        :type node_size: int, optional
+        :return: The figure object representing the network visualization.
+        :rtype: matplotlib.figure.Figure
+        """
+        try:
+            from matplotlib import pyplot as plt
+        except ImportError as e:
+            raise ImportError("Matplotlib required for show()") from e
+
+        # TODO: environment when positions defined
+        fig_size = tuple(array(self._environment.image.shape) / dpi)
+
+        # figsize in inches
+        # default matplotlibrc is dpi=80 for plt and dpi=100 for savefig
+        fig = plt.figure(figsize=fig_size, dpi=dpi, frameon=False)
+        plt.imshow(self._environment.image, cmap="binary_r", vmin=0, origin="lower")
+        if positions:
+            # truncate positions to [x, y], i.e. lose theta
+            for k, v in list(positions.items()):
+                positions[k] = v[:2]
+            pos = positions
+            net = self.subnetwork(list(pos.keys()))
+        else:
+            pos = self.pos
+            net = self
+        labels = labels or net.labels
+        draw_networkx_edges(net, pos, alpha=0.6, edgelist=edgelist)
+        draw_networkx_nodes(net, pos, node_size=node_size, node_color=nodeColor, cmap="YlOrRd")
+        if show_labels:
+            label_pos = {}
+            from math import sqrt
+
+            label_delta = sqrt(node_size * 0.6) * dpi / 100
+            for n in net.nodes():
+                label_pos[n] = pos[n].copy() + label_delta
+            draw_networkx_labels(
+                net,
+                label_pos,
+                labels=labels,
+                horizontalalignment="left",
+                verticalalignment="bottom",
+            )
+        # plt.axis('off')
+        return fig
+
     def get_size(self):
         """Returns network width and height based on nodes positions."""
         return max(list(self.pos.values()), axis=0) - min(list(self.pos.values()), axis=0)
@@ -614,60 +634,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
             },
         }
 
-    def get_tree_net(self, treeKey, downstream_only=False):
-        """
-        Returns a new network with edges that are not in a tree removed.
-
-        :param treeKey: The key in the nodes' memory that defines the tree. It can be a list of tree neighbors or a dictionary with 'parent' (node) and 'children' (list) keys.
-        :type treeKey: str
-        :param downstream_only: A flag indicating whether to include only downstream edges in the tree. Defaults to False. Downstream edges are edges from parent to children.
-        :type downstream_only: bool
-
-        :return: A new network object with only the edges that are part of the tree. If downstream_only is True, the network is directed.
-        :rtype: NetworkMixin
-
-        The tree is defined in the nodes' memory under the specified treeKey. The method iterates over all nodes in the network and checks if the treeKey is present in their memory. If it is, it retrieves the tree neighbors or children and adds the corresponding edges to the tree_edges_ids list. It also adds the tree nodes to the tree_nodes list.
-
-        After iterating over all nodes, a subnetwork is created using the tree_nodes. Then, the method removes any edges from the subnetwork that are not present in the tree_edges_ids list.
-
-        Finally, the resulting subnetwork, representing the tree, is returned.
-
-        """
-        tree_edges_ids = []
-        tree_nodes = []
-        for node in self.nodes():
-            print(f"{node.memory=}")
-            neighbors_in_tree = []
-            if treeKey not in node.memory:
-                continue
-            if isinstance(node.memory[treeKey], list):
-                if downstream_only:
-                    raise NetworkException(NetworkErrorMsg.LIST_TREE_DOWNSTREAM_ONLY)
-                neighbors_in_tree = node.memory[treeKey]
-            elif isinstance(node.memory[treeKey], dict) and "children" in node.memory[treeKey]:
-                neighbors_in_tree += node.memory[treeKey]["children"]
-                if (
-                    not downstream_only
-                    and "parent" in node.memory[treeKey]
-                    and node.memory[treeKey]["parent"] is not None
-                ):
-                    neighbors_in_tree.append(node.memory[treeKey]["parent"])
-
-            tree_edges_ids.extend(
-                [(node.id, neighbor.id) for neighbor in neighbors_in_tree if neighbor in self.neighbors(node)]
-            )
-            tree_nodes.extend(neighbor for neighbor in neighbors_in_tree if neighbor in self.neighbors(node))
-            if neighbors_in_tree:
-                print(f"{node}, {tree_edges_ids=}")
-                tree_nodes.append(node)
-
-        treeNet = self.subnetwork(tree_nodes)
-        if downstream_only:
-            treeNet = treeNet.to_directed()
-        for u, v in tuple(treeNet.edges()):
-            if (u.id, v.id) not in tree_edges_ids:
-                treeNet.remove_edge(u, v)
-        return treeNet
+    #### Test helper methods ####
 
     def validate_params(self, params: dict):
         """
