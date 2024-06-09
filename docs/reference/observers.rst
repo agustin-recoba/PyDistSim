@@ -1,8 +1,9 @@
 .. _observers:
 .. currentmodule:: pydistsim.observers
 
+#########
 Observers
-=============================
+#########
 
 PyDistSim provides a set of observers that can be used to monitor the simulation.
 Observers are used to collect data from the simulation, and can be used to plot the
@@ -19,8 +20,9 @@ class is :class:`Observer`, which defines the interface for all observers.
 \
 
 
+**********************
 The observable classes
-.............................
+**********************
 
 Standardize the use of observers in the framework, we implemented a mixin class :class:`ObserverManagerMixin` that
 can be used to add observer functionality to any class. The mixin class provides methods to add and remove observers,
@@ -32,8 +34,10 @@ and to notify the observers of changes in the observable object.
    :caption: ObserverManagerMixin inheritance diagram
 
 
+********************
 The metric collector
-.............................
+********************
+
 .. currentmodule:: pydistsim.metrics
 
 In addition to the observer classes, PyDistSim provides a special observer class called :class:`MetricCollector`.
@@ -54,7 +58,7 @@ To enable the metric collection, the simulation object must be configured with a
 To access the collected metrics, the :meth:`MetricCollector.make_report` method can be used.
 
 Subclassing :class:`MetricCollector`
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+====================================
 
 Extend this class and implement the desired event methods to collect custom metrics.
 For registering events, call the :meth:`MetricCollector._add_metric` method.

@@ -1,8 +1,9 @@
 .. _networkmixin:
 .. currentmodule:: pydistsim.network.rangenetwork
 
+##############
 Range Networks
-=============================
+##############
 
 PyDistSim implements an abstraction of range networks, which is a network where
 each node is connected to all nodes within a certain range.
@@ -19,8 +20,9 @@ For reference, see :class:`RangeNetwork` and :class:`BidirectionalRangeNetwork`.
 \
 
 
+***********
 Range Types
-.............................
+***********
 
 PyDistSim implements several range types, which define the behavior of the range network.
 The rage type defines which nodes are connected to each other, but use of distance is

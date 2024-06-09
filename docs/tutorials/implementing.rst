@@ -2,8 +2,9 @@
 
 .. currentmodule:: pydistsim.algorithm.node_algorithm
 
+####################################
 Implementing a distributed algorithm
-====================================
+####################################
 
 In order to implement a distributed algorithm, the class must fulfill these requirements:
     1.  It must be a subclass of :class:`NodeAlgorithm` class.
@@ -26,14 +27,15 @@ In order to implement a distributed algorithm, the class must fulfill these requ
     Actions without an implementation will only log a warning message, so for no-ops, it is not necessary to implement
     anything.
 
+*************************
 "The Santoro's interface"
--------------------------
+*************************
 
 TODO RST
 
 
-
+*******************************************
 Helper functions and the extended interface
--------------------------------------------
+*******************************************
 
 TODO RST

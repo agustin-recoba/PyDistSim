@@ -1,8 +1,10 @@
 .. _networkmixin:
 .. currentmodule:: pydistsim.network.network
 
+#############################
 Networks and the NetworkMixin
-=============================
+#############################
+
 
 PyDistSim uses the library :mod:`networkx` to represent graphs. :mod:`networkx` provides a rich set of graph classes and methods to work with graphs.
 
@@ -22,5 +24,4 @@ In broad terms, these NetworkMixin subclasses are responsible for the following:
 For class and method documentation refer to :class:`NetworkMixin`.
 
 .. inheritance-diagram:: Network BidirectionalNetwork
-   :parts: 3
    :caption: Inheritance diagram for Network and BidirectionalNetwork
