@@ -360,8 +360,7 @@ class YoYo(NodeAlgorithm):
             node.status = self.Status.LEADER
             return
 
-        # default destination: send to every neighbor
-        self.send(node, Message(header="init_id", data=node.id))
+        self.send(node, Message(header="init_id", data=node.id, destination=node.memory[self.neighborsKey]))
 
         node.status = self.Status.IDLE
 
