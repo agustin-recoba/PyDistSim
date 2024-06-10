@@ -10,6 +10,8 @@ class MetaHeader(StrEnum):
 
 class Message:
 
+    next_message_id = 1
+
     def __init__(
         self,
         source=None,
@@ -45,6 +47,8 @@ class Message:
         self.data = data or dict()
         self.meta_header = meta_header
         self.meta_data = meta_data or dict()
+        self.id = self.__class__.next_message_id
+        self.__class__.next_message_id += 1
 
     def __repr__(self):
         destination = self.destination
@@ -62,5 +66,10 @@ class Message:
         Create a copy of the Message object.
         """
         # nodes are protected from copying by __deepcopy__()
-        self.data = deepcopy(self.data)
-        return copy(self)
+        copy_data = deepcopy(self.data)
+        new_message = copy(self)
+        new_message.data = copy_data
+        new_message.id = self.__class__.next_message_id
+        self.__class__.next_message_id += 1
+
+        return new_message
