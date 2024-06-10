@@ -1,7 +1,7 @@
 import inspect
-import random
+from collections.abc import Iterable
 from copy import deepcopy
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Dict, Optional
 
 from networkx import (
     DiGraph,
@@ -20,6 +20,10 @@ from numpy.random import rand
 from pydistsim.algorithm import BaseAlgorithm
 from pydistsim.conf import settings
 from pydistsim.logger import logger
+from pydistsim.network.communicationproperties import (
+    CommunicationPropertiesModel,
+    UnorderedCommunication,
+)
 from pydistsim.network.environment import Environment
 from pydistsim.network.exceptions import (
     MessageUndeliverableException,
@@ -29,7 +33,11 @@ from pydistsim.network.exceptions import (
 from pydistsim.network.node import Node
 from pydistsim.observers import NodeObserver, ObserverManagerMixin
 from pydistsim.sensor import CompositeSensor
-from pydistsim.utils.helpers import pydistsim_equal_objects, with_typehint
+from pydistsim.utils.helpers import (
+    pydistsim_equal_objects,
+    sort_by_sortedness,
+    with_typehint,
+)
 
 if TYPE_CHECKING:
     from pydistsim.algorithm import BaseAlgorithm
@@ -52,6 +60,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         environment: Environment = None,
         algorithms: AlgorithmsParam = (),
         networkRouting: bool = True,
+        communication_properties: CommunicationPropertiesModel | None = None,
         **kwargs,
     ):
         """
@@ -74,6 +83,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self.networkRouting = networkRouting
         self.simulation = None
+        self.communication_properties = communication_properties or UnorderedCommunication
         logger.info("Instance of Network has been initialized.")
 
     #### Overriding methods from Graph and DiGraph ####
@@ -388,61 +398,38 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
     #### Node communication methods ####
 
-    def get_some_message(self) -> Optional["Message"]:
-        nodes_with_messages = [node for node in self.nodes() if len(node.outbox) > 0]
-
-        if len(nodes_with_messages) == 0:  # No nodes with messages in outbox.
-            logger.debug("There are no nodes with messages in outbox.")
-            return None
-
-        node: "Node" = random.choice(nodes_with_messages)
-        message = random.choice(node.outbox)
-        # TODO: implement OPTIONAL message ordering
-
-        node.outbox.remove(message)
-
-        return message
-
-    def communication_step(self):
+    def transit_messages(self, u: "Node", v: "Node") -> dict["Message", int]:
         """
-        Perform one step of communication in the network.
+        Get messages in transit from node u to node v.
 
-        :return: True if a message was "communicated", False otherwise.
-        :rtype: bool
+        :param u: The source node.
+        :type u: Node
+        :param v: The destination node.
+        :type v: Node
+        :return: A dictionary of messages in transit from node u to node v,
+                 with the message as the key and the delay as the value.
+        :rtype: Dict[Message, int]
         """
-        if len(self) == 0:
-            return True
+        if "in_transit_messages" not in self[u][v]:
+            self[u][v]["in_transit_messages"] = {}
+        return self[u][v]["in_transit_messages"]
 
-        message = self.get_some_message()
-        if message is None:
-            return False
+    def add_transit_message(self, u: "Node", v: "Node", message: "Message", delay: int):
+        """
+        Add a message to the in-transit messages from node u to node v.
 
-        logger.debug("Communicating message: {}", message)
+        :param u: The source node.
+        :type u: Node
+        :param v: The destination node.
+        :type v: Node
+        :param message: The message
+        :type message: Message
+        :param delay: The delay of the message
+        :type delay: int
+        """
 
-        if message.destination is None and message.nexthop is None:
-            # broadcast
-            self.broadcast(message)
-        elif message.nexthop is not None:
-            # Node routing
-            try:
-                self.deliver_to(message.nexthop, message)
-            except MessageUndeliverableException as e:
-                logger.warning("Routing Message Undeliverable: {}", e.message)
-        elif message.destination is not None:
-            # Destination is neighbor
-            if message.source in self.nodes() and message.destination in self.neighbors(
-                message.source
-            ):  # for DiGraph, `self.neighbors` are the out-neighbors
-                self.deliver_to(message.destination, message)
-            elif self.networkRouting:
-                # Network routing
-                # TODO: program network routing so it goes hop by hop only
-                #       in connected part of the network
-                self.deliver_to(message.destination, message)
-            else:
-                raise MessageUndeliverableException("Can't deliver message.", message)
-
-        return True
+        in_transit_messages = self.transit_messages(u, v)
+        in_transit_messages[message] = delay
 
     def communicate(self):
         """
@@ -458,27 +445,75 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         """
         logger.info("Communicating messages in the network.")
 
-        while self.communication_step():
-            ...
+        if len(self) == 0:
+            return
 
-    def broadcast(self, message: "Message"):
-        """
-        Broadcasts a message to all neighbors of the source node.
+        transmission_complete: list["Message"] = []
 
-        :param message: The message to be broadcasted.
-        :type message: Message
-        :raises PyDistSimMessageUndeliverable: If the source node is not in the network.
-        """
-        if message.source in self.nodes():
-            for neighbor in self.neighbors(message.source):
-                neighbors_message = message.copy()
-                neighbors_message.destination = neighbor
-                self.deliver_to(neighbor, neighbors_message)
-        else:
-            raise MessageUndeliverableException(
-                "Source not in network. Can't broadcast",
-                message,
-            )
+        # Process messages in outboxes
+        for node in self.nodes():
+            node: "Node"
+            for message in node.outbox.copy():
+                next_dest = message.nexthop or message.destination
+                node.outbox.remove(message)
+
+                if self.communication_properties.message_loss_indicator(self):
+                    logger.debug("Message lost: {}", message)
+                    continue
+
+                logger.debug("Message delayed: {}", message)
+                self.add_transit_message(
+                    node, next_dest, message, self.communication_properties.message_delay_indicator(self)
+                )
+                continue
+
+        # Process messages in transit
+        for u, v in self.edges():
+            messages_delay = self.transit_messages(u, v)
+            message_ordering = self.communication_properties.message_ordering
+
+            # Decrease delay for all messages
+            for message in messages_delay:
+                messages_delay[message] -= 1
+
+            if message_ordering:
+                # Sort messages by id only if message_ordering is enabled
+                messages = sorted(messages_delay.keys(), key=lambda x: x.id)
+            else:
+                # Sort only a little bit if message_ordering is disabled
+                messages = sort_by_sortedness(messages_delay.keys(), 0.75, key=lambda x: x.id)
+
+            for message in messages:
+                if messages_delay[message] > 0 and message_ordering:
+                    # When a delayed message is found, only process the rest if there is no message ordering.
+                    # This is to ensure that the messages are processed in order, even if a previous message is delayed.
+                    break
+                if messages_delay[message] <= 0:
+                    transmission_complete.append(message)
+                    messages_delay.pop(message)
+
+        for message in transmission_complete:
+            logger.debug("Communicating message: {}", message)
+
+            if message.nexthop is not None:
+                # Node routing
+                try:
+                    self.deliver_to(message.nexthop, message)
+                except MessageUndeliverableException as e:
+                    logger.warning("Routing Message Undeliverable: {}", e.message)
+            elif message.destination is not None:
+                # Destination is neighbor
+                if message.source in self.nodes() and message.destination in self.neighbors(
+                    message.source
+                ):  # for DiGraph, `self.neighbors` are the out-neighbors
+                    self.deliver_to(message.destination, message)
+                elif self.networkRouting:
+                    # Network routing
+                    # TODO: program network routing so it goes hop by hop only
+                    #       in connected part of the network
+                    self.deliver_to(message.destination, message)
+                else:
+                    raise MessageUndeliverableException("Can't deliver message.", message)
 
     def deliver_to(self, destination: "Node", message: "Message"):
         """

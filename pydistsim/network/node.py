@@ -85,8 +85,8 @@ class Node(ObserverManagerMixin):
 
         Clears the outbox, inbox, status, and memory of the node.
         """
-        self.outbox = []
-        self._inbox = []
+        self.outbox: list["Message"] = []
+        self._inbox: list["Message"] = []
         self._status = None
         self.memory = {}
 

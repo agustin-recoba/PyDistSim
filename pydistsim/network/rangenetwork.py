@@ -13,6 +13,7 @@ from pydistsim.network.network import AlgorithmsParam, BidirectionalNetwork, Net
 from pydistsim.utils.helpers import with_typehint
 
 if TYPE_CHECKING:
+    from pydistsim.network.communicationproperties import CommunicationPropertiesModel
     from pydistsim.network.node import Node
 
 
@@ -171,6 +172,7 @@ class RangeNetworkMixin(with_typehint(Network)):
         rangeType: RangeType | None = None,
         algorithms: "AlgorithmsParam" = (),
         networkRouting: bool = True,
+        communication_properties: Optional["CommunicationPropertiesModel"] = None,
         **kwargs,
     ):
         """
@@ -188,14 +190,18 @@ class RangeNetworkMixin(with_typehint(Network)):
         :type graph: NetworkX graph, optional
         :param kwargs: Additional keyword arguments.
         """
-        super().__init__(incoming_graph_data, environment, algorithms, networkRouting, **kwargs)
+        super().__init__(
+            incoming_graph_data, environment, algorithms, networkRouting, communication_properties, **kwargs
+        )
         self.rangeType = rangeType or RangeType(self._environment)
         self.rangeType.environment = self._environment
 
-    def to_directed_class(self):
+    @staticmethod
+    def to_directed_class():
         return RangeNetwork
 
-    def to_undirected_class(self):
+    @staticmethod
+    def to_undirected_class():
         return BidirectionalRangeNetwork
 
     def add_node(self, node=None, pos=None, ori=None, commRange=None):

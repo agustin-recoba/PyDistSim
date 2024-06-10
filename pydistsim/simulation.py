@@ -13,7 +13,7 @@ from pydistsim.observers import (
 )
 
 if TYPE_CHECKING:
-    from pydistsim.network import Network
+    from pydistsim.network import NetworkType
 
 
 class Simulation(ObserverManagerMixin, QThread):
@@ -22,12 +22,12 @@ class Simulation(ObserverManagerMixin, QThread):
     It is responsible for visualization and logging, also.
     """
 
-    def __init__(self, network: "Network", **kwargs):
+    def __init__(self, network: "NetworkType", **kwargs):
         """
         Initialize a Simulation object.
 
         :param network: The network object representing the simulation network.
-        :type network: Network
+        :type network: NetworkType
         :param logLevel: The log level for the simulation logger (default: LogLevels.DEBUG).
         :type logLevel: LogLevels
         :param kwargs: Additional keyword arguments.
@@ -137,12 +137,12 @@ class Simulation(ObserverManagerMixin, QThread):
         return self._network
 
     @network.setter
-    def network(self, network: "Network"):
+    def network(self, network: "NetworkType"):
         """
         Set the network for the simulation.
 
         :param network: The network object to set.
-        :type network: Network
+        :type network: NetworkType
 
         :return: None
         :rtype: None
