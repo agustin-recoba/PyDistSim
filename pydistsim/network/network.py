@@ -22,7 +22,7 @@ from pydistsim.conf import settings
 from pydistsim.logger import logger
 from pydistsim.network.communicationproperties import (
     CommunicationPropertiesModel,
-    UnorderedCommunication,
+    ExampleProperties,
 )
 from pydistsim.network.environment import Environment
 from pydistsim.network.exceptions import (
@@ -79,7 +79,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self.networkRouting = networkRouting
         self.simulation = None
-        self.communication_properties = communication_properties or UnorderedCommunication
+        self.communication_properties = communication_properties or ExampleProperties.UnorderedCommunication
         logger.info("Instance of Network has been initialized.")
 
     #### Overriding methods from Graph and DiGraph ####
@@ -481,14 +481,14 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
                 next_dest = message.nexthop or message.destination
                 node.outbox.remove(message)
 
-                if self.communication_properties.message_loss_indicator(self):
+                if self.communication_properties.message_loss_indicator(self, message):
                     logger.debug("Message lost: {}", message)
                     self.add_lost_message(node, next_dest, message)
                     continue
 
                 logger.debug("Message delayed: {}", message)
                 self.add_transit_message(
-                    node, next_dest, message, self.communication_properties.message_delay_indicator(self)
+                    node, next_dest, message, self.communication_properties.message_delay_indicator(self, message)
                 )
 
         # Process messages in transit

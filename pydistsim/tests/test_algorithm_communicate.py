@@ -6,11 +6,7 @@ from pydistsim.message import Message
 from pydistsim.network import NetworkGenerator
 from pydistsim.network.communicationproperties import (
     CommunicationPropertiesModel,
-    IdealCommunication,
-    LikelyRandomLossCommunication,
-    RandomDelayCommunication,
-    UnorderedCommunication,
-    UnorderedRandomDelayCommunication,
+    ExampleProperties,
     no_loss,
 )
 
@@ -60,7 +56,7 @@ def some_in_transit(source, dest, network):
     return len(network.transit_messages(source, dest)) > 0
 
 
-def delay_only_first_message(network):
+def delay_only_first_message(network, message):
     if hasattr(network, "first_message_sent") and network.first_message_sent:
         return 0
     network.first_message_sent = True
@@ -76,23 +72,23 @@ DelayOnlyFirstMessage = CommunicationPropertiesModel(
 
 class TestCommunicationProperties(unittest.TestCase):
     TESTS = {
-        LikelyRandomLossCommunication: (
+        ExampleProperties.LikelyRandomLossCommunication: (
             "LikelyRandomLossCommunication",
             [all_sent, only_some_received, assert_order, none_in_transit],
         ),
-        IdealCommunication: (
+        ExampleProperties.IdealCommunication: (
             "IdealCommunication",
             [all_sent, all_received, assert_order, none_in_transit],
         ),
-        UnorderedCommunication: (
+        ExampleProperties.UnorderedCommunication: (
             "UnorderedCommunication",
             [all_sent, all_received, assert_unordered, none_in_transit],
         ),
-        RandomDelayCommunication: (
+        ExampleProperties.RandomDelayCommunication: (
             "RandomDelayCommunication",
             [all_sent, assert_order, some_in_transit],
         ),
-        UnorderedRandomDelayCommunication: (
+        ExampleProperties.UnorderedRandomDelayCommunication: (
             "UnorderedRandomDelayCommunication",
             [all_sent, only_some_received, assert_unordered, some_in_transit],
         ),
