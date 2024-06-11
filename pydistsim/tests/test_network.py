@@ -84,12 +84,12 @@ class TestDirectedNetwork(unittest.TestCase):
 
     def test_nodes_sorted(self):
         """Test sorting of nodes."""
-        assert self.net.nodes_sorted() == (
+        assert self.net.nodes_sorted() == [
             self.node1,
             self.node2,
             self.node3,
             self.node4,
-        )
+        ]
 
     def test_remove_node(self):
         """Test node removal."""

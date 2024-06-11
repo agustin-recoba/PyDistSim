@@ -1,6 +1,6 @@
 from collections.abc import Callable, Iterable
 from itertools import product
-from random import choice, shuffle
+from random import choice, choices, shuffle
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from pydistsim.logger import logger
@@ -89,33 +89,3 @@ def measure_sortedness(sequence: Iterable[T], key: Callable[[T], Any] = None, re
             inverted_pairs.append(pair)
 
     return (sortedness / (len(sequence) * (len(sequence) - 1) / 2), inverted_pairs)
-
-
-def sort_by_sortedness(
-    sequence: Iterable[T], sortedness_threshold, key: Callable[[T], Any] = None, reverse: bool = False
-) -> list[T]:
-    """
-    Sort a sequence by sortedness. A higher value means the sequence is more sorted.
-
-    :param sequence: The sequence to sort by sortedness.
-    :type sequence: Iterable[T]
-    :param sortedness_threshold: The sortedness threshold to sort the sequence by.
-    :type sortedness_threshold: float
-    :param key: The key function to use to extract a comparison key from each element.
-    :type key: Callable[[T], Any]
-    :param reverse: Whether to sort the sequence in reverse order.
-    :type reverse: bool
-    :return: The sequence sorted by sortedness.
-    :rtype: list[T]
-    """
-
-    sequence = list(sequence)
-    shuffle(sequence)
-    measured_sortedness, inverted_pairs = measure_sortedness(sequence, key=key, reverse=reverse)
-    while measured_sortedness < sortedness_threshold:
-        logger.trace("Shuffling sequence to improve sortedness. Sortedness: %f", measured_sortedness)
-        i, j = choice(inverted_pairs)
-        sequence[i], sequence[j] = sequence[j], sequence[i]
-        measured_sortedness, inverted_pairs = measure_sortedness(sequence, key=key, reverse=reverse)
-
-    return sequence

@@ -1,7 +1,7 @@
 import inspect
-from collections.abc import Iterable
 from copy import deepcopy
-from typing import TYPE_CHECKING, Dict, Optional
+from random import choices
+from typing import TYPE_CHECKING
 
 from networkx import (
     DiGraph,
@@ -33,11 +33,7 @@ from pydistsim.network.exceptions import (
 from pydistsim.network.node import Node
 from pydistsim.observers import NodeObserver, ObserverManagerMixin
 from pydistsim.sensor import CompositeSensor
-from pydistsim.utils.helpers import (
-    pydistsim_equal_objects,
-    sort_by_sortedness,
-    with_typehint,
-)
+from pydistsim.utils.helpers import pydistsim_equal_objects, with_typehint
 
 if TYPE_CHECKING:
     from pydistsim.algorithm import BaseAlgorithm
@@ -357,16 +353,14 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
                 treeNet.remove_edge(u, v)
         return treeNet
 
-    def nodes_sorted(self):
+    def nodes_sorted(self) -> list["Node"]:
         """
-        Sort nodes by id, important for message ordering.
+        Returned sorted nodes by id.
 
-        :param data: A boolean value indicating whether to include node data in the sorted list.
-        :type data: bool
         :return: A sorted tuple of nodes.
-        :rtype: tuple
+        :rtype: list[Node]
         """
-        return tuple(sorted(self.nodes(), key=lambda k: k.id))
+        return sorted(self.nodes(), key=lambda k: k.id)
 
     def node_by_id(self, id_):
         """
@@ -431,6 +425,34 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         in_transit_messages = self.transit_messages(u, v)
         in_transit_messages[message] = delay
 
+    def get_lost_messages(self, u: "Node", v: "Node") -> list["Message"]:
+        """
+        Get lost messages from node u to node v.
+
+        :param u: The source node.
+        :type u: Node
+        :param v: The destination node.
+        :type v: Node
+        :return: A list of lost messages from node u to node v.
+        :rtype: list[Message]
+        """
+        if "lost_messages" not in self[u][v]:
+            self[u][v]["lost_messages"] = []
+        return self[u][v]["lost_messages"]
+
+    def add_lost_message(self, u: "Node", v: "Node", message: "Message"):
+        """
+        Add a message to the lost messages from node u to node v.
+
+        :param u: The source node.
+        :type u: Node
+        :param v: The destination node.
+        :type v: Node
+        :param message: The message
+        :type message: Message
+        """
+        self.get_lost_messages(u, v).append(message)
+
     def communicate(self):
         """
         Pass all messages from node's outboxes to its neighbors inboxes.
@@ -453,35 +475,46 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         # Process messages in outboxes
         for node in self.nodes():
             node: "Node"
-            for message in node.outbox.copy():
+
+            # reversed to process messages in the order they were added
+            for message in reversed(node.outbox.copy()):
                 next_dest = message.nexthop or message.destination
                 node.outbox.remove(message)
 
                 if self.communication_properties.message_loss_indicator(self):
                     logger.debug("Message lost: {}", message)
+                    self.add_lost_message(node, next_dest, message)
                     continue
 
                 logger.debug("Message delayed: {}", message)
                 self.add_transit_message(
                     node, next_dest, message, self.communication_properties.message_delay_indicator(self)
                 )
-                continue
 
         # Process messages in transit
         for u, v in self.edges():
             messages_delay = self.transit_messages(u, v)
+            if not messages_delay:
+                continue
+
             message_ordering = self.communication_properties.message_ordering
 
             # Decrease delay for all messages
             for message in messages_delay:
                 messages_delay[message] -= 1
 
-            if message_ordering:
-                # Sort messages by id only if message_ordering is enabled
+            # Sort messages by id
+            messages = sorted(messages_delay.keys(), key=lambda x: x.id)
+            if not message_ordering:
+                # Artificially create inversions in the message order
                 messages = sorted(messages_delay.keys(), key=lambda x: x.id)
-            else:
-                # Sort only a little bit if message_ordering is disabled
-                messages = sort_by_sortedness(messages_delay.keys(), 0.75, key=lambda x: x.id)
+                cant_inversions = len(messages) // 4
+                artificial_inversions = choices(
+                    [(i, j) for i in range(len(messages)) for j in range(len(messages)) if i < j], k=cant_inversions
+                )
+
+                for i, j in artificial_inversions:
+                    messages[i], messages[j] = messages[j], messages[i]
 
             for message in messages:
                 if messages_delay[message] > 0 and message_ordering:
