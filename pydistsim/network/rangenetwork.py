@@ -2,7 +2,8 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Optional
 
-from numpy import sqrt
+from numpy import sign, sqrt
+from numpy.core.numeric import allclose
 from numpy.random import random
 
 from pydistsim.conf import settings
@@ -12,6 +13,7 @@ from pydistsim.network.network import AlgorithmsParam, BidirectionalNetwork, Net
 from pydistsim.utils.helpers import with_typehint
 
 if TYPE_CHECKING:
+    from pydistsim.network.communicationproperties import CommunicationPropertiesModel
     from pydistsim.network.node import Node
 
 
@@ -170,6 +172,7 @@ class RangeNetworkMixin(with_typehint(Network)):
         rangeType: RangeType | None = None,
         algorithms: "AlgorithmsParam" = (),
         networkRouting: bool = True,
+        communication_properties: Optional["CommunicationPropertiesModel"] = None,
         **kwargs,
     ):
         """
@@ -187,14 +190,18 @@ class RangeNetworkMixin(with_typehint(Network)):
         :type graph: NetworkX graph, optional
         :param kwargs: Additional keyword arguments.
         """
-        super().__init__(incoming_graph_data, environment, algorithms, networkRouting, **kwargs)
+        super().__init__(
+            incoming_graph_data, environment, algorithms, networkRouting, communication_properties, **kwargs
+        )
         self.rangeType = rangeType or RangeType(self._environment)
         self.rangeType.environment = self._environment
 
-    def to_directed_class(self):
+    @staticmethod
+    def to_directed_class():
         return RangeNetwork
 
-    def to_undirected_class(self):
+    @staticmethod
+    def to_undirected_class():
         return BidirectionalRangeNetwork
 
     def add_node(self, node=None, pos=None, ori=None, commRange=None):
@@ -253,6 +260,53 @@ class RangeNetworkMixin(with_typehint(Network)):
             elif param == "comm_range":
                 for node in self:
                     assert node.commRange == value
+
+    def modify_avg_degree(self, value):
+        """
+        Modifies (increases) average degree based on the given value by
+        modifying nodes' commRange.
+
+        :param value: The desired average degree value.
+        :type value: float
+
+        :raises AssertionError: If all nodes do not have the same commRange.
+        :raises AssertionError: If the given value is not greater than the current average degree.
+
+        This method increases the average degree of the network by modifying the communication range
+        (`commRange`) of the nodes. It ensures that all nodes have the same communication range.
+
+        The method uses a step-wise approach to gradually increase the average degree until it reaches
+        the desired value. It adjusts the communication range of each node in the network by adding a
+        step size calculated based on the difference between the desired average degree and the current
+        average degree.
+
+        The step size is determined by the `step_factor` parameter, which controls the rate of change
+        in the communication range. If the step size overshoots or undershoots the desired average
+        degree, the `step_factor` is halved to reduce the step size for the next iteration.
+
+        Once the average degree reaches the desired value, the method logs the modified degree.
+
+        Note: This method assumes that the network is initially connected and all nodes have the same
+        communication range.
+
+        Example usage:
+            network.modify_avg_degree(5.0)
+        """
+        # assert all nodes have the same commRange
+        assert allclose([n.commRange for n in self], self.nodes_sorted()[0].commRange)
+        # TODO: implement decreasing of degree, preserve connected network
+        assert value + settings.DEG_ATOL > self.avg_degree()  # only increment
+        step_factor = 7.0
+        steps = [0]
+        # TODO: while condition should call validate
+        while not allclose(self.avg_degree(), value, atol=settings.DEG_ATOL):
+            steps.append((value - self.avg_degree()) * step_factor)
+            for node in self:
+                node.commRange += steps[-1]
+            # variable step_factor for step size for over/undershoot cases
+            if len(steps) > 2 and sign(steps[-2]) != sign(steps[-1]):
+                step_factor /= 2
+        logger.debug("Modified degree to {}", self.avg_degree())
 
 
 class RangeNetwork(RangeNetworkMixin, Network):

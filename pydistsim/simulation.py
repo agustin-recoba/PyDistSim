@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from PySide6.QtCore import SIGNAL, QThread
 
@@ -13,7 +13,7 @@ from pydistsim.observers import (
 )
 
 if TYPE_CHECKING:
-    from pydistsim.network import Network
+    from pydistsim.network import NetworkType
 
 
 class Simulation(ObserverManagerMixin, QThread):
@@ -22,12 +22,12 @@ class Simulation(ObserverManagerMixin, QThread):
     It is responsible for visualization and logging, also.
     """
 
-    def __init__(self, network: "Network", **kwargs):
+    def __init__(self, network: "NetworkType", **kwargs):
         """
         Initialize a Simulation object.
 
         :param network: The network object representing the simulation network.
-        :type network: Network
+        :type network: NetworkType
         :param logLevel: The log level for the simulation logger (default: LogLevels.DEBUG).
         :type logLevel: LogLevels
         :param kwargs: Additional keyword arguments.
@@ -58,8 +58,8 @@ class Simulation(ObserverManagerMixin, QThread):
         :return: None
         """
         self.stepsLeft = steps
-        for _ in range(len(self.network.algorithms) * len(self.network.nodes())):
-            algorithm: "BaseAlgorithm" = self.network.get_current_algorithm()
+        for _ in range(len(self.network.algorithms) * len(self.network)):
+            algorithm: Optional["BaseAlgorithm"] = self.network.get_current_algorithm()
             if not algorithm:
                 logger.info(
                     "Simulation has finished. There are no "
@@ -93,7 +93,7 @@ class Simulation(ObserverManagerMixin, QThread):
 
         :param algorithm: The algorithm to run on the network.
         """
-        for _ in range(1000 * len(self.network.nodes())):
+        for _ in range(1000 * len(self.network)):
             algorithm.step()
             self.stepsLeft -= 1
 
@@ -126,7 +126,7 @@ class Simulation(ObserverManagerMixin, QThread):
         :return: True if the algorithm is halted, False otherwise.
         :rtype: bool
         """
-        algorithm: "BaseAlgorithm" = self.network.get_current_algorithm()
+        algorithm: Optional["BaseAlgorithm"] = self.network.get_current_algorithm()
         return algorithm is None or algorithm.is_halted()
 
     @property
@@ -137,12 +137,12 @@ class Simulation(ObserverManagerMixin, QThread):
         return self._network
 
     @network.setter
-    def network(self, network: "Network"):
+    def network(self, network: "NetworkType"):
         """
         Set the network for the simulation.
 
         :param network: The network object to set.
-        :type network: Network
+        :type network: NetworkType
 
         :return: None
         :rtype: None

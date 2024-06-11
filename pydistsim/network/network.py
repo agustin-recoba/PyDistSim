@@ -1,7 +1,7 @@
 import inspect
-import random
 from copy import deepcopy
-from typing import TYPE_CHECKING, Optional
+from random import choices
+from typing import TYPE_CHECKING
 
 from networkx import (
     DiGraph,
@@ -12,7 +12,7 @@ from networkx import (
     is_connected,
     is_strongly_connected,
 )
-from numpy import array, max, min, pi, sign
+from numpy import array, max, min, pi
 from numpy.core.numeric import Inf, allclose
 from numpy.lib.function_base import average
 from numpy.random import rand
@@ -20,6 +20,10 @@ from numpy.random import rand
 from pydistsim.algorithm import BaseAlgorithm
 from pydistsim.conf import settings
 from pydistsim.logger import logger
+from pydistsim.network.communicationproperties import (
+    CommunicationPropertiesModel,
+    ExampleProperties,
+)
 from pydistsim.network.environment import Environment
 from pydistsim.network.exceptions import (
     MessageUndeliverableException,
@@ -42,7 +46,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
     """
     Mixin to extend Graph and DiGraph. The result represents a network in a distributed simulation.
 
-    The Network classes (:class:`.Network` and :class:`.BidirectionalNetwork`) extend the Graph class and provides additional functionality
+    The Network classes (:class:`Network` and :class:`BidirectionalNetwork`) extend the Graph class and provides additional functionality
     for managing nodes, algorithms, and network properties.
     """
 
@@ -52,6 +56,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         environment: Environment = None,
         algorithms: AlgorithmsParam = (),
         networkRouting: bool = True,
+        communication_properties: CommunicationPropertiesModel | None = None,
         **kwargs,
     ):
         """
@@ -74,124 +79,22 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self.networkRouting = networkRouting
         self.simulation = None
+        self.communication_properties = communication_properties or ExampleProperties.UnorderedCommunication
         logger.info("Instance of Network has been initialized.")
 
-    def to_directed_class(self):
+    #### Overriding methods from Graph and DiGraph ####
+
+    @staticmethod
+    def to_directed_class():
         return Network
 
-    def to_undirected_class(self):
+    @staticmethod
+    def to_undirected_class():
         return BidirectionalNetwork
 
     def copy(self, as_view=False):
         """Return a copy of the graph."""
         return deepcopy(self)
-
-    def is_connected(self):
-        if self.is_directed():
-            return is_strongly_connected(self)
-        return is_connected(self)
-
-    def subnetwork(self, nbunch, pos=None):
-        """
-        Returns a Network instance with the specified nodes.
-
-        :param nbunch: A list of nodes to include in the subnetwork.
-        :type nbunch: list
-        :param pos: Optional dictionary of node positions.
-        :type pos: dict, optional
-        :return: A Network instance representing the subnetwork.
-        :rtype: Network
-        """
-        if not pos:
-            pos = self.pos
-        H = self.copy()
-        for node in self.nodes():
-            node_H = H.node_by_id(node.id)
-            if node in nbunch:
-                # Copy node attributes
-                H.pos.update({node_H: pos[node][:2]})
-                if len(pos[node]) > 2:
-                    H.ori.update({node_H: pos[node][2]})
-                else:
-                    H.ori.update({node_H: deepcopy(self.ori[node])})
-                H.labels.update({node_H: deepcopy(self.labels[node])})
-                node_H.network = H
-            else:
-                H.remove_node(node_H)
-
-        # Copy network attributes and reinitialize algorithms
-        H.algorithms = deepcopy(self._algorithms_param) or settings.ALGORITHMS
-        H.algorithmState = {"index": 0, "step": 1, "finished": False}
-        H.simulation = None
-        H.clear_observers()
-
-        assert isinstance(H, NetworkMixin)
-        return H
-
-    def nodes_sorted(self):
-        """
-        Sort nodes by id, important for message ordering.
-
-        :param data: A boolean value indicating whether to include node data in the sorted list.
-        :type data: bool
-        :return: A sorted tuple of nodes.
-        :rtype: tuple
-        """
-        return tuple(sorted(self.nodes(), key=lambda k: k.id))
-
-    @property
-    def algorithms(self):
-        """
-        Set algorithms by passing tuple of Algorithm subclasses.
-
-        >>> net.algorithms = (Algorithm1, Algorithm2,)
-
-        For params pass tuples in form (Algorithm, params) like this
-
-        >>> net.algorithms = ((Algorithm1, {'param1': value,}), Algorithm2)
-
-        """
-        return self._algorithms
-
-    @algorithms.setter
-    def algorithms(self, algorithms: AlgorithmsParam):
-        self.reset()
-        self._algorithms = ()
-        if not isinstance(algorithms, tuple):
-            raise NetworkException(NetworkErrorMsg.ALGORITHM)
-        for algorithm in algorithms:
-            if inspect.isclass(algorithm) and issubclass(algorithm, BaseAlgorithm):
-                self._algorithms += (algorithm(self),)
-            elif (
-                isinstance(algorithm, tuple)
-                and len(algorithm) == 2
-                and issubclass(algorithm[0], BaseAlgorithm)
-                and isinstance(algorithm[1], dict)
-            ):
-                self._algorithms += (algorithm[0](self, **algorithm[1]),)
-            else:
-                raise NetworkException(NetworkErrorMsg.ALGORITHM)
-
-        # If everything went ok, set algorithms param for coping
-        self._algorithms_param = algorithms
-
-    @property
-    def environment(self):
-        return self._environment
-
-    def _set_environment(self, environment: Environment):
-        """
-        Setter for environment. Override this method if default
-        behavior is not enough.
-
-        :param environment: The new environment for the network.
-        :type environment: Environment
-        """
-        self._environment = environment
-
-    @environment.setter
-    def environment(self, environment: Environment):
-        self._set_environment(environment)
 
     def remove_node(self, node, skip_check=False):
         """
@@ -256,6 +159,62 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         self._copy_observers_to_nodes(node)
         return node
 
+    #### Network attribute management ####
+
+    @property
+    def algorithms(self):
+        """
+        Set algorithms by passing tuple of Algorithm subclasses.
+
+        >>> net.algorithms = (Algorithm1, Algorithm2,)
+
+        For params pass tuples in form (Algorithm, params) like this
+
+        >>> net.algorithms = ((Algorithm1, {'param1': value,}), Algorithm2)
+
+        """
+        return self._algorithms
+
+    @algorithms.setter
+    def algorithms(self, algorithms: AlgorithmsParam):
+        self.reset()
+        self._algorithms = ()
+        if not isinstance(algorithms, tuple):
+            raise NetworkException(NetworkErrorMsg.ALGORITHM)
+        for algorithm in algorithms:
+            if inspect.isclass(algorithm) and issubclass(algorithm, BaseAlgorithm):
+                self._algorithms += (algorithm(self),)
+            elif (
+                isinstance(algorithm, tuple)
+                and len(algorithm) == 2
+                and issubclass(algorithm[0], BaseAlgorithm)
+                and isinstance(algorithm[1], dict)
+            ):
+                self._algorithms += (algorithm[0](self, **algorithm[1]),)
+            else:
+                raise NetworkException(NetworkErrorMsg.ALGORITHM)
+
+        # If everything went ok, set algorithms param for coping
+        self._algorithms_param = algorithms
+
+    @property
+    def environment(self):
+        return self._environment
+
+    def _set_environment(self, environment: Environment):
+        """
+        Setter for environment. Override this method if default
+        behavior is not enough.
+
+        :param environment: The new environment for the network.
+        :type environment: Environment
+        """
+        self._environment = environment
+
+    @environment.setter
+    def environment(self, environment: Environment):
+        self._set_environment(environment)
+
     def add_observers(self, *observers):
         super().add_observers(*observers)
         self._copy_observers_to_nodes()
@@ -273,6 +232,135 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         super().clear_observers()
         for node in self.nodes():
             node.clear_observers()
+
+    def reset(self):
+        """
+        Reset the network to its initial state.
+
+        Does not reset the observers of the network nor the observers of the nodes.
+        """
+        logger.info("Resetting network.")
+        self.algorithmState = {"index": 0, "step": 1, "finished": False}
+        self.reset_all_nodes()
+
+    def reset_all_nodes(self):
+        """
+        Reset all nodes in the network.
+
+        :return: None
+        """
+        logger.info("Resetting all nodes.")
+        for node in self.nodes():
+            node: "Node"
+            node.reset()
+
+    #### Network methods ####
+
+    def is_connected(self):
+        if self.is_directed():
+            return is_strongly_connected(self)
+        return is_connected(self)
+
+    def subnetwork(self, nbunch, pos=None):
+        """
+        Returns a Network instance with the specified nodes.
+
+        :param nbunch: A list of nodes to include in the subnetwork.
+        :type nbunch: list
+        :param pos: Optional dictionary of node positions.
+        :type pos: dict, optional
+        :return: A Network instance representing the subnetwork.
+        :rtype: Network
+        """
+        if not pos:
+            pos = self.pos
+        H = self.copy()
+        for node in self.nodes():
+            node_H = H.node_by_id(node.id)
+            if node in nbunch:
+                # Copy node attributes
+                H.pos.update({node_H: pos[node][:2]})
+                if len(pos[node]) > 2:
+                    H.ori.update({node_H: pos[node][2]})
+                else:
+                    H.ori.update({node_H: deepcopy(self.ori[node])})
+                H.labels.update({node_H: deepcopy(self.labels[node])})
+                node_H.network = H
+            else:
+                H.remove_node(node_H)
+
+        # Copy network attributes and reinitialize algorithms
+        H.algorithms = deepcopy(self._algorithms_param) or settings.ALGORITHMS
+        H.algorithmState = {"index": 0, "step": 1, "finished": False}
+        H.simulation = None
+        H.clear_observers()
+
+        assert isinstance(H, NetworkMixin)
+        return H
+
+    def get_tree_net(self, treeKey, downstream_only=False):
+        """
+        Returns a new network with edges that are not in a tree removed.
+
+        :param treeKey: The key in the nodes' memory that defines the tree. It can be a list of tree neighbors or a dictionary with 'parent' (node) and 'children' (list) keys.
+        :type treeKey: str
+        :param downstream_only: A flag indicating whether to include only downstream edges in the tree. Defaults to False. Downstream edges are edges from parent to children.
+        :type downstream_only: bool
+
+        :return: A new network object with only the edges that are part of the tree. If downstream_only is True, the network is directed.
+        :rtype: NetworkMixin
+
+        The tree is defined in the nodes' memory under the specified treeKey. The method iterates over all nodes in the network and checks if the treeKey is present in their memory. If it is, it retrieves the tree neighbors or children and adds the corresponding edges to the tree_edges_ids list. It also adds the tree nodes to the tree_nodes list.
+
+        After iterating over all nodes, a subnetwork is created using the tree_nodes. Then, the method removes any edges from the subnetwork that are not present in the tree_edges_ids list.
+
+        Finally, the resulting subnetwork, representing the tree, is returned.
+
+        """
+        tree_edges_ids = []
+        tree_nodes = []
+        for node in self.nodes():
+            print(f"{node.memory=}")
+            neighbors_in_tree = []
+            if treeKey not in node.memory:
+                continue
+            if isinstance(node.memory[treeKey], list):
+                if downstream_only:
+                    raise NetworkException(NetworkErrorMsg.LIST_TREE_DOWNSTREAM_ONLY)
+                neighbors_in_tree = node.memory[treeKey]
+            elif isinstance(node.memory[treeKey], dict) and "children" in node.memory[treeKey]:
+                neighbors_in_tree += node.memory[treeKey]["children"]
+                if (
+                    not downstream_only
+                    and "parent" in node.memory[treeKey]
+                    and node.memory[treeKey]["parent"] is not None
+                ):
+                    neighbors_in_tree.append(node.memory[treeKey]["parent"])
+
+            tree_edges_ids.extend(
+                [(node.id, neighbor.id) for neighbor in neighbors_in_tree if neighbor in self.neighbors(node)]
+            )
+            tree_nodes.extend(neighbor for neighbor in neighbors_in_tree if neighbor in self.neighbors(node))
+            if neighbors_in_tree:
+                print(f"{node}, {tree_edges_ids=}")
+                tree_nodes.append(node)
+
+        treeNet = self.subnetwork(tree_nodes)
+        if downstream_only:
+            treeNet = treeNet.to_directed()
+        for u, v in tuple(treeNet.edges()):
+            if (u.id, v.id) not in tree_edges_ids:
+                treeNet.remove_edge(u, v)
+        return treeNet
+
+    def nodes_sorted(self) -> list["Node"]:
+        """
+        Returned sorted nodes by id.
+
+        :return: A sorted tuple of nodes.
+        :rtype: list[Node]
+        """
+        return sorted(self.nodes(), key=lambda k: k.id)
 
     def node_by_id(self, id_):
         """
@@ -302,52 +390,181 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         degree_iter = self.out_degree() if self.is_directed() else self.degree()
         return average(tuple(map(lambda x: x[1], tuple(degree_iter))))
 
-    def modify_avg_degree(self, value):
+    #### Node communication methods ####
+
+    def transit_messages(self, u: "Node", v: "Node") -> dict["Message", int]:
         """
-        Modifies (increases) average degree based on the given value by
-        modifying nodes' commRange.
+        Get messages in transit from node u to node v.
 
-        :param value: The desired average degree value.
-        :type value: float
-
-        :raises AssertionError: If all nodes do not have the same commRange.
-        :raises AssertionError: If the given value is not greater than the current average degree.
-
-        This method increases the average degree of the network by modifying the communication range
-        (`commRange`) of the nodes. It ensures that all nodes have the same communication range.
-
-        The method uses a step-wise approach to gradually increase the average degree until it reaches
-        the desired value. It adjusts the communication range of each node in the network by adding a
-        step size calculated based on the difference between the desired average degree and the current
-        average degree.
-
-        The step size is determined by the `step_factor` parameter, which controls the rate of change
-        in the communication range. If the step size overshoots or undershoots the desired average
-        degree, the `step_factor` is halved to reduce the step size for the next iteration.
-
-        Once the average degree reaches the desired value, the method logs the modified degree.
-
-        Note: This method assumes that the network is initially connected and all nodes have the same
-        communication range.
-
-        Example usage:
-            network.modify_avg_degree(5.0)
+        :param u: The source node.
+        :type u: Node
+        :param v: The destination node.
+        :type v: Node
+        :return: A dictionary of messages in transit from node u to node v,
+                 with the message as the key and the delay as the value.
+        :rtype: Dict[Message, int]
         """
-        # assert all nodes have the same commRange
-        assert allclose([n.commRange for n in self], self.nodes_sorted()[0].commRange)
-        # TODO: implement decreasing of degree, preserve connected network
-        assert value + settings.DEG_ATOL > self.avg_degree()  # only increment
-        step_factor = 7.0
-        steps = [0]
-        # TODO: while condition should call validate
-        while not allclose(self.avg_degree(), value, atol=settings.DEG_ATOL):
-            steps.append((value - self.avg_degree()) * step_factor)
-            for node in self:
-                node.commRange += steps[-1]
-            # variable step_factor for step size for over/undershoot cases
-            if len(steps) > 2 and sign(steps[-2]) != sign(steps[-1]):
-                step_factor /= 2
-        logger.debug("Modified degree to {}", self.avg_degree())
+        if "in_transit_messages" not in self[u][v]:
+            self[u][v]["in_transit_messages"] = {}
+        return self[u][v]["in_transit_messages"]
+
+    def add_transit_message(self, u: "Node", v: "Node", message: "Message", delay: int):
+        """
+        Add a message to the in-transit messages from node u to node v.
+
+        :param u: The source node.
+        :type u: Node
+        :param v: The destination node.
+        :type v: Node
+        :param message: The message
+        :type message: Message
+        :param delay: The delay of the message
+        :type delay: int
+        """
+
+        in_transit_messages = self.transit_messages(u, v)
+        in_transit_messages[message] = delay
+
+    def get_lost_messages(self, u: "Node", v: "Node") -> list["Message"]:
+        """
+        Get lost messages from node u to node v.
+
+        :param u: The source node.
+        :type u: Node
+        :param v: The destination node.
+        :type v: Node
+        :return: A list of lost messages from node u to node v.
+        :rtype: list[Message]
+        """
+        if "lost_messages" not in self[u][v]:
+            self[u][v]["lost_messages"] = []
+        return self[u][v]["lost_messages"]
+
+    def add_lost_message(self, u: "Node", v: "Node", message: "Message"):
+        """
+        Add a message to the lost messages from node u to node v.
+
+        :param u: The source node.
+        :type u: Node
+        :param v: The destination node.
+        :type v: Node
+        :param message: The message
+        :type message: Message
+        """
+        self.get_lost_messages(u, v).append(message)
+
+    def communicate(self):
+        """
+        Pass all messages from node's outboxes to its neighbors inboxes.
+
+        This method collects messages from each node's outbox and delivers them to the appropriate destination.
+        If the message is a broadcast, it is sent to all neighbors.
+        If the message has a specific next hop, it is sent directly to that node.
+        If the message has a specific destination, it is sent to that neighbor if it is reachable.
+        If network routing is enabled, the message is sent to the destination using network routing.
+
+        :return: None
+        """
+        logger.info("Communicating messages in the network.")
+
+        if len(self) == 0:
+            return
+
+        transmission_complete: list["Message"] = []
+
+        # Process messages in outboxes
+        for node in self.nodes():
+            node: "Node"
+
+            # reversed to process messages in the order they were added
+            for message in reversed(node.outbox.copy()):
+                next_dest = message.nexthop or message.destination
+                node.outbox.remove(message)
+
+                if self.communication_properties.message_loss_indicator(self, message):
+                    logger.debug("Message lost: {}", message)
+                    self.add_lost_message(node, next_dest, message)
+                    continue
+
+                logger.debug("Message delayed: {}", message)
+                self.add_transit_message(
+                    node, next_dest, message, self.communication_properties.message_delay_indicator(self, message)
+                )
+
+        # Process messages in transit
+        for u, v in self.edges():
+            messages_delay = self.transit_messages(u, v)
+            if not messages_delay:
+                continue
+
+            message_ordering = self.communication_properties.message_ordering
+
+            # Decrease delay for all messages
+            for message in messages_delay:
+                messages_delay[message] -= 1
+
+            # Sort messages by id
+            messages = sorted(messages_delay.keys(), key=lambda x: x.id)
+            if not message_ordering:
+                # Artificially create inversions in the message order
+                messages = sorted(messages_delay.keys(), key=lambda x: x.id)
+                cant_inversions = len(messages) // 4
+                artificial_inversions = choices(
+                    [(i, j) for i in range(len(messages)) for j in range(len(messages)) if i < j], k=cant_inversions
+                )
+
+                for i, j in artificial_inversions:
+                    messages[i], messages[j] = messages[j], messages[i]
+
+            for message in messages:
+                if messages_delay[message] > 0 and message_ordering:
+                    # When a delayed message is found, only process the rest if there is no message ordering.
+                    # This is to ensure that the messages are processed in order, even if a previous message is delayed.
+                    break
+                if messages_delay[message] <= 0:
+                    transmission_complete.append(message)
+                    messages_delay.pop(message)
+
+        for message in transmission_complete:
+            logger.debug("Communicating message: {}", message)
+
+            if message.nexthop is not None:
+                # Node routing
+                try:
+                    self.deliver_to(message.nexthop, message)
+                except MessageUndeliverableException as e:
+                    logger.warning("Routing Message Undeliverable: {}", e.message)
+            elif message.destination is not None:
+                # Destination is neighbor
+                if message.source in self.nodes() and message.destination in self.neighbors(
+                    message.source
+                ):  # for DiGraph, `self.neighbors` are the out-neighbors
+                    self.deliver_to(message.destination, message)
+                elif self.networkRouting:
+                    # Network routing
+                    # TODO: program network routing so it goes hop by hop only
+                    #       in connected part of the network
+                    self.deliver_to(message.destination, message)
+                else:
+                    raise MessageUndeliverableException("Can't deliver message.", message)
+
+    def deliver_to(self, destination: "Node", message: "Message"):
+        """
+        Deliver a message to a destination node in the network.
+
+        :param destination: The destination node to send the message to.
+        :type destination: Node
+        :param message: The message to be sent.
+        :type message: Message
+        :raises PyDistSimMessageUndeliverable: If the destination is not in the network.
+        """
+        logger.debug("Sending message from {} to {}.", message.source, destination)
+        if destination in self.nodes():
+            destination.push_to_inbox(message)
+        else:
+            raise MessageUndeliverableException("Destination not in network.", message)
+
+    #### Algorithm relation methods ####
 
     def get_current_algorithm(self):
         """
@@ -372,15 +589,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         return self.algorithms[self.algorithmState["index"]]
 
-    def reset(self):
-        """
-        Reset the network to its initial state.
-
-        Does not reset the observers of the network nor the observers of the nodes.
-        """
-        logger.info("Resetting network.")
-        self.algorithmState = {"index": 0, "step": 1, "finished": False}
-        self.reset_all_nodes()
+    #### Visualization methods ####
 
     def show(self, *args, **kwargs):
         fig = self.get_fig(*args, **kwargs)
@@ -460,125 +669,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         # plt.axis('off')
         return fig
 
-    def reset_all_nodes(self):
-        """
-        Reset all nodes in the network.
-
-        :return: None
-        """
-        logger.info("Resetting all nodes.")
-        for node in self.nodes():
-            node: "Node"
-            node.reset()
-
-    def get_some_message(self) -> Optional["Message"]:
-        nodes_with_messages = [node for node in self.nodes() if len(node.outbox) > 0]
-
-        if len(nodes_with_messages) == 0:  # No nodes with messages in outbox.
-            logger.debug("There are no nodes with messages in outbox.")
-            return None
-
-        node: "Node" = random.choice(nodes_with_messages)
-        message = random.choice(node.outbox)
-        # TODO: implement OPTIONAL message ordering
-
-        node.outbox.remove(message)
-
-        return message
-
-    def communication_step(self):
-        """
-        Perform one step of communication in the network.
-
-        :return: True if a message was "communicated", False otherwise.
-        :rtype: bool
-        """
-        if len(self) == 0:
-            return True
-
-        message = self.get_some_message()
-        if message is None:
-            return False
-
-        logger.debug("Communicating message: {}", message)
-
-        if message.destination is None and message.nexthop is None:
-            # broadcast
-            self.broadcast(message)
-        elif message.nexthop is not None:
-            # Node routing
-            try:
-                self.deliver_to(message.nexthop, message)
-            except MessageUndeliverableException as e:
-                logger.warning("Routing Message Undeliverable: {}", e.message)
-        elif message.destination is not None:
-            # Destination is neighbor
-            if message.source in self.nodes() and message.destination in self.neighbors(
-                message.source
-            ):  # for DiGraph, `self.neighbors` are the out-neighbors
-                self.deliver_to(message.destination, message)
-            elif self.networkRouting:
-                # Network routing
-                # TODO: program network routing so it goes hop by hop only
-                #       in connected part of the network
-                self.deliver_to(message.destination, message)
-            else:
-                raise MessageUndeliverableException("Can't deliver message.", message)
-
-        return True
-
-    def communicate(self):
-        """
-        Pass all messages from node's outboxes to its neighbors inboxes.
-
-        This method collects messages from each node's outbox and delivers them to the appropriate destination.
-        If the message is a broadcast, it is sent to all neighbors.
-        If the message has a specific next hop, it is sent directly to that node.
-        If the message has a specific destination, it is sent to that neighbor if it is reachable.
-        If network routing is enabled, the message is sent to the destination using network routing.
-
-        :return: None
-        """
-        logger.info("Communicating messages in the network.")
-
-        while self.communication_step():
-            ...
-
-    def broadcast(self, message: "Message"):
-        """
-        Broadcasts a message to all neighbors of the source node.
-
-        :param message: The message to be broadcasted.
-        :type message: Message
-        :raises PyDistSimMessageUndeliverable: If the source node is not in the network.
-        """
-        if message.source in self.nodes():
-            for neighbor in self.neighbors(message.source):
-                neighbors_message = message.copy()
-                neighbors_message.destination = neighbor
-                self.deliver_to(neighbor, neighbors_message)
-        else:
-            raise MessageUndeliverableException(
-                "Source not in network. Can't broadcast",
-                message,
-            )
-
-    def deliver_to(self, destination: "Node", message: "Message"):
-        """
-        Deliver a message to a destination node in the network.
-
-        :param destination: The destination node to send the message to.
-        :type destination: Node
-        :param message: The message to be sent.
-        :type message: Message
-        :raises PyDistSimMessageUndeliverable: If the destination is not in the network.
-        """
-        logger.debug("Sending message from {} to {}.", message.source, destination)
-        if destination in self.nodes():
-            destination.push_to_inbox(message)
-        else:
-            raise MessageUndeliverableException("Destination not in network.", message)
-
     def get_size(self):
         """Returns network width and height based on nodes positions."""
         return max(list(self.pos.values()), axis=0) - min(list(self.pos.values()), axis=0)
@@ -612,60 +702,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
             },
         }
 
-    def get_tree_net(self, treeKey, downstream_only=False):
-        """
-        Returns a new network with edges that are not in a tree removed.
-
-        :param treeKey: The key in the nodes' memory that defines the tree. It can be a list of tree neighbors or a dictionary with 'parent' (node) and 'children' (list) keys.
-        :type treeKey: str
-        :param downstream_only: A flag indicating whether to include only downstream edges in the tree. Defaults to False. Downstream edges are edges from parent to children.
-        :type downstream_only: bool
-
-        :return: A new network object with only the edges that are part of the tree. If downstream_only is True, the network is directed.
-        :rtype: NetworkMixin
-
-        The tree is defined in the nodes' memory under the specified treeKey. The method iterates over all nodes in the network and checks if the treeKey is present in their memory. If it is, it retrieves the tree neighbors or children and adds the corresponding edges to the tree_edges_ids list. It also adds the tree nodes to the tree_nodes list.
-
-        After iterating over all nodes, a subnetwork is created using the tree_nodes. Then, the method removes any edges from the subnetwork that are not present in the tree_edges_ids list.
-
-        Finally, the resulting subnetwork, representing the tree, is returned.
-
-        """
-        tree_edges_ids = []
-        tree_nodes = []
-        for node in self.nodes():
-            print(f"{node.memory=}")
-            neighbors_in_tree = []
-            if treeKey not in node.memory:
-                continue
-            if isinstance(node.memory[treeKey], list):
-                if downstream_only:
-                    raise NetworkException(NetworkErrorMsg.LIST_TREE_DOWNSTREAM_ONLY)
-                neighbors_in_tree = node.memory[treeKey]
-            elif isinstance(node.memory[treeKey], dict) and "children" in node.memory[treeKey]:
-                neighbors_in_tree += node.memory[treeKey]["children"]
-                if (
-                    not downstream_only
-                    and "parent" in node.memory[treeKey]
-                    and node.memory[treeKey]["parent"] is not None
-                ):
-                    neighbors_in_tree.append(node.memory[treeKey]["parent"])
-
-            tree_edges_ids.extend(
-                [(node.id, neighbor.id) for neighbor in neighbors_in_tree if neighbor in self.neighbors(node)]
-            )
-            tree_nodes.extend(neighbor for neighbor in neighbors_in_tree if neighbor in self.neighbors(node))
-            if neighbors_in_tree:
-                print(f"{node}, {tree_edges_ids=}")
-                tree_nodes.append(node)
-
-        treeNet = self.subnetwork(tree_nodes)
-        if downstream_only:
-            treeNet = treeNet.to_directed()
-        for u, v in tuple(treeNet.edges()):
-            if (u.id, v.id) not in tree_edges_ids:
-                treeNet.remove_edge(u, v)
-        return treeNet
+    #### Test helper methods ####
 
     def validate_params(self, params: dict):
         """

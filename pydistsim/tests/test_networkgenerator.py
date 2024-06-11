@@ -6,7 +6,7 @@ from numpy.core.numeric import Inf
 from pydistsim.demo_algorithms.readsensors import ReadSensors
 from pydistsim.network import NetworkGenerator, NetworkGeneratorException, UdgRangeType
 from pydistsim.network.environment import Environment2D
-from pydistsim.network.network import NetworkMixin
+from pydistsim.network.network import NetworkType
 from pydistsim.sensor import NeighborsSensor
 from pydistsim.utils.testing import PyDistSimTestCase
 
@@ -283,7 +283,7 @@ class TestNetworkGeneration(PyDistSimTestCase):
                         self.assertEqual(None, net_gen.generate_random_network(max_steps=500))
                     elif isinstance(output, dict):
                         net = net_gen.generate_random_network(max_steps=2000)
-                        assert isinstance(net, NetworkMixin)
+                        assert isinstance(net, NetworkType)
                         assert directed == net.is_directed()
                         net.validate_params(output)
 
