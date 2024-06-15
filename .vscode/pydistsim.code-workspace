@@ -8,6 +8,7 @@
     "editor.rulers": [120],
     "black-formatter.args": ["--config=./pyproject.toml"],
     "python.testing.pytestArgs": ["pydistsim"],
+    "python.experiments.optInto": ["pythonTestAdapter"],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
     "python.analysis.typeCheckingMode": "off",
