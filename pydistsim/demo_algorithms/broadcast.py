@@ -2,7 +2,9 @@ from typing import TYPE_CHECKING
 
 from pydistsim.algorithm import NodeAlgorithm, StatusValues
 from pydistsim.message import Message
-from pydistsim.restrictions import Restrictions
+from pydistsim.restrictions.comunication import BidirectionalLinks
+from pydistsim.restrictions.reliability import TotalReliability
+from pydistsim.restrictions.topological import Connectivity, UniqueInitiator
 
 if TYPE_CHECKING:
     from pydistsim.network import Node
@@ -21,10 +23,10 @@ class Flood(NodeAlgorithm):
     S_term = [Status.DONE]
 
     restrictions = [
-        Restrictions.BidirectionalLinks,
-        Restrictions.TotalReliability,
-        Restrictions.Connectivity,
-        Restrictions.UniqueInitiator,
+        BidirectionalLinks,
+        TotalReliability,
+        Connectivity,
+        UniqueInitiator,
     ]
 
     def initializer(self):

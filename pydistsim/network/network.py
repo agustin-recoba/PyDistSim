@@ -390,6 +390,16 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         degree_iter = self.out_degree() if self.is_directed() else self.degree()
         return average(tuple(map(lambda x: x[1], tuple(degree_iter))))
 
+    def out_neighbors(self, node: "Node") -> set["Node"]:
+        if self.is_directed():
+            return set(self.successors(node))
+        return set(self.neighbors(node))
+
+    def in_neighbors(self, node: "Node") -> set["Node"]:
+        if self.is_directed():
+            return set(self.predecessors(node))
+        return set(self.neighbors(node))
+
     #### Node communication methods ####
 
     def transit_messages(self, u: "Node", v: "Node") -> dict["Message", int]:
