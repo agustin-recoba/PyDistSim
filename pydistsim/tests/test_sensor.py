@@ -3,15 +3,10 @@ import unittest
 import scipy.stats
 
 from pydistsim.network import Network, Node
-from pydistsim.sensor import DistSensor, NeighborsSensor
+from pydistsim.sensor import DistSensor, SensorError
 
 
 class TestSensor(unittest.TestCase):
-
-    def test_node_without_network(self):
-        """Test if node without network raises exception on read sensor."""
-        node = Node()
-        self.assertRaises(Exception, node.compositeSensor.read)
 
     def test_read(self):
         """Test read compositeSensor"""
@@ -21,14 +16,17 @@ class TestSensor(unittest.TestCase):
 
     def test_set_compositeSensor(self):
         """Test setting compositeSensors on a node"""
+        node = Node()
+        dist_sensor = DistSensor({"pf": scipy.stats.norm, "scale": 10})
+        node.compositeSensor = ("AoASensor", dist_sensor)
+        self.assertRaises(SensorError, node.compositeSensor.read)
+
         net = Network()
         node = net.add_node()
         dist_sensor = DistSensor({"pf": scipy.stats.norm, "scale": 10})
-        node.compositeSensor = (NeighborsSensor, "AoASensor", dist_sensor)
-        self.assertTrue(len(node.compositeSensor.sensors) == 3)
+        node.compositeSensor = ("AoASensor", dist_sensor)
+        self.assertTrue(len(node.compositeSensor.sensors) == 2)
         readings = node.compositeSensor.read()
-        self.assertTrue(
-            "Neighbors" in list(readings.keys()) and "AoA" in list(readings.keys()) and "Dist" in list(readings.keys())
-        )
+        self.assertTrue("AoA" in list(readings.keys()) and "Dist" in list(readings.keys()))
 
         # TODO: check normal distribution

@@ -27,7 +27,6 @@ Knowledge sensors
 .. autosummary::
    :toctree: generated/
 
-   NeighborsSensor
    TruePosSensor
 
 ****************

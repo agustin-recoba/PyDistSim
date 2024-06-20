@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 
 class Flood(NodeAlgorithm):
     required_params = ("informationKey",)
-    default_params = {"neighborsKey": "Neighbors"}
 
     class Status(StatusValues):
         INITIATOR = "INITIATOR"
@@ -32,7 +31,6 @@ class Flood(NodeAlgorithm):
     def initializer(self):
         ini_nodes: list["Node"] = []
         for node in self.network.nodes():
-            node.memory[self.neighborsKey] = node.compositeSensor.read()["Neighbors"]
             node.status = self.Status.IDLE
             if self.informationKey in node.memory:
                 node.status = self.Status.INITIATOR
@@ -47,7 +45,7 @@ class Flood(NodeAlgorithm):
             Message(
                 header="Information",
                 data=node.memory[self.informationKey],
-                destination=list(node.memory[self.neighborsKey]),
+                destination=list(node.neighbors()),
             ),
         )
         node.status = self.Status.DONE
@@ -56,7 +54,7 @@ class Flood(NodeAlgorithm):
     def receiving(self, node, message):
         if message.header == "Information":
             node.memory[self.informationKey] = message.data
-            destination_nodes = list(node.memory[self.neighborsKey])
+            destination_nodes = list(node.neighbors())
             # send to every neighbor, except the original sender
             destination_nodes.remove(message.source)
             if destination_nodes:

@@ -16,7 +16,6 @@ class Message:
         self,
         source=None,
         destination=None,
-        nexthop=None,
         header="",
         meta_header=MetaHeader.NORMAL_MESSAGE,
         data=None,
@@ -29,8 +28,6 @@ class Message:
         :type source: Any
         :param destination: The destination of the message.
         :type destination: Any
-        :param nexthop: The next hop for the message.
-        :type nexthop: Any
         :param header: The header of the message.
         :type header: str
         :param meta_header: The meta header of the message.
@@ -42,7 +39,6 @@ class Message:
         """
         self.source = source
         self.destination = destination
-        self.nexthop = nexthop
         self.header = header
         self.data = data or dict()
         self.meta_header = meta_header

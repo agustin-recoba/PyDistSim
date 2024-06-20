@@ -46,7 +46,6 @@ class YoYo(NodeAlgorithm):
             node.memory[self.inNeighborsKey] = []
             node.memory[self.outNeighborsKey] = []
 
-            node.memory[self.neighborsKey] = node.compositeSensor.read()["Neighbors"]
             node.status = self.Status.INITIATOR
 
             node.memory[self.RECEIVED_IDS_KEY] = {}
@@ -356,11 +355,11 @@ class YoYo(NodeAlgorithm):
     def spontaneously(self, node, message):
         # Special case. Only one node in graph
         # If node has no neighbors set its status to LEADER
-        if not node.memory[self.neighborsKey]:
+        if not node.neighbors():
             node.status = self.Status.LEADER
             return
 
-        self.send(node, Message(header="init_id", data=node.id, destination=node.memory[self.neighborsKey]))
+        self.send(node, Message(header="init_id", data=node.id, destination=node.neighbors()))
 
         node.status = self.Status.IDLE
 
@@ -376,7 +375,7 @@ class YoYo(NodeAlgorithm):
             num_of_out_neighbors = len(node.memory[self.outNeighborsKey])
 
             if num_of_in_neighbors + num_of_out_neighbors >= len(
-                node.memory[self.neighborsKey]
+                node.neighbors()
             ):  # if all neighbors have sent their ids
                 self.change_status(node)
 

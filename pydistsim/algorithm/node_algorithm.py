@@ -1,8 +1,9 @@
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import StrEnum
+from functools import cached_property
 from types import MethodType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pydistsim.algorithm.base_algorithm import BaseAlgorithm
 from pydistsim.logger import logger
@@ -20,7 +21,7 @@ class Alarm:
 
     time_left: int
     message: Message
-    node: "Node"
+    node: "NodeProxy"
     triggered: bool = False
 
 
@@ -150,7 +151,7 @@ class NodeAlgorithm(BaseAlgorithm):
         for node in self.network.nodes_sorted():
             node.status = self.Status.IDLE
 
-    def send(self, source_node: "Node", message: Message):
+    def send(self, node_w: "NodeProxy", message: Message):
         """
         Send a message to nodes listed in message's destination field.
 
@@ -162,15 +163,18 @@ class NodeAlgorithm(BaseAlgorithm):
         :param message: The message to be sent.
         :type message: Message
         """
+        source_node: Node = node_w.unbox()  # unwrap the proxy
+
         message.source = source_node
         if not isinstance(message.destination, Iterable):
             message.destination = [message.destination]
-        for destination in message.destination:
+        for destination_w in message.destination:
+            destination: Node = destination_w.unbox()  # unwrap the proxy
             source_node.push_to_outbox(message.copy(), destination)
 
     ### Alarm methods ###
 
-    def set_alarm(self, node: "Node", time: int, message: Message | None = None):
+    def set_alarm(self, node_p: "NodeProxy", time: int, message: Message | None = None):
         """
         Set an alarm for the node.
         One unit of time is one step of the algorithm.
@@ -179,8 +183,8 @@ class NodeAlgorithm(BaseAlgorithm):
 
         Returns the alarm that was set, useful for disabling it later.
 
-        :param node: The node for which the alarm is set.
-        :type node: Node
+        :param node_p: The node for which the alarm is set.
+        :type node: NodeProxy
         :param time: The time after which the alarm will trigger.
         :type time: int
         :param message: The message to be sent when the alarm triggers.
@@ -193,25 +197,25 @@ class NodeAlgorithm(BaseAlgorithm):
         if message is None:
             message = Message()
         message.meta_header = MessageMetaHeader.ALARM_MESSAGE
-        message.destination = node
+        message.destination = node_p.unbox()
 
-        alarm = Alarm(time, message, node)
+        alarm = Alarm(time, message, node_p)
         self.alarms.append(alarm)
         return alarm
 
-    def disable_all_node_alarms(self, node: "Node"):
+    def disable_all_node_alarms(self, node_p: "NodeProxy"):
         """
         Disable all alarms set for the node.
 
         :param node: The node for which the alarms are disabled.
-        :type node: Node
+        :type node: NodeProxy
         """
-        to_delete_messages = [alarm.message for alarm in self.alarms if alarm.node == node]
-        self.alarms = [alarm for alarm in self.alarms if alarm.node != node]
+        to_delete_messages = [alarm.message for alarm in self.alarms if alarm.node == node_p]
+        self.alarms = [alarm for alarm in self.alarms if alarm.node != node_p]
 
-        for message in node.inbox.copy():
-            if message in to_delete_messages and message in node.inbox:
-                node.inbox.remove(message)
+        for message in node_p.unbox().inbox.copy():
+            if message in to_delete_messages and message in node_p.inbox:
+                node_p.inbox.remove(message)
 
     def disable_alarm(self, alarm: Alarm):
         """
@@ -222,8 +226,8 @@ class NodeAlgorithm(BaseAlgorithm):
         """
         if alarm in self.alarms:
             self.alarms.remove(alarm)
-        elif alarm.message in alarm.node.inbox:
-            alarm.node.inbox.remove(alarm.message)
+        elif alarm.message in alarm.node.unbox().inbox:
+            alarm.node.unbox().inbox.remove(alarm.message)
 
     def update_alarm_time(self, alarm: Alarm, time_diff: int):
         """
@@ -237,8 +241,8 @@ class NodeAlgorithm(BaseAlgorithm):
         """
         if alarm in self.alarms:
             alarm.time_left += time_diff
-        elif alarm.message in alarm.node.inbox:
-            alarm.node.inbox.remove(alarm.message)
+        elif alarm.message in alarm.node.unbox().inbox:
+            alarm.node.unbox().inbox.remove(alarm.message)
             alarm.time_left += time_diff
             alarm.triggered = False
             self.alarms.append(alarm)
@@ -256,16 +260,6 @@ class NodeAlgorithm(BaseAlgorithm):
             if message.destination is None or message.destination == node:
                 # when destination is None it is broadcast message
                 self._process_message(node, message)
-            elif message.nexthop == node.id:
-                self._forward_message(node, message)
-
-    def _forward_message(self, node: "Node", message: Message):
-        try:
-            message.nexthop = node.memory["routing"][message.destination]
-        except KeyError:
-            logger.warning("Missing routing table or destination node not in it.")
-        else:
-            self.send(node, message)
 
     def _process_alarms(self):
         for alarm in self.alarms.copy():
@@ -274,7 +268,7 @@ class NodeAlgorithm(BaseAlgorithm):
             if alarm.time_left <= 0:
                 self.alarms.remove(alarm)
                 alarm.triggered = True
-                alarm.node.push_to_inbox(alarm.message)
+                alarm.node.unbox().push_to_inbox(alarm.message)
 
     def _process_message(self, node: "Node", message: Message):
         logger.debug("Processing message: 0x%x" % id(message))
@@ -282,17 +276,23 @@ class NodeAlgorithm(BaseAlgorithm):
         return self._process_action(method_name, node, message)
 
     def _process_action(self, action: Actions, node: "Node", message: Message):
-        status: StatusValues = getattr(self.Status, node.status.value)
+        status: StatusValues = getattr(self.Status, node.status)
+
+        node_proxy = NodeProxy(node)  # TODO: set offuscation here
+        if message.source is not None:
+            message.source = node_proxy.get_in_neighbor_proxy(message.source)
+        if message.destination is not None:
+            message.destination = node_proxy
 
         method_name = f"{action}_{status}"
         default_name = f"{Actions.default}_{status}"
 
         if hasattr(self, method_name):
             method = getattr(self, method_name)
-            return method(node, message)
+            return method(node_proxy, message)
         elif hasattr(self, default_name):
             method = getattr(self, default_name)
-            return method(node, message)
+            return method(node_proxy, message)
 
         logger.error(f"Method {self.name}.{action} not implemented for status {node.status}.")
 
@@ -326,7 +326,7 @@ class NodeAlgorithm(BaseAlgorithm):
 
             # Create a method for invocations like `self.default(node, message)`
             # CAUTION: the resolution of the method is deferred to the instance, super() will not work
-            def __unresolved_action_method__(alg_instance: "NodeAlgorithm", node: "Node", message: Message):
+            def __unresolved_action_method__(alg_instance: "NodeAlgorithm", node: "_NodeWrapper", message: Message):
                 alg_instance._process_action(action, node, message)
 
             dct[action] = __unresolved_action_method__
@@ -336,3 +336,113 @@ class NodeAlgorithm(BaseAlgorithm):
                     # Create a method for invocations like `self.default_IDLE(node, message)`
                     # As the method is created in the class, super() will work.
                     dct[f"{action}_{status}"] = status.get_method(action)
+
+
+class _NodeWrapper:
+    __slots__ = ("node", "configs")
+    accesible_get = ()
+    accesible_set = ()
+
+    def __init__(self, node: "Node", **configs):
+        self.node = node
+        self.configs = configs
+
+    def __getattr__(self, item):
+        if item in self.configs:
+            return self.configs[item]
+        elif item in self.accesible_get or item in self.accesible_set:
+            return getattr(self.node, item)
+        raise AttributeError(f"{self.__class__.__name__} object has no attribute {item}")
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name in self.accesible_set:
+            setattr(self.node, name, value)
+        else:
+            super().__setattr__(name, value)
+
+    def __repr__(self):
+        return repr(self.node)
+
+    def __str__(self):
+        return str(self.node)
+
+    def __eq__(self, other):
+        return self.node == other.node
+
+    def __hash__(self):
+        return hash(self.node)
+
+    def __deepcopy__(self, memo):
+        return self
+
+    def __copy__(self):
+        return self
+
+    def unbox(self) -> "Node":
+        return self.node
+
+
+class NodeProxy(_NodeWrapper):
+    accesible_get = (
+        "id",
+        "status",
+        "memory",
+        "sensors",
+        "compositeSensor",
+    )
+
+    accesible_set = (
+        "status",
+        "memory",
+    )
+
+    __wrapped_nodes__ = {}
+
+    def __new__(cls, node: "Node", **configs):
+        "A NodeProxy wrapper is created only once for each node and subclass of NodeProxy."
+
+        if (cls, node) in cls.__wrapped_nodes__:
+            return cls.__wrapped_nodes__[(cls, node)]
+        cls.__wrapped_nodes__[(cls, node)] = super().__new__(cls)
+        return cls.__wrapped_nodes__[(cls, node)]
+
+    def out_neighbors(self) -> set["NeighborAccess"]:
+        """
+        Get the out-neighbors of the node.
+
+        :return: The out-neighbors of the node.
+        :rtype: set[NeighborAccess]
+        """
+
+        return set(self.__out_neighbors_dict.values())
+
+    neighbors = out_neighbors
+    "Alias for out_neighbors."
+
+    @cached_property
+    def __out_neighbors_dict(self) -> dict["Node", "NeighborAccess"]:
+        return {node: NeighborAccess(node, id=i) for i, node in enumerate(self.node.network.out_neighbors(self.node))}
+
+    @cached_property
+    def __in_neighbors_dict(self) -> dict["Node", "NeighborAccess"]:
+        return {node: NeighborAccess(node, id=i) for i, node in enumerate(self.node.network.in_neighbors(self.node))}
+
+    def in_neighbors(self) -> set["NeighborAccess"]:
+        """
+        Get the in-neighbors of the node.
+
+        :return: The in-neighbors of the node.
+        :rtype: set[NeighborAccess]
+        """
+
+        return set(self.__in_neighbors_dict.values())
+
+    def get_out_neighbor_proxy(self, node: "Node") -> "NeighborAccess":
+        return self.__out_neighbors_dict[node]
+
+    def get_in_neighbor_proxy(self, node: "Node") -> "NeighborAccess":
+        return self.__in_neighbors_dict[node]
+
+
+class NeighborAccess(_NodeWrapper):
+    accesible_get = ("id",)

@@ -7,7 +7,6 @@ from pydistsim.demo_algorithms.readsensors import ReadSensors
 from pydistsim.network import NetworkGenerator, NetworkGeneratorException, UdgRangeType
 from pydistsim.network.environment import Environment2D
 from pydistsim.network.network import NetworkType
-from pydistsim.sensor import NeighborsSensor
 from pydistsim.utils.testing import PyDistSimTestCase
 
 
@@ -20,7 +19,6 @@ class TestNetworkGeneration(PyDistSimTestCase):
         env = Environment2D(shape=(600, 600))
         rangeType = UdgRangeType(env)
         algorithms = (ReadSensors,)
-        sensors = (NeighborsSensor,)
         self.in_out = [
             (
                 "default N_COUNT and COMM_RANGE and ENVIRONMENT should be compatible",
@@ -256,14 +254,12 @@ class TestNetworkGeneration(PyDistSimTestCase):
                     "rangeType": rangeType,
                     "algorithms": algorithms,
                     "commRange": 100,
-                    "sensors": sensors,
                 },
                 {
                     "count": 10,
                     "rangeType": rangeType,
                     "algorithms": algorithms,
                     "commRange": 100,
-                    "sensors": sensors,
                 },
             ),
         ]

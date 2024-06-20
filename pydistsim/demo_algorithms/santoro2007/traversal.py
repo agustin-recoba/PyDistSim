@@ -4,7 +4,7 @@ from pydistsim.message import Message
 
 class DFT(NodeAlgorithm):
     required_params = ()
-    default_params = {"neighborsKey": "Neighbors", "visitedAction": lambda node: None}
+    default_params = {"visitedAction": lambda node: None}
 
     class Status(StatusValues):
         INITIATOR = "INITIATOR"
@@ -14,7 +14,6 @@ class DFT(NodeAlgorithm):
 
     def initializer(self):
         for node in self.network.nodes():
-            node.memory[self.neighborsKey] = node.compositeSensor.read()["Neighbors"]
             node.status = self.Status.IDLE
         ini_node = self.network.nodes_sorted()[0]
         ini_node.status = self.Status.INITIATOR
@@ -23,7 +22,7 @@ class DFT(NodeAlgorithm):
     @Status.INITIATOR
     def spontaneously(self, node, message):
         node.memory["parent"] = None
-        node.memory["unvisited"] = list(node.memory[self.neighborsKey])
+        node.memory["unvisited"] = list(node.neighbors())
         self.visitedAction(node)
         self.visit(node)
 
@@ -35,7 +34,7 @@ class DFT(NodeAlgorithm):
     def receiving(self, node, message):
         if message.header == "Token":
             node.memory["parent"] = message.source
-            node.memory["unvisited"] = list(node.memory[self.neighborsKey])
+            node.memory["unvisited"] = list(node.neighbors())
             node.memory["unvisited"].remove(node.memory["parent"])
             self.visitedAction(node)
             self.visit(node)
@@ -80,7 +79,6 @@ class DFStar(NodeAlgorithm):
 
     def initializer(self):
         for node in self.network.nodes():
-            node.memory[self.neighborsKey] = node.compositeSensor.read()["Neighbors"]
             node.status = self.Status.IDLE
         ini_node = self.network.nodes_sorted()[0]
         ini_node.status = self.Status.INITIATOR
@@ -89,7 +87,7 @@ class DFStar(NodeAlgorithm):
     @Status.INITIATOR
     def spontaneously(self, node, message):
         node.memory["initiator"] = True
-        node.memory["unvisited"] = list(node.memory[self.neighborsKey])
+        node.memory["unvisited"] = list(node.neighbors())
         node.memory["next"] = node.memory["unvisited"].pop()
         if len(node.memory["unvisited"]) > 0:
             self.send(
@@ -108,11 +106,11 @@ class DFStar(NodeAlgorithm):
     @Status.IDLE
     def receiving(self, node, message):
         if message.header == "T":
-            node.memory["unvisited"] = list(node.memory[self.neighborsKey])
+            node.memory["unvisited"] = list(node.neighbors())
             self.first_visit(node, message)
 
         if message.header == "Visited":
-            node.memory["unvisited"] = list(node.memory[self.neighborsKey])
+            node.memory["unvisited"] = list(node.neighbors())
             node.memory["unvisited"].remove(message.source)
             node.status = self.Status.AVAILABLE
 
@@ -167,7 +165,7 @@ class DFStar(NodeAlgorithm):
                 node,
                 Message(
                     header="Visited",
-                    destination=set(node.memory[self.neighborsKey]) - {node.memory["entry"], node.memory["next"]},
+                    destination=set(node.neighbors()) - {node.memory["entry"], node.memory["next"]},
                 ),
             )
             node.status = self.Status.VISITED
@@ -177,7 +175,7 @@ class DFStar(NodeAlgorithm):
                 node,
                 Message(
                     header="Visited",
-                    destination=set(node.memory[self.neighborsKey]) - {node.memory["entry"]},
+                    destination=set(node.neighbors()) - {node.memory["entry"]},
                 ),
             )
             node.status = self.Status.DONE
