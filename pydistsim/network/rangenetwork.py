@@ -171,7 +171,6 @@ class RangeNetworkMixin(with_typehint(Network)):
         environment: Optional["Environment"] = None,
         rangeType: RangeType | None = None,
         algorithms: "AlgorithmsParam" = (),
-        networkRouting: bool = True,
         communication_properties: Optional["CommunicationPropertiesModel"] = None,
         **kwargs,
     ):
@@ -184,15 +183,11 @@ class RangeNetworkMixin(with_typehint(Network)):
         :type rangeType: RangeType, optional
         :param algorithms: The algorithms to be executed on the network. If not provided, the default algorithms defined in settings.ALGORITHMS will be used.
         :type algorithms: AlgorithmsParam, optional
-        :param networkRouting: Flag indicating whether network routing is enabled. Defaults to True.
-        :type networkRouting: bool, optional
         :param graph: The graph representing the network topology. Defaults to None.
         :type graph: NetworkX graph, optional
         :param kwargs: Additional keyword arguments.
         """
-        super().__init__(
-            incoming_graph_data, environment, algorithms, networkRouting, communication_properties, **kwargs
-        )
+        super().__init__(incoming_graph_data, environment, algorithms, communication_properties, **kwargs)
         self.rangeType = rangeType or RangeType(self._environment)
         self.rangeType.environment = self._environment
 

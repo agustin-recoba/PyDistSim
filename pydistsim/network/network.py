@@ -55,7 +55,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         incoming_graph_data=None,  # Correct subclassing of Graph
         environment: Environment = None,
         algorithms: AlgorithmsParam = (),
-        networkRouting: bool = True,
         communication_properties: CommunicationPropertiesModel | None = None,
         **kwargs,
     ):
@@ -64,8 +63,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         :type environment: Environment, optional
         :param algorithms: The algorithms to be executed on the network. If not provided, the default algorithms defined in settings.ALGORITHMS will be used.
         :type algorithms: AlgorithmsParam, optional
-        :param networkRouting: Flag indicating whether network routing is enabled. Defaults to True.
-        :type networkRouting: bool, optional
         :param graph: The graph representing the network topology. Defaults to None.
         :type graph: NetworkX graph, optional
         :param kwargs: Additional keyword arguments.
@@ -77,7 +74,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         self.labels = {}
         self.algorithms = algorithms or settings.ALGORITHMS
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
-        self.networkRouting = networkRouting
         self.simulation = None
         self.communication_properties = communication_properties or ExampleProperties.UnorderedCommunication
         logger.info("Instance of Network has been initialized.")
@@ -471,7 +467,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         If the message is a broadcast, it is sent to all neighbors.
         If the message has a specific next hop, it is sent directly to that node.
         If the message has a specific destination, it is sent to that neighbor if it is reachable.
-        If network routing is enabled, the message is sent to the destination using network routing.
 
         :return: None
         """
@@ -488,7 +483,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
             # reversed to process messages in the order they were added
             for message in reversed(node.outbox.copy()):
-                next_dest = message.nexthop or message.destination
+                next_dest = message.destination
                 node.outbox.remove(message)
 
                 if self.communication_properties.message_loss_indicator(self, message):
@@ -496,7 +491,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
                     self.add_lost_message(node, next_dest, message)
                     continue
 
-                logger.debug("Message delayed: {}", message)
                 self.add_transit_message(
                     node, next_dest, message, self.communication_properties.message_delay_indicator(self, message)
                 )
@@ -538,22 +532,11 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         for message in transmission_complete:
             logger.debug("Communicating message: {}", message)
 
-            if message.nexthop is not None:
-                # Node routing
-                try:
-                    self.deliver_to(message.nexthop, message)
-                except MessageUndeliverableException as e:
-                    logger.warning("Routing Message Undeliverable: {}", e.message)
-            elif message.destination is not None:
+            if message.destination is not None:
                 # Destination is neighbor
                 if message.source in self.nodes() and message.destination in self.neighbors(
                     message.source
                 ):  # for DiGraph, `self.neighbors` are the out-neighbors
-                    self.deliver_to(message.destination, message)
-                elif self.networkRouting:
-                    # Network routing
-                    # TODO: program network routing so it goes hop by hop only
-                    #       in connected part of the network
                     self.deliver_to(message.destination, message)
                 else:
                     raise MessageUndeliverableException("Can't deliver message.", message)

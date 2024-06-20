@@ -73,8 +73,6 @@ class TestDirectedNetwork(unittest.TestCase):
             for (algo1, algo2) in zip(subnetwork.algorithms, self.net.algorithms)
         )  # compare algorithm network
 
-        assert subnetwork.networkRouting == self.net.networkRouting
-
         for node in [self.node1, self.node2]:
             node_in_subnetwork = subnetwork.node_by_id(node.id)
             assert all(subnetwork.pos[node_in_subnetwork] == self.net.pos[node])
