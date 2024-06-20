@@ -1,7 +1,6 @@
 import unittest
 from inspect import isclass
-
-from numpy.core.numeric import Inf
+from math import inf as Inf
 
 from pydistsim.demo_algorithms.readsensors import ReadSensors
 from pydistsim.network import NetworkGenerator, NetworkGeneratorException, UdgRangeType

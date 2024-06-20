@@ -2,8 +2,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Optional
 
-from numpy import sign, sqrt
-from numpy.core.numeric import allclose
+from numpy import allclose, sign, sqrt
 from numpy.random import random
 
 from pydistsim.conf import settings

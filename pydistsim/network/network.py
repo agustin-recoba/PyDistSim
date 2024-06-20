@@ -1,5 +1,6 @@
 import inspect
 from copy import deepcopy
+from math import inf as Inf
 from random import choices
 from typing import TYPE_CHECKING
 
@@ -12,9 +13,7 @@ from networkx import (
     is_connected,
     is_strongly_connected,
 )
-from numpy import array, max, min, pi
-from numpy.core.numeric import Inf, allclose
-from numpy.lib.function_base import average
+from numpy import allclose, array, average, max, min, pi
 from numpy.random import rand
 
 from pydistsim.algorithm import BaseAlgorithm
