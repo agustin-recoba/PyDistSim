@@ -46,5 +46,4 @@ class BidirectionalLinks(ReciprocalCommunication):
 
     @classmethod
     def check(cls, network: "NetworkType"):
-        # TODO: create edge labeling system to ofuscate neighbor knowledge
-        raise NotImplementedError
+        return not network.is_directed()
