@@ -8,7 +8,7 @@ from pydistsim.algorithm import (
     NodeAlgorithm,
     StatusValues,
 )
-from pydistsim.algorithm.node_algorithm import NodeProxy
+from pydistsim.algorithm.node_algorithm import NodeAccess
 from pydistsim.message import Message
 from pydistsim.network import NetworkException, NetworkGenerator
 from pydistsim.simulation import Simulation
@@ -213,9 +213,9 @@ class TimerAlgorithm(NodeAlgorithm):
     def initializer(self):
         for node in self.network.nodes():
             node.status = self.Status.IDLE
-            self.set_alarm(NodeProxy(node), 3, Message(data=f"ALARM{node.id}"))
-            self.set_alarm(NodeProxy(node), 6, Message(data=f"ALARM{node.id}"))
-            node.memory["LAST_ALARM"] = self.set_alarm(NodeProxy(node), 9, Message(data=f"ALARM{node.id}"))
+            self.set_alarm(NodeAccess(node), 3, Message(data=f"ALARM{node.id}"))
+            self.set_alarm(NodeAccess(node), 6, Message(data=f"ALARM{node.id}"))
+            node.memory["LAST_ALARM"] = self.set_alarm(NodeAccess(node), 9, Message(data=f"ALARM{node.id}"))
 
     @Status.IDLE
     def alarm(self, node, message):
@@ -230,9 +230,9 @@ class TimerDefaultMessage(TimerAlgorithm):
     def initializer(self):
         for node in self.network.nodes():
             node.status = self.Status.IDLE
-            self.set_alarm(NodeProxy(node), 3)
-            self.set_alarm(NodeProxy(node), 6)
-            node.memory["LAST_ALARM"] = self.set_alarm(NodeProxy(node), 9)
+            self.set_alarm(NodeAccess(node), 3)
+            self.set_alarm(NodeAccess(node), 6)
+            node.memory["LAST_ALARM"] = self.set_alarm(NodeAccess(node), 9)
 
 
 class TimerDefaultMessageDecreasedTime(TimerAlgorithm):
@@ -253,9 +253,9 @@ class TimerDefaultMessageDecreasedTime(TimerAlgorithm):
     def initializer(self):
         for node in self.network.nodes():
             node.status = self.Status.IDLE
-            node.memory["FIRST_ALARM"] = self.set_alarm(NodeProxy(node), 4)
-            node.memory["SECOND_ALARM"] = self.set_alarm(NodeProxy(node), 6)
-            node.memory["LAST_ALARM"] = self.set_alarm(NodeProxy(node), 9)
+            node.memory["FIRST_ALARM"] = self.set_alarm(NodeAccess(node), 4)
+            node.memory["SECOND_ALARM"] = self.set_alarm(NodeAccess(node), 6)
+            node.memory["LAST_ALARM"] = self.set_alarm(NodeAccess(node), 9)
             node.push_to_inbox(Message(meta_header=NodeAlgorithm.INI))
 
 

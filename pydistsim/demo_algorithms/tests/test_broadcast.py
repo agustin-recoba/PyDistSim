@@ -22,6 +22,10 @@ class TestBroadcastSimple(PyDistSimTestCase):
 
     def test_broadcast(self):
         sim = Simulation(self.net)
+        first_algo = sim.network._algorithms[0]
+        last_algo = sim.network._algorithms[-1]
+
+        first_algo.check_restrictions()
 
         for node in self.net.nodes():
             if node == self.initiator:
@@ -29,7 +33,13 @@ class TestBroadcastSimple(PyDistSimTestCase):
             else:
                 assert "greet" not in node.memory
 
+        sim.run(1)
+
+        first_algo.check_algorithm_initialization()
+
         sim.run(100_000)
+
+        last_algo.check_algorithm_termination()
 
         for node in self.net.nodes():
             self.assertEqual(node.memory["greet"], HELLO)
@@ -56,6 +66,10 @@ class TestBroadcastConcatenated(PyDistSimTestCase):
 
     def test_broadcast(self):
         sim = Simulation(self.net)
+        first_algo = sim.network._algorithms[0]
+        last_algo = sim.network._algorithms[-1]
+
+        first_algo.check_restrictions()
 
         for node in self.net.nodes():
             with self.subTest(node=node):
@@ -69,7 +83,13 @@ class TestBroadcastConcatenated(PyDistSimTestCase):
                     assert "greet" not in node.memory
                     assert "bye" not in node.memory
 
+        sim.run(1)
+
+        first_algo.check_algorithm_initialization()
+
         sim.run(100_000)
+
+        last_algo.check_algorithm_termination()
 
         for node in self.net.nodes():
             with self.subTest(node=node):

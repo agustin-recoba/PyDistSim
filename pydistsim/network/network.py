@@ -485,13 +485,13 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
                 next_dest = message.destination
                 node.outbox.remove(message)
 
-                if self.communication_properties.message_loss_indicator(self, message):
+                if self.communication_properties.should_lose(self, message):
                     logger.debug("Message lost: {}", message)
                     self.add_lost_message(node, next_dest, message)
                     continue
 
                 self.add_transit_message(
-                    node, next_dest, message, self.communication_properties.message_delay_indicator(self, message)
+                    node, next_dest, message, self.communication_properties.get_delay(self, message)
                 )
 
         # Process messages in transit
@@ -558,7 +558,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
     #### Algorithm relation methods ####
 
-    def get_current_algorithm(self):
+    def get_current_algorithm(self) -> BaseAlgorithm | None:
         """
         Try to return the current algorithm based on the algorithmState.
 

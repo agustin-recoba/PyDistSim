@@ -1,15 +1,16 @@
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 from functools import cached_property
-from types import MethodType
+from types import NoneType
 from typing import TYPE_CHECKING, Any
 
-from pydistsim.algorithm.base_algorithm import BaseAlgorithm
+from pydistsim.algorithm.base_algorithm import AlgorithmException, BaseAlgorithm
 from pydistsim.logger import logger
 from pydistsim.message import Message
 from pydistsim.message import MetaHeader as MessageMetaHeader
 from pydistsim.observers import ObservableEvents
+from pydistsim.restrictions.axioms import FiniteCommunicationDelays, LocalOrientation
 
 if TYPE_CHECKING:
     from pydistsim.network import Node
@@ -17,11 +18,13 @@ if TYPE_CHECKING:
 
 @dataclass
 class Alarm:
-    "Dataclass that represents an alarm set for a node."
+    """
+    Dataclass that represents an alarm set for a node.
+    """
 
     time_left: int
     message: Message
-    node: "NodeProxy"
+    node: "NodeAccess"
     triggered: bool = False
 
 
@@ -43,14 +46,26 @@ MSG_META_HEADER_MAP = {
 }
 
 
+ActionMethod = Callable[["NodeAlgorithm", "NodeAccess", Message], NoneType]
+
+
 class StatusValues(StrEnum):
     """
     Enum that defines the possible statuses of the nodes.
 
-    Instances of this class should be used as decorators for methods in subclasses of NodeAlgorithm.
+    Instances of this class should be used as decorators for methods in subclasses of :class:`NodeAlgorithm`.
     """
 
-    def __call__(self, func: MethodType):
+    def __call__(self, func: ActionMethod):
+        """
+        Decorator that sets the method for the action and status.
+
+        :param func: The method to be set.
+        :type func: ActionMethod
+        :return: The method that was set.
+        :rtype: ActionMethod
+        """
+
         assert (
             func.__name__ in Actions.__members__
         ), f"Invalid function name '{func.__name__}', please make sure it is one of {list(Actions.__members__)}."
@@ -65,7 +80,7 @@ class StatusValues(StrEnum):
     def get_method(self, action: Actions):
         return getattr(self, str(action))
 
-    def set_method(self, method: MethodType):
+    def set_method(self, method: ActionMethod):
         setattr(self, method.__name__, method)
 
 
@@ -87,6 +102,17 @@ class NodeAlgorithm(BaseAlgorithm):
     class Status(StatusValues):
         "Example of StatusValues subclass that defines the possible statuses of the nodes."
         IDLE = "IDLE"
+
+    algorithm_restrictions = (
+        FiniteCommunicationDelays,
+        LocalOrientation,
+    )
+
+    S_init = ()
+    "Tuple of statuses that nodes should have at the beginning of the algorithm."
+
+    S_term = ()
+    "Tuple of statuses that nodes should have at the end of the algorithm."
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -151,7 +177,7 @@ class NodeAlgorithm(BaseAlgorithm):
         for node in self.network.nodes_sorted():
             node.status = self.Status.IDLE
 
-    def send(self, node_w: "NodeProxy", message: Message):
+    def send(self, node_w: "NodeAccess", message: Message):
         """
         Send a message to nodes listed in message's destination field.
 
@@ -163,18 +189,18 @@ class NodeAlgorithm(BaseAlgorithm):
         :param message: The message to be sent.
         :type message: Message
         """
-        source_node: Node = node_w.unbox()  # unwrap the proxy
+        source_node: "Node" = node_w.unbox()  # unwrap the proxy
 
         message.source = source_node
         if not isinstance(message.destination, Iterable):
             message.destination = [message.destination]
         for destination_w in message.destination:
-            destination: Node = destination_w.unbox()  # unwrap the proxy
+            destination: "Node" = destination_w.unbox()  # unwrap the proxy
             source_node.push_to_outbox(message.copy(), destination)
 
     ### Alarm methods ###
 
-    def set_alarm(self, node_p: "NodeProxy", time: int, message: Message | None = None):
+    def set_alarm(self, node_p: "NodeAccess", time: int, message: Message | None = None):
         """
         Set an alarm for the node.
         One unit of time is one step of the algorithm.
@@ -203,7 +229,7 @@ class NodeAlgorithm(BaseAlgorithm):
         self.alarms.append(alarm)
         return alarm
 
-    def disable_all_node_alarms(self, node_p: "NodeProxy"):
+    def disable_all_node_alarms(self, node_p: "NodeAccess"):
         """
         Disable all alarms set for the node.
 
@@ -249,6 +275,32 @@ class NodeAlgorithm(BaseAlgorithm):
         else:
             raise ValueError("Alarm not found.")
 
+    ### Methods for algorithm evaluation ###
+
+    def check_algorithm_initialization(self):
+        """
+        Check if the algorithm's current state matches the expected initial state.
+
+        This method depends on the correct configuration of the :attr:`S_init` class attribute of the algorithm.
+        """
+        for node in self.network.nodes():
+            if node.status not in self.S_init:
+                raise AlgorithmException(
+                    f"Node status not initialized as expected. Found {node.status} instead of any of {self.S_init}."
+                )
+
+    def check_algorithm_termination(self):
+        """
+        Check if the algorithm's current state matches the expected termination state.
+
+        This method depends on the correct configuration of the :attr:`S_term` class attribute of the algorithm.
+        """
+        for node in self.network.nodes():
+            if node.status not in self.S_term:
+                raise AlgorithmException(
+                    f"Node status not terminated as expected. Found {node.status} instead of any of {self.S_term}."
+                )
+
     ### Private methods for algorithm execution ###
 
     def _node_step(self, node: "Node"):
@@ -278,9 +330,9 @@ class NodeAlgorithm(BaseAlgorithm):
     def _process_action(self, action: Actions, node: "Node", message: Message):
         status: StatusValues = getattr(self.Status, node.status)
 
-        node_proxy = NodeProxy(node)  # TODO: set offuscation here
+        node_proxy = NodeAccess(node)  # TODO: set offuscation here
         if message.source is not None:
-            message.source = node_proxy.get_in_neighbor_proxy(message.source)
+            message.source = node_proxy._get_in_neighbor_proxy(message.source)
         if message.destination is not None:
             message.destination = node_proxy
 
@@ -340,8 +392,12 @@ class NodeAlgorithm(BaseAlgorithm):
 
 class _NodeWrapper:
     __slots__ = ("node", "configs")
-    accesible_get = ()
-    accesible_set = ()
+
+    accessible_get = ("id",)
+    "Attributes that can be 'read' from the node."
+
+    accessible_set = ()
+    "Attributes that can be 'written' or 'read' to the node."
 
     def __init__(self, node: "Node", **configs):
         self.node = node
@@ -350,27 +406,18 @@ class _NodeWrapper:
     def __getattr__(self, item):
         if item in self.configs:
             return self.configs[item]
-        elif item in self.accesible_get or item in self.accesible_set:
+        elif item in self.accessible_get or item in self.accessible_set:
             return getattr(self.node, item)
         raise AttributeError(f"{self.__class__.__name__} object has no attribute {item}")
 
     def __setattr__(self, name: str, value: Any) -> None:
-        if name in self.accesible_set:
+        if name in self.accessible_set:
             setattr(self.node, name, value)
         else:
             super().__setattr__(name, value)
 
     def __repr__(self):
-        return repr(self.node)
-
-    def __str__(self):
-        return str(self.node)
-
-    def __eq__(self, other):
-        return self.node == other.node
-
-    def __hash__(self):
-        return hash(self.node)
+        return self.node.__repr_str__(self.id)
 
     def __deepcopy__(self, memo):
         return self
@@ -381,9 +428,20 @@ class _NodeWrapper:
     def unbox(self) -> "Node":
         return self.node
 
+    @property
+    def id(self):
+        raise AttributeError("Stub method. Raise attribute error to trigger the __getattr__ method.")
 
-class NodeProxy(_NodeWrapper):
-    accesible_get = (
+
+class NodeAccess(_NodeWrapper):
+    """
+    Class used to control the access to a node's attributes.
+
+    For full node access, use the :meth:`unbox` method. Be aware that such access may break the knowledge restrictions
+    of the algorithm.
+    """
+
+    accessible_get = (
         "id",
         "status",
         "memory",
@@ -391,22 +449,12 @@ class NodeProxy(_NodeWrapper):
         "compositeSensor",
     )
 
-    accesible_set = (
+    accessible_set = (
         "status",
         "memory",
     )
 
-    __wrapped_nodes__ = {}
-
-    def __new__(cls, node: "Node", **configs):
-        "A NodeProxy wrapper is created only once for each node and subclass of NodeProxy."
-
-        if (cls, node) in cls.__wrapped_nodes__:
-            return cls.__wrapped_nodes__[(cls, node)]
-        cls.__wrapped_nodes__[(cls, node)] = super().__new__(cls)
-        return cls.__wrapped_nodes__[(cls, node)]
-
-    def out_neighbors(self) -> set["NeighborAccess"]:
+    def neighbors(self) -> set["NeighborLabel"]:
         """
         Get the out-neighbors of the node.
 
@@ -416,20 +464,10 @@ class NodeProxy(_NodeWrapper):
 
         return set(self.__out_neighbors_dict.values())
 
-    neighbors = out_neighbors
-    "Alias for out_neighbors."
-
-    @cached_property
-    def __out_neighbors_dict(self) -> dict["Node", "NeighborAccess"]:
-        return {node: NeighborAccess(node, id=i) for i, node in enumerate(self.node.network.out_neighbors(self.node))}
-
-    @cached_property
-    def __in_neighbors_dict(self) -> dict["Node", "NeighborAccess"]:
-        return {node: NeighborAccess(node, id=i) for i, node in enumerate(self.node.network.in_neighbors(self.node))}
-
-    def in_neighbors(self) -> set["NeighborAccess"]:
+    def in_neighbors(self) -> set["NeighborLabel"]:
         """
-        Get the in-neighbors of the node.
+        Get the in-neighbors of the node. If the network is not directed, the in-neighbors are the same as the
+        out-neighbors.
 
         :return: The in-neighbors of the node.
         :rtype: set[NeighborAccess]
@@ -437,12 +475,44 @@ class NodeProxy(_NodeWrapper):
 
         return set(self.__in_neighbors_dict.values())
 
-    def get_out_neighbor_proxy(self, node: "Node") -> "NeighborAccess":
+    out_neighbors = neighbors
+    "Alias for out_neighbors."
+
+    ###### Private methods ######
+
+    @cached_property
+    def __out_neighbors_dict(self) -> dict["Node", "NeighborLabel"]:
+        return {node: NeighborLabel(node, id=i) for i, node in enumerate(self.node.network.out_neighbors(self.node))}
+
+    @cached_property
+    def __in_neighbors_dict(self) -> dict["Node", "NeighborLabel"]:
+        if not self.node.network.is_directed():
+            return self.__out_neighbors_dict  # Bidirectional links, same neighbors and same labels
+        else:
+            return {node: NeighborLabel(node, id=i) for i, node in enumerate(self.node.network.in_neighbors(self.node))}
+
+    def _get_out_neighbor_proxy(self, node: "Node") -> "NeighborLabel":
         return self.__out_neighbors_dict[node]
 
-    def get_in_neighbor_proxy(self, node: "Node") -> "NeighborAccess":
+    def _get_in_neighbor_proxy(self, node: "Node") -> "NeighborLabel":
         return self.__in_neighbors_dict[node]
 
+    __wrapped_nodes__ = {}
+    "Memoization of the wrapped nodes. Used to avoid creating multiple wrappers for the same node."
 
-class NeighborAccess(_NodeWrapper):
-    accesible_get = ("id",)
+    def __new__(cls, node: "Node", **configs):
+        "A NodeProxy wrapper is created only once for each node and subclass of NodeProxy."
+
+        if (cls, node) in cls.__wrapped_nodes__:
+            return cls.__wrapped_nodes__[(cls, node)]
+        cls.__wrapped_nodes__[(cls, node)] = super().__new__(cls)
+        return cls.__wrapped_nodes__[(cls, node)]
+
+
+class NeighborLabel(_NodeWrapper):
+    """
+    Class that represents a neighbor of a node. It is used to represent the knowledge that a node has about its
+    neighbors.
+    """
+
+    accessible_get = ("id",)

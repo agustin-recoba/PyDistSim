@@ -1,8 +1,13 @@
 from typing import TYPE_CHECKING
 
-from pydistsim.algorithm import NodeAlgorithm, StatusValues
+from pydistsim.algorithm.node_algorithm import (
+    NeighborLabel,
+    NodeAccess,
+    NodeAlgorithm,
+    StatusValues,
+)
 from pydistsim.message import Message
-from pydistsim.restrictions.comunication import BidirectionalLinks
+from pydistsim.restrictions.communication import BidirectionalLinks
 from pydistsim.restrictions.reliability import TotalReliability
 from pydistsim.restrictions.topological import Connectivity, UniqueInitiator
 
@@ -18,15 +23,15 @@ class Flood(NodeAlgorithm):
         IDLE = "IDLE"
         DONE = "DONE"
 
-    S_init = [Status.INITIATOR, Status.IDLE]
-    S_term = [Status.DONE]
+    S_init = (Status.INITIATOR, Status.IDLE)
+    S_term = (Status.DONE,)
 
-    restrictions = [
+    restrictions = (
         BidirectionalLinks,
         TotalReliability,
         Connectivity,
         UniqueInitiator,
-    ]
+    )
 
     def initializer(self):
         ini_nodes: list["Node"] = []
@@ -39,7 +44,7 @@ class Flood(NodeAlgorithm):
             ini_node.push_to_inbox(Message(meta_header=NodeAlgorithm.INI, destination=ini_node))
 
     @Status.INITIATOR
-    def spontaneously(self, node, message):
+    def spontaneously(self, node: NodeAccess, message: Message):
         self.send(
             node,
             Message(
@@ -51,10 +56,10 @@ class Flood(NodeAlgorithm):
         node.status = self.Status.DONE
 
     @Status.IDLE
-    def receiving(self, node, message):
+    def receiving(self, node: NodeAccess, message: Message):
         if message.header == "Information":
             node.memory[self.informationKey] = message.data
-            destination_nodes = list(node.neighbors())
+            destination_nodes = node.neighbors()
             # send to every neighbor, except the original sender
             destination_nodes.remove(message.source)
             if destination_nodes:

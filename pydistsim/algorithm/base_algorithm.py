@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 from pydistsim.logger import logger
 from pydistsim.observers import ObserverManagerMixin
+from pydistsim.restrictions import Restriction
 
 if TYPE_CHECKING:
     from pydistsim.network import NetworkType
@@ -103,6 +104,9 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
     required_params = ()
     default_params = {}
 
+    algorithm_restrictions = ()
+    "Tuple of restrictions that must be satisfied for the algorithm to run."
+
     def __init__(self, network, **kwargs):
         super().__init__()
         self.network: "NetworkType" = network
@@ -138,6 +142,15 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
         Check if the distributed algorithm has come to an end or deadlock.
         """
         raise NotImplementedError
+
+    def check_restrictions(self):
+        """
+        Check if the restrictions are satisfied.
+        """
+        for restriction in self.__class__.algorithm_restrictions:
+            restriction: Restriction
+            if not restriction.check(self.network):
+                raise AlgorithmException(f"Restriction {restriction.__name__} not satisfied.")
 
 
 class AlgorithmException(Exception):

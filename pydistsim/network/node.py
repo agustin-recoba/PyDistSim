@@ -47,7 +47,11 @@ class Node(ObserverManagerMixin):
         self.reset()
 
     def __repr__(self):
-        return "<Node id=%s>" % self.id
+        return self.__repr_str__(self.id)
+
+    @staticmethod
+    def __repr_str__(id):
+        return "<Node id=%s>" % id
 
     # TODO: Implement __deepcopy__ method, increment id
     # def __deepcopy__(self, memo):

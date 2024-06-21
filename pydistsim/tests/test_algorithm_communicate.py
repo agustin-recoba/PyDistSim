@@ -7,7 +7,6 @@ from pydistsim.network import NetworkGenerator
 from pydistsim.network.communicationproperties import (
     CommunicationPropertiesModel,
     ExampleProperties,
-    no_loss,
 )
 
 CANT_MESSAGES = 100
@@ -66,7 +65,7 @@ def delay_only_first_message(network, message):
 DelayOnlyFirstMessage = CommunicationPropertiesModel(
     message_ordering=True,
     message_delay_indicator=delay_only_first_message,
-    message_loss_indicator=no_loss,
+    message_loss_indicator=None,
 )
 
 

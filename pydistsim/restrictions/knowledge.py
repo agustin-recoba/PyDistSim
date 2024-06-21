@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import TYPE_CHECKING
 
-from pydistsim.restrictions.base import Restriction
+from pydistsim.restrictions.base_restriction import Restriction
 
 if TYPE_CHECKING:
     from pydistsim.network.network import NetworkType
@@ -19,7 +19,7 @@ class InitialDistinctValues(KnowledgeRestriction):
     """
 
     @classmethod
-    def check(cls, network: "NetworkType"):
+    def check(cls, network: "NetworkType") -> bool:
         raise NotImplementedError
 
 
@@ -29,5 +29,5 @@ class NetworkSize(KnowledgeRestriction):
     """
 
     @classmethod
-    def check(cls, network: "NetworkType"):
+    def check(cls, network: "NetworkType") -> bool:
         raise NotImplementedError

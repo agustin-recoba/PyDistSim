@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from pydistsim.restrictions.base import Restriction
+from pydistsim.restrictions.base_restriction import Restriction
 
 if TYPE_CHECKING:
     from pydistsim.network.network import NetworkType

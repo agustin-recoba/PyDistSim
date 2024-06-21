@@ -2,7 +2,7 @@ from abc import ABC
 from typing import TYPE_CHECKING
 
 from pydistsim.message import Message, MetaHeader
-from pydistsim.restrictions.base import Restriction
+from pydistsim.restrictions.base_restriction import Restriction
 from pydistsim.utils.helpers import len_is_not_zero
 
 if TYPE_CHECKING:
@@ -24,7 +24,7 @@ class BoundedCommunicationDelays(TimeRestriction):
     """
 
     @classmethod
-    def check(cls, network: "NetworkType"):
+    def check(cls, network: "NetworkType") -> bool:
         raise NotImplementedError
 
 
@@ -34,7 +34,7 @@ class UnitaryCommunicationDelays(TimeRestriction):
     """
 
     @classmethod
-    def check(cls, network: "NetworkType"):
+    def check(cls, network: "NetworkType") -> bool:
         raise NotImplementedError
 
 
@@ -45,7 +45,7 @@ class SynchronizedClocks(TimeRestriction):
     """
 
     @classmethod
-    def check(cls, network: "NetworkType"):
+    def check(cls, network: "NetworkType") -> bool:
         raise NotImplementedError
 
 
@@ -55,7 +55,7 @@ class SimultaneousStart(TimeRestriction):
     """
 
     @classmethod
-    def check(cls, network: "NetworkType"):
+    def check(cls, network: "NetworkType") -> bool:
         def message_is_ini(message: "Message"):
             return message.meta_header == MetaHeader.INITIALIZATION_MESSAGE
 

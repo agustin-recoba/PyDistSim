@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from networkx import connected_components, is_tree
 
 from pydistsim.message import Message, MetaHeader
-from pydistsim.restrictions.base import Restriction
+from pydistsim.restrictions.base_restriction import Restriction
 from pydistsim.utils.helpers import len_is_not_zero, len_is_one
 
 if TYPE_CHECKING:
@@ -23,7 +23,7 @@ class Connectivity(TopologicalRestriction):
     """
 
     @classmethod
-    def check(cls, network: "NetworkType"):
+    def check(cls, network: "NetworkType") -> bool:
         return network.is_connected()
 
 
@@ -33,11 +33,11 @@ StrongConnectivity = Connectivity
 
 class UniqueInitiator(TopologicalRestriction):
     """
-    Only one entity will be able to initiate the algorithm.
+    Only one entity will be able to initiate the algorithm through a spontaneous event.
     """
 
     @classmethod
-    def check(cls, network: "NetworkType"):
+    def check(cls, network: "NetworkType") -> bool:
         def message_is_ini(message: "Message"):
             return message.meta_header == MetaHeader.INITIALIZATION_MESSAGE
 
@@ -60,7 +60,7 @@ class CompleteGraph(ShapeRestriction):
     """
 
     @classmethod
-    def check(cls, network: "NetworkType"):
+    def check(cls, network: "NetworkType") -> bool:
         N = len(network) - 1
         return not any(
             node in neighbors_of_node or len(neighbors_of_node) != N for node, neighbors_of_node in network.adj.items()
@@ -75,7 +75,7 @@ class CycleGraph(ShapeRestriction):
     """
 
     @classmethod
-    def check(cls, network: "NetworkType"):
+    def check(cls, network: "NetworkType") -> bool:
         return all(len(neighbors_of_node) == 2 for node, neighbors_of_node in network.adj.items()) and len_is_one(
             connected_components(network.to_undirected())
         )
@@ -93,7 +93,7 @@ class OrientedCycleGraph(CycleGraph):
     """
 
     @classmethod
-    def check(cls, network: "NetworkType"):
+    def check(cls, network: "NetworkType") -> bool:
         raise NotImplementedError
 
 
@@ -109,7 +109,7 @@ class TreeGraph(ShapeRestriction):
     """
 
     @classmethod
-    def check(cls, network: "NetworkType"):
+    def check(cls, network: "NetworkType") -> bool:
         return is_tree(network)
 
 
@@ -126,7 +126,7 @@ class StarGraph(ShapeRestriction):
     """
 
     @classmethod
-    def check(cls, network: "NetworkType"):
+    def check(cls, network: "NetworkType") -> bool:
         if len(network) <= 2:
             return True
 
@@ -154,7 +154,7 @@ class HyperCubeGraph(ShapeRestriction):
     """
 
     @classmethod
-    def check(cls, network: "NetworkType"):
+    def check(cls, network: "NetworkType") -> bool:
         raise NotImplementedError
 
 
@@ -167,5 +167,5 @@ class OrientedHyperCubeGraph(HyperCubeGraph):
     """
 
     @classmethod
-    def check(cls, network: "NetworkType"):
+    def check(cls, network: "NetworkType") -> bool:
         raise NotImplementedError
