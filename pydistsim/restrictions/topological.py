@@ -4,14 +4,14 @@ from typing import TYPE_CHECKING
 from networkx import connected_components, is_tree
 
 from pydistsim.message import Message, MetaHeader
-from pydistsim.restrictions.base_restriction import Restriction
+from pydistsim.restrictions.base_restriction import CheckableRestriction
 from pydistsim.utils.helpers import len_is_not_zero, len_is_one
 
 if TYPE_CHECKING:
     from pydistsim.network.network import NetworkType
 
 
-class TopologicalRestriction(Restriction, ABC):
+class TopologicalRestriction(CheckableRestriction, ABC):
     """
     Restrictions related to the communication topology of the underlying graph of the network.
     """

@@ -1,13 +1,13 @@
 from abc import ABC
 from typing import TYPE_CHECKING
 
-from pydistsim.restrictions.base_restriction import Restriction
+from pydistsim.restrictions.base_restriction import CheckableRestriction
 
 if TYPE_CHECKING:
     from pydistsim.network.network import NetworkType
 
 
-class ReliabilityRestriction(Restriction, ABC):
+class ReliabilityRestriction(CheckableRestriction, ABC):
     """
     Restrictions related to reliability, faults, ant their detection.
     """
@@ -24,8 +24,7 @@ class EdgeFailureDetection(ReliabilityRestriction):
 
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
-        # TODO: implement dynamic edge failure and optional detection
-        raise NotImplementedError
+        raise NotImplementedError("ToDo: implement dynamic edge failure and optional detection")
 
 
 class EntityFailureDetection(ReliabilityRestriction):
@@ -38,8 +37,7 @@ class EntityFailureDetection(ReliabilityRestriction):
 
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
-        # TODO: implement dynamic entity failure and optional detection
-        raise NotImplementedError
+        raise NotImplementedError("ToDo: implement dynamic entity failure and optional detection")
 
 
 class TotalReliability(ReliabilityRestriction):
@@ -52,7 +50,7 @@ class TotalReliability(ReliabilityRestriction):
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
         return (
-            network.communication_properties.message_loss_indicator is None
+            network.behavioral_properties.message_loss_indicator is None
         )  # No message loss. Entity failures are not implemented.
 
 
@@ -67,7 +65,7 @@ class PartialReliability(ReliabilityRestriction):
 
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
-        raise TotalReliability.check(network)  # The simulation does not support partial reliability (yet)
+        return TotalReliability.check(network)  # The simulation does not support partial reliability (yet)
 
 
 class GuaranteedDelivery(ReliabilityRestriction):
@@ -78,4 +76,4 @@ class GuaranteedDelivery(ReliabilityRestriction):
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
         # TODO: implement optional message corruption
-        raise network.communication_properties.message_loss_indicator is None  # Check only no message loss (for now)
+        return network.behavioral_properties.message_loss_indicator is None  # Check only no message loss (for now)

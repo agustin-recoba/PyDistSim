@@ -23,6 +23,7 @@ To manually set sensor parameters first make an sensor instance:
 """
 
 import inspect
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 from functools import wraps
 from typing import TYPE_CHECKING
@@ -36,7 +37,7 @@ if TYPE_CHECKING:
     from pydistsim.network import Node
 
 
-class Sensor:
+class Sensor(ABC):
     """
     Abstract base class for all Sensors.
 
@@ -74,6 +75,7 @@ class Sensor:
         """
         return self.__class__.__name__
 
+    @abstractmethod
     def read(self) -> dict:
         """
         Read the sensor data.
@@ -189,7 +191,7 @@ class CompositeSensor:
 
     """
 
-    def __init__(self, node: "Node", componentSensors: tuple[type[Sensor] | str, ...] = None):
+    def __init__(self, node: "Node", componentSensors: tuple[type[Sensor] | str, ...] | None = None):
         """
         Initialize the Sensor object.
 

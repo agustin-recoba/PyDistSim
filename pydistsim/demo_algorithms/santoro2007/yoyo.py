@@ -1,5 +1,9 @@
 from pydistsim.algorithm import NodeAlgorithm, StatusValues
 from pydistsim.message import Message
+from pydistsim.restrictions.communication import BidirectionalLinks
+from pydistsim.restrictions.knowledge import InitialDistinctValues
+from pydistsim.restrictions.reliability import TotalReliability
+from pydistsim.restrictions.topological import Connectivity, UniqueInitiator
 
 
 class YoYo(NodeAlgorithm):
@@ -18,8 +22,19 @@ class YoYo(NodeAlgorithm):
         PRUNED = "PRUNED"
         LEADER = "LEADER"
 
+    S_init = (Status.INITIATOR, Status.IDLE)
+    S_term = (Status.LEADER, Status.PRUNED)
+
+    restrictions = (
+        BidirectionalLinks,
+        TotalReliability,
+        Connectivity,
+        UniqueInitiator,
+        InitialDistinctValues,
+    )
+
     # Store assigned id (assigned in SetupYoYo)
-    ID_KEY = "id"
+    ID_KEY = InitialDistinctValues.KEY
 
     # Store received ids, I'll use a dict {id_value: [source_nodes]}
     RECEIVED_IDS_KEY = "received_ids"
@@ -42,6 +57,8 @@ class YoYo(NodeAlgorithm):
     PRUNE_REQUEST = "prune"
 
     def initializer(self):
+        InitialDistinctValues.apply(self.network)
+
         for node in self.network.nodes():
             node.memory[self.inNeighborsKey] = []
             node.memory[self.outNeighborsKey] = []
@@ -217,7 +234,7 @@ class YoYo(NodeAlgorithm):
                 Message(
                     destination=node.memory[self.outNeighborsKey],
                     header="id",
-                    data=node.id,
+                    data=node.memory[self.ID_KEY],
                 ),
             )
 
@@ -359,14 +376,21 @@ class YoYo(NodeAlgorithm):
             node.status = self.Status.LEADER
             return
 
-        self.send(node, Message(header="init_id", data=node.id, destination=node.neighbors()))
+        self.send(
+            node,
+            Message(
+                header="init_id",
+                data=node.memory[self.ID_KEY],
+                destination=node.neighbors(),
+            ),
+        )
 
         node.status = self.Status.IDLE
 
     @Status.IDLE
     def receiving(self, node, message):
         if message.header == "init_id":
-            if message.data < node.id:
+            if message.data < node.memory[self.ID_KEY]:
                 node.memory[self.inNeighborsKey].append(message.source)
             else:
                 node.memory[self.outNeighborsKey].append(message.source)

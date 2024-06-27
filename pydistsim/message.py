@@ -40,7 +40,7 @@ class Message:
         self.source = source
         self.destination = destination
         self.header = header
-        self.data = data or dict()
+        self.data = data
         self.meta_header = meta_header
         self.meta_data = meta_data or dict()
         self.id = self.__class__.next_message_id

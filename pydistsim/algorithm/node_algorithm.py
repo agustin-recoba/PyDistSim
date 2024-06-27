@@ -1,11 +1,11 @@
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
-from functools import cached_property
 from types import NoneType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pydistsim.algorithm.base_algorithm import AlgorithmException, BaseAlgorithm
+from pydistsim.algorithm.node_wrapper import NodeAccess
 from pydistsim.logger import logger
 from pydistsim.message import Message
 from pydistsim.message import MetaHeader as MessageMetaHeader
@@ -114,6 +114,9 @@ class NodeAlgorithm(BaseAlgorithm):
     S_term = ()
     "Tuple of statuses that nodes should have at the end of the algorithm."
 
+    NODE_ACCESS_TYPE: type[NodeAccess] = NodeAccess
+    "Type of the node access proxy. Default is :class:`NodeAccess`."
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -122,11 +125,6 @@ class NodeAlgorithm(BaseAlgorithm):
     ### BaseAlgorithm interface methods ###
 
     def step(self):
-        logger.debug(
-            "[{}] Step {} started",
-            self.name,
-            self.network.algorithmState["step"],
-        )
         if not self.is_initialized():
             self.notify_observers(ObservableEvents.algorithm_started, self)
             self.initializer()
@@ -138,12 +136,6 @@ class NodeAlgorithm(BaseAlgorithm):
             self._process_alarms()
             for node in self.network.nodes_sorted():
                 self._node_step(node)
-        logger.debug(
-            "[{}] Step {} finished",
-            self.name,
-            self.network.algorithmState["step"],
-        )
-        self.network.algorithmState["step"] += 1
 
         self.notify_observers(ObservableEvents.step_done, self)
 
@@ -330,7 +322,7 @@ class NodeAlgorithm(BaseAlgorithm):
     def _process_action(self, action: Actions, node: "Node", message: Message):
         status: StatusValues = getattr(self.Status, node.status)
 
-        node_proxy = NodeAccess(node)  # TODO: set offuscation here
+        node_proxy = self.NODE_ACCESS_TYPE(node)  # TODO: set offuscation here
         if message.source is not None:
             message.source = node_proxy._get_in_neighbor_proxy(message.source)
         if message.destination is not None:
@@ -378,7 +370,7 @@ class NodeAlgorithm(BaseAlgorithm):
 
             # Create a method for invocations like `self.default(node, message)`
             # CAUTION: the resolution of the method is deferred to the instance, super() will not work
-            def __unresolved_action_method__(alg_instance: "NodeAlgorithm", node: "_NodeWrapper", message: Message):
+            def __unresolved_action_method__(alg_instance: "NodeAlgorithm", node: "NodeAccess", message: Message):
                 alg_instance._process_action(action, node, message)
 
             dct[action] = __unresolved_action_method__
@@ -388,131 +380,3 @@ class NodeAlgorithm(BaseAlgorithm):
                     # Create a method for invocations like `self.default_IDLE(node, message)`
                     # As the method is created in the class, super() will work.
                     dct[f"{action}_{status}"] = status.get_method(action)
-
-
-class _NodeWrapper:
-    __slots__ = ("node", "configs")
-
-    accessible_get = ("id",)
-    "Attributes that can be 'read' from the node."
-
-    accessible_set = ()
-    "Attributes that can be 'written' or 'read' to the node."
-
-    def __init__(self, node: "Node", **configs):
-        self.node = node
-        self.configs = configs
-
-    def __getattr__(self, item):
-        if item in self.configs:
-            return self.configs[item]
-        elif item in self.accessible_get or item in self.accessible_set:
-            return getattr(self.node, item)
-        raise AttributeError(f"{self.__class__.__name__} object has no attribute {item}")
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        if name in self.accessible_set:
-            setattr(self.node, name, value)
-        else:
-            super().__setattr__(name, value)
-
-    def __repr__(self):
-        return self.node.__repr_str__(self.id)
-
-    def __deepcopy__(self, memo):
-        return self
-
-    def __copy__(self):
-        return self
-
-    def unbox(self) -> "Node":
-        return self.node
-
-    @property
-    def id(self):
-        raise AttributeError("Stub method. Raise attribute error to trigger the __getattr__ method.")
-
-
-class NodeAccess(_NodeWrapper):
-    """
-    Class used to control the access to a node's attributes.
-
-    For full node access, use the :meth:`unbox` method. Be aware that such access may break the knowledge restrictions
-    of the algorithm.
-    """
-
-    accessible_get = (
-        "id",
-        "status",
-        "memory",
-        "sensors",
-        "compositeSensor",
-    )
-
-    accessible_set = (
-        "status",
-        "memory",
-    )
-
-    def neighbors(self) -> set["NeighborLabel"]:
-        """
-        Get the out-neighbors of the node.
-
-        :return: The out-neighbors of the node.
-        :rtype: set[NeighborAccess]
-        """
-
-        return set(self.__out_neighbors_dict.values())
-
-    def in_neighbors(self) -> set["NeighborLabel"]:
-        """
-        Get the in-neighbors of the node. If the network is not directed, the in-neighbors are the same as the
-        out-neighbors.
-
-        :return: The in-neighbors of the node.
-        :rtype: set[NeighborAccess]
-        """
-
-        return set(self.__in_neighbors_dict.values())
-
-    out_neighbors = neighbors
-    "Alias for out_neighbors."
-
-    ###### Private methods ######
-
-    @cached_property
-    def __out_neighbors_dict(self) -> dict["Node", "NeighborLabel"]:
-        return {node: NeighborLabel(node, id=i) for i, node in enumerate(self.node.network.out_neighbors(self.node))}
-
-    @cached_property
-    def __in_neighbors_dict(self) -> dict["Node", "NeighborLabel"]:
-        if not self.node.network.is_directed():
-            return self.__out_neighbors_dict  # Bidirectional links, same neighbors and same labels
-        else:
-            return {node: NeighborLabel(node, id=i) for i, node in enumerate(self.node.network.in_neighbors(self.node))}
-
-    def _get_out_neighbor_proxy(self, node: "Node") -> "NeighborLabel":
-        return self.__out_neighbors_dict[node]
-
-    def _get_in_neighbor_proxy(self, node: "Node") -> "NeighborLabel":
-        return self.__in_neighbors_dict[node]
-
-    __wrapped_nodes__ = {}
-    "Memoization of the wrapped nodes. Used to avoid creating multiple wrappers for the same node."
-
-    def __new__(cls, node: "Node", **configs):
-        "A NodeProxy wrapper is created only once for each node and subclass of NodeProxy."
-
-        if (cls, node) in cls.__wrapped_nodes__:
-            return cls.__wrapped_nodes__[(cls, node)]
-        cls.__wrapped_nodes__[(cls, node)] = super().__new__(cls)
-        return cls.__wrapped_nodes__[(cls, node)]
-
-
-class NeighborLabel(_NodeWrapper):
-    """
-    Class that represents a neighbor of a node. It is used to represent the knowledge that a node has about its
-    neighbors.
-    """
-
-    accessible_get = ("id",)

@@ -8,11 +8,11 @@ from numpy.random import random
 from pydistsim.conf import settings
 from pydistsim.logger import logger
 from pydistsim.network.environment import Environment
-from pydistsim.network.network import AlgorithmsParam, BidirectionalNetwork, Network
+from pydistsim.network.network import BidirectionalNetwork, Network
 from pydistsim.utils.helpers import with_typehint
 
 if TYPE_CHECKING:
-    from pydistsim.network.communicationproperties import CommunicationPropertiesModel
+    from pydistsim.network.networkbehavior import NetworkBehaviorModel
     from pydistsim.network.node import Node
 
 
@@ -26,15 +26,15 @@ class RangeType(ABC):
     :type environment: Environment
     """
 
-    def __new__(self, environment: "Environment" = None, **kwargs):
+    def __new__(cls, environment: "Environment| None" = None, **kwargs):
         """Return instance of default RangeType."""
-        for cls in self.__subclasses__():
+        for cls in cls.__subclasses__():
             if cls.__name__ == settings.CHANNEL_TYPE:
                 return super().__new__(cls)
 
         # if self is not RangeType class (as in pickle.load_newobj) return
         # instance of self
-        return object.__new__(self)
+        return object.__new__(cls)
 
     def __init__(self, environment: "Environment"):
         self.environment = environment
@@ -169,8 +169,7 @@ class RangeNetworkMixin(with_typehint(Network)):
         incoming_graph_data=None,
         environment: Optional["Environment"] = None,
         rangeType: RangeType | None = None,
-        algorithms: "AlgorithmsParam" = (),
-        communication_properties: Optional["CommunicationPropertiesModel"] = None,
+        behavioral_properties: Optional["NetworkBehaviorModel"] = None,
         **kwargs,
     ):
         """
@@ -180,13 +179,11 @@ class RangeNetworkMixin(with_typehint(Network)):
         :type environment: Environment, optional
         :param rangeType: The type of channel to be used for communication. If not provided, a new RangeType instance will be created using the environment.
         :type rangeType: RangeType, optional
-        :param algorithms: The algorithms to be executed on the network. If not provided, the default algorithms defined in settings.ALGORITHMS will be used.
-        :type algorithms: AlgorithmsParam, optional
         :param graph: The graph representing the network topology. Defaults to None.
         :type graph: NetworkX graph, optional
         :param kwargs: Additional keyword arguments.
         """
-        super().__init__(incoming_graph_data, environment, algorithms, communication_properties, **kwargs)
+        super().__init__(incoming_graph_data, environment, behavioral_properties, **kwargs)
         self.rangeType = rangeType or RangeType(self._environment)
         self.rangeType.environment = self._environment
 

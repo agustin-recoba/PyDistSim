@@ -1,5 +1,6 @@
 from numpy import array, concatenate, dot, sqrt
 
+from pydistsim.algorithm.node_wrapper import SensorNodeAccess
 from pydistsim.demo_algorithms.niculescu2003.floodingupdate import FloodingUpdate
 
 
@@ -9,6 +10,7 @@ class DVHop(FloodingUpdate):
     """
 
     required_params = ("truePositionKey", "hopsizeKey")
+    NODE_ACCESS_TYPE = SensorNodeAccess
 
     def initiator_condition(self, node):
         node.memory[self.truePositionKey] = node.compositeSensor.read().get("TruePos", None)

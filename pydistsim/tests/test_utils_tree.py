@@ -17,8 +17,6 @@ class TestNetwork(unittest.TestCase):
         self.node2 = self.net.add_node(pos=[21.9, 22.9])
         self.node3 = self.net.add_node(pos=[21.7, 21.7])
 
-        self.net.algorithms = (NodeAlgorithm,)
-
         self.node1.memory[self.treeKey] = {
             "parent": None,
             "children": [self.node2, self.node3],
@@ -70,9 +68,6 @@ class TestNetwork(unittest.TestCase):
         node1 = net.add_node(pos=[22.8, 21.8])
         node2 = net.add_node(pos=[21.9, 22.9])
         node3 = net.add_node(pos=[21.7, 21.7])
-
-        net.algorithms = (NodeAlgorithm,)
-
         with self.assertRaises(tree.MissingTreeKey):
             tree.check_tree_key(net, self.treeKey)
 

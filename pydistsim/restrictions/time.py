@@ -2,14 +2,14 @@ from abc import ABC
 from typing import TYPE_CHECKING
 
 from pydistsim.message import Message, MetaHeader
-from pydistsim.restrictions.base_restriction import Restriction
+from pydistsim.restrictions.base_restriction import CheckableRestriction
 from pydistsim.utils.helpers import len_is_not_zero
 
 if TYPE_CHECKING:
     from pydistsim.network.network import NetworkType
 
 
-class TimeRestriction(Restriction, ABC):
+class TimeRestriction(CheckableRestriction, ABC):
     """
     Restrictions relating to time.
 
@@ -25,7 +25,7 @@ class BoundedCommunicationDelays(TimeRestriction):
 
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
-        raise NotImplementedError
+        return network.behavioral_properties.bounded_communication_delays
 
 
 class UnitaryCommunicationDelays(TimeRestriction):
@@ -35,7 +35,7 @@ class UnitaryCommunicationDelays(TimeRestriction):
 
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
-        raise NotImplementedError
+        return network.behavioral_properties.message_delay_indicator is None
 
 
 class SynchronizedClocks(TimeRestriction):
@@ -46,7 +46,7 @@ class SynchronizedClocks(TimeRestriction):
 
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
-        raise NotImplementedError
+        return network.behavioral_properties.clock_increment is None
 
 
 class SimultaneousStart(TimeRestriction):
@@ -60,4 +60,4 @@ class SimultaneousStart(TimeRestriction):
             return message.meta_header == MetaHeader.INITIALIZATION_MESSAGE
 
         nodes_with_ini = (node for node in network if len_is_not_zero(filter(message_is_ini, node.inbox)))
-        return len(nodes_with_ini) == len(network)
+        return len(list(nodes_with_ini)) == len(network)

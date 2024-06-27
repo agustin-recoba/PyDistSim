@@ -3,10 +3,11 @@ from typing import TYPE_CHECKING
 
 from pydistsim.logger import logger
 from pydistsim.observers import ObserverManagerMixin
-from pydistsim.restrictions import Restriction
+from pydistsim.restrictions import CheckableRestriction
 
 if TYPE_CHECKING:
     from pydistsim.network import NetworkType
+    from pydistsim.simulation import Simulation
 
 
 class AlgorithmMeta(type):
@@ -107,9 +108,9 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
     algorithm_restrictions = ()
     "Tuple of restrictions that must be satisfied for the algorithm to run."
 
-    def __init__(self, network, **kwargs):
+    def __init__(self, simulation: "Simulation", **kwargs):
         super().__init__()
-        self.network: "NetworkType" = network
+        self.simulation: "NetworkType" = simulation
         self.name = self.__class__.__name__
         logger.debug("Instance of {} class has been initialized.", self.name)
 
@@ -131,11 +132,15 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.__dict__})"
 
+    @property
+    def network(self) -> "NetworkType":
+        return self.simulation.network
+
     def step(self):
         raise NotImplementedError
 
     def is_initialized(self):
-        return self.network.algorithmState["step"] != 1 and self.network.get_current_algorithm() == self
+        return self.simulation.algorithmState["step"] != 1 and self.simulation.get_current_algorithm() == self
 
     def is_halted(self):
         """
@@ -148,8 +153,7 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
         Check if the restrictions are satisfied.
         """
         for restriction in self.__class__.algorithm_restrictions:
-            restriction: Restriction
-            if not restriction.check(self.network):
+            if isinstance(restriction, CheckableRestriction) and not restriction.check(self.network):
                 raise AlgorithmException(f"Restriction {restriction.__name__} not satisfied.")
 
 

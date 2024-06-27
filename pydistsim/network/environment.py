@@ -15,7 +15,7 @@ class Environment:
     This class represents an abstract base class for environments in the PyDistSim framework.
     """
 
-    def __new__(self, **kwargs):
+    def __new__(cls, **kwargs):
         """Return an instance of the default Environment.
 
         This method returns an instance of the default Environment subclass specified in the settings.
@@ -23,12 +23,12 @@ class Environment:
         :param kwargs: Additional keyword arguments to be passed to the subclass constructor.
         :return: An instance of the default Environment subclass.
         """
-        for cls in self.__subclasses__():
+        for cls in cls.__subclasses__():
             if cls.__name__ == settings.ENVIRONMENT:
                 return super().__new__(cls, **kwargs)
         # if self is not Environment class (as in pickle.load_newobj) return
         # instance of self
-        return super().__new__(self)
+        return super().__new__(cls)
 
     def is_space(self, xy):
         """Check if the given coordinates represent a valid space in the environment.

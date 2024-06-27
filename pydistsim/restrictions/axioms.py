@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from pydistsim.restrictions.base_restriction import Restriction
+from pydistsim.restrictions.base_restriction import CheckableRestriction
 
 if TYPE_CHECKING:
     from pydistsim.network.network import NetworkType
@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 from abc import ABC
 
 
-class SimulationAxiom(Restriction, ABC):
+class SimulationAxiom(CheckableRestriction, ABC):
     "Bases of the definition of the distributed computing environment."
 
     @classmethod

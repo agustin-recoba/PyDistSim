@@ -1,6 +1,7 @@
 import unittest
 
 from pydistsim.algorithm import NetworkAlgorithm, NodeAlgorithm
+from pydistsim.exceptions import SimulationException
 from pydistsim.network import NetworkGenerator
 from pydistsim.simulation import Simulation
 from pydistsim.utils.testing import PyDistSimTestCase
@@ -21,10 +22,11 @@ class TestRunBaseNodeAlgorithm(PyDistSimTestCase):
     def setUp(self):
         net_gen = NetworkGenerator(100)
         self.net = net_gen.generate_random_network()
-        self.net.algorithms = (UnimplementedNodeAlgorithm,)
+        self.algorithms = (UnimplementedNodeAlgorithm,)
 
     def test_run_base_algorithm(self):
         sim = Simulation(self.net)
+        sim.algorithms = self.algorithms
 
         for node in self.net.nodes():
             with self.subTest(node=node):
@@ -60,16 +62,27 @@ class TestRunBaseNodeAlgorithm(PyDistSimTestCase):
 
         assert sim.is_halted()
 
+    def test_get_current_algorithm(self):
+        """Test getting current algorithm."""
+        sim = Simulation(self.net)
+        sim.algorithms = ()
+
+        with self.assertRaises(SimulationException):
+            sim.get_current_algorithm()
+
+        sim.algorithms = (NodeAlgorithm,)
+
 
 class TestRunNetworkAlgorithm(unittest.TestCase):
 
     def setUp(self):
         net_gen = NetworkGenerator(100)
         self.net = net_gen.generate_random_network()
-        self.net.algorithms = (ImplementedNetworkAlgorithm,)
+        self.algorithms = (ImplementedNetworkAlgorithm,)
 
     def test_run_base_algorithm(self):
         sim = Simulation(self.net)
+        sim.algorithms = self.algorithms
 
         for node in self.net.nodes():
             with self.subTest(node=node):
@@ -91,10 +104,11 @@ class TestRunNotImplementedNetworkAlgorithm(unittest.TestCase):
     def setUp(self):
         net_gen = NetworkGenerator(100)
         self.net = net_gen.generate_random_network()
-        self.net.algorithms = (NetworkAlgorithm,)
+        self.algorithms = (NetworkAlgorithm,)
 
     def test_run_base_algorithm(self):
         sim = Simulation(self.net)
+        sim.algorithms = self.algorithms
 
         with self.assertRaises(NotImplementedError):
             sim.run(100_000)
@@ -107,22 +121,22 @@ class TestResetNetwork(unittest.TestCase):
     def setUp(self):
         net_gen = NetworkGenerator(100)
         self.net1 = net_gen.generate_random_network()
-        self.net1.algorithms = (UnimplementedNodeAlgorithm,)
+        self.sim1 = Simulation(self.net1)
+        self.sim1.algorithms = (UnimplementedNodeAlgorithm,)
 
         self.net2 = net_gen.generate_random_network()
-        self.net2.algorithms = (ImplementedNetworkAlgorithm,)
-
-        self.sim = Simulation(self.net1)
+        self.sim2 = Simulation(self.net2)
+        self.sim2.algorithms = (ImplementedNetworkAlgorithm,)
 
     def test_set_network(self):
-        assert isinstance(self.net1.get_current_algorithm(), UnimplementedNodeAlgorithm)
-        assert isinstance(self.net2.get_current_algorithm(), ImplementedNetworkAlgorithm)
+        assert isinstance(self.sim1.get_current_algorithm(), UnimplementedNodeAlgorithm)
+        assert isinstance(self.sim2.get_current_algorithm(), ImplementedNetworkAlgorithm)
 
-        assert self.sim.network == self.net1
-        assert self.net1.simulation == self.sim
+        assert self.sim1.network == self.net1
+        assert self.net1.simulation == self.sim1
 
-        self.sim.network = self.net2
+        self.sim1.network = self.net2
 
-        assert self.sim.network == self.net2
-        assert self.net2.simulation == self.sim
+        assert self.sim1.network == self.net2
+        assert self.net2.simulation == self.sim1
         assert self.net1.simulation is None

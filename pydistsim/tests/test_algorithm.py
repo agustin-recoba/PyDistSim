@@ -8,7 +8,8 @@ from pydistsim.algorithm import (
     NodeAlgorithm,
     StatusValues,
 )
-from pydistsim.algorithm.node_algorithm import NodeAccess
+from pydistsim.algorithm.node_wrapper import NodeAccess
+from pydistsim.exceptions import SimulationException
 from pydistsim.message import Message
 from pydistsim.network import NetworkException, NetworkGenerator
 from pydistsim.simulation import Simulation
@@ -16,8 +17,8 @@ from pydistsim.utils.helpers import first
 from pydistsim.utils.testing import PyDistSimTestCase
 
 
-def set_algorithms(net, algorithms):
-    net.algorithms = algorithms
+def set_algorithms(sim, algorithms):
+    sim.algorithms = algorithms
 
 
 class SomeNodeAlgorithm(NodeAlgorithm):
@@ -85,13 +86,13 @@ class TestAlgorithmsSetter(unittest.TestCase):
         self.check = [
             # wrong_format
             (
-                NetworkException,
+                SimulationException,
                 [
                     (SomeNodeAlgorithm, {"rp1": 1, "rp2": 2, "rp3": 3}),
                 ],
             ),
             # wrong_base_class
-            (NetworkException, ((Node, {}),)),
+            (SimulationException, ((Node, {}),)),
             # missing_req_params
             (
                 AlgorithmException,
@@ -119,28 +120,32 @@ class TestAlgorithmsSetter(unittest.TestCase):
 
     def test_setter(self):
         """Test different algorithm initialization formats and params."""
-        set_algorithms(self.net, self.algorithms_ok)
+        sim = Simulation(self.net)
+
+        set_algorithms(sim, self.algorithms_ok)
         for exc, alg in self.check:
-            self.assertRaises(exc, set_algorithms, self.net, alg)
+            self.assertRaises(exc, set_algorithms, sim, alg)
 
     def test_params_inheritance(self):
         """Test default params inheritance algorithm classes."""
-        self.net.algorithms = (
+        sim = Simulation(self.net)
+        sim.algorithms = (
             (
                 SomeAlgorithmWithInheritanceChild,
                 {"rp1": 1, "rp2": 2, "rp3": 3, "rp4": 4, "rp5": 5, "rp6": 6},
             ),
         )
-        self.assertTrue(self.net.algorithms[0].dp1 == "dp1_value")
-        self.assertTrue(self.net.algorithms[0].dp2 == "overriden_dp2_value")
-        self.assertTrue(self.net.algorithms[0].dp3 == "dp3_value")
+        self.assertTrue(sim.algorithms[0].dp1 == "dp1_value")
+        self.assertTrue(sim.algorithms[0].dp2 == "overriden_dp2_value")
+        self.assertTrue(sim.algorithms[0].dp3 == "dp3_value")
         self.assertRaises(AssertionError, rp_multiple)
         self.assertRaises(AssertionError, dp_is_rp)
         self.assertRaises(AssertionError, rp_is_dp)
 
     def test_default_params(self):
         """Test default params."""
-        self.net.algorithms = (
+        sim = Simulation(self.net)
+        sim.algorithms = (
             (
                 SomeNetworkAlgorithm,
                 {
@@ -148,9 +153,9 @@ class TestAlgorithmsSetter(unittest.TestCase):
                 },
             ),
         )
-        self.assertTrue(self.net.algorithms[0].dp1 == "dp1_value")
-        self.assertTrue(self.net.algorithms[0].dp2 == "overriden_dp2_value")
-        self.assertTrue(self.net.algorithms[0].dp3 == "dp3_value")
+        self.assertTrue(sim.algorithms[0].dp1 == "dp1_value")
+        self.assertTrue(sim.algorithms[0].dp2 == "overriden_dp2_value")
+        self.assertTrue(sim.algorithms[0].dp3 == "dp3_value")
 
 
 class TestStatusValues(unittest.TestCase):
@@ -270,15 +275,15 @@ class TestAlarms(unittest.TestCase):
     def test_run_base_algorithm_default_message(self):
         self.aux_test(
             TimerDefaultMessage,
-            lambda node: node.status == TimerAlgorithm.Status.DONE and len(node.memory["alarm"]) == 0,
+            lambda node: node.status == TimerAlgorithm.Status.DONE and node.memory["alarm"] is None,
         )
 
     def aux_test(self, algo_class, data_test):
         self.net = NetworkGenerator(10).generate_random_network()
-        self.net.algorithms = (algo_class,)
-
         sim = Simulation(self.net)
-        algorithm = sim.network.get_current_algorithm()
+        sim.algorithms = (algo_class,)
+
+        algorithm = sim.get_current_algorithm()
         some_n = first(self.net.nodes())
 
         assert sim.is_halted()
@@ -312,10 +317,10 @@ class TestAlarms(unittest.TestCase):
 
     def test_update_alarm(self):
         self.net = NetworkGenerator(10).generate_random_network()
-        self.net.algorithms = (TimerDefaultMessageDecreasedTime,)
-
         sim = Simulation(self.net)
-        algorithm = sim.network.get_current_algorithm()
+        sim.algorithms = (TimerDefaultMessageDecreasedTime,)
+
+        algorithm = sim.get_current_algorithm()
         some_n = first(self.net.nodes())
 
         assert sim.is_halted()

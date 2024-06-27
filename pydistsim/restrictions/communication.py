@@ -1,13 +1,13 @@
 from abc import ABC
 from typing import TYPE_CHECKING
 
-from pydistsim.restrictions.base_restriction import Restriction
+from pydistsim.restrictions.base_restriction import CheckableRestriction
 
 if TYPE_CHECKING:
     from pydistsim.network.network import NetworkType
 
 
-class CommunicationRestriction(Restriction, ABC):
+class CommunicationRestriction(CheckableRestriction, ABC):
     """
     Restriction related to communication among entities.
     """
@@ -21,7 +21,7 @@ class MessageOrdering(CommunicationRestriction):
 
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
-        return network.communication_properties.message_ordering
+        return network.behavioral_properties.message_ordering
 
 
 class ReciprocalCommunication(CommunicationRestriction):

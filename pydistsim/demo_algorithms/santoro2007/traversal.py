@@ -1,5 +1,8 @@
 from pydistsim.algorithm import NodeAlgorithm, StatusValues
 from pydistsim.message import Message
+from pydistsim.restrictions.communication import BidirectionalLinks
+from pydistsim.restrictions.reliability import TotalReliability
+from pydistsim.restrictions.topological import Connectivity, UniqueInitiator
 
 
 class DFT(NodeAlgorithm):
@@ -76,6 +79,16 @@ class DFStar(NodeAlgorithm):
         AVAILABLE = "AVAILABLE"
         VISITED = "VISITED"
         DONE = "DONE"
+
+    S_init = (Status.INITIATOR, Status.IDLE)
+    S_term = (Status.DONE,)
+
+    restrictions = (
+        BidirectionalLinks,
+        TotalReliability,
+        Connectivity,
+        UniqueInitiator,
+    )
 
     def initializer(self):
         for node in self.network.nodes():

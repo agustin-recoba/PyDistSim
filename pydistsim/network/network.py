@@ -1,4 +1,4 @@
-import inspect
+from collections.abc import Iterable
 from copy import deepcopy
 from math import inf as Inf
 from random import choices
@@ -16,29 +16,22 @@ from networkx import (
 from numpy import allclose, array, average, max, min, pi
 from numpy.random import rand
 
-from pydistsim.algorithm import BaseAlgorithm
 from pydistsim.conf import settings
-from pydistsim.logger import logger
-from pydistsim.network.communicationproperties import (
-    CommunicationPropertiesModel,
-    ExampleProperties,
-)
-from pydistsim.network.environment import Environment
-from pydistsim.network.exceptions import (
+from pydistsim.exceptions import (
     MessageUndeliverableException,
     NetworkErrorMsg,
     NetworkException,
 )
+from pydistsim.logger import logger
+from pydistsim.network.environment import Environment
+from pydistsim.network.networkbehavior import ExampleProperties, NetworkBehaviorModel
 from pydistsim.network.node import Node
 from pydistsim.observers import NodeObserver, ObserverManagerMixin
 from pydistsim.sensor import CompositeSensor
 from pydistsim.utils.helpers import pydistsim_equal_objects, with_typehint
 
 if TYPE_CHECKING:
-    from pydistsim.algorithm import BaseAlgorithm
     from pydistsim.message import Message
-
-AlgorithmsParam = tuple[type["BaseAlgorithm"] | tuple[type["BaseAlgorithm"], dict]]
 
 
 class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
@@ -46,22 +39,19 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
     Mixin to extend Graph and DiGraph. The result represents a network in a distributed simulation.
 
     The Network classes (:class:`Network` and :class:`BidirectionalNetwork`) extend the Graph class and provides additional functionality
-    for managing nodes, algorithms, and network properties.
+    for managing nodes and network properties.
     """
 
     def __init__(
         self,
         incoming_graph_data=None,  # Correct subclassing of Graph
-        environment: Environment = None,
-        algorithms: AlgorithmsParam = (),
-        communication_properties: CommunicationPropertiesModel | None = None,
+        environment: Environment | None = None,
+        behavioral_properties: NetworkBehaviorModel | None = None,
         **kwargs,
     ):
         """
         :param environment: The environment in which the network operates. If not provided, a new Environment instance will be created.
         :type environment: Environment, optional
-        :param algorithms: The algorithms to be executed on the network. If not provided, the default algorithms defined in settings.ALGORITHMS will be used.
-        :type algorithms: AlgorithmsParam, optional
         :param graph: The graph representing the network topology. Defaults to None.
         :type graph: NetworkX graph, optional
         :param kwargs: Additional keyword arguments.
@@ -71,10 +61,8 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         self.pos = {}
         self.ori = {}
         self.labels = {}
-        self.algorithms = algorithms or settings.ALGORITHMS
-        self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self.simulation = None
-        self.communication_properties = communication_properties or ExampleProperties.UnorderedCommunication
+        self.behavioral_properties = behavioral_properties or ExampleProperties.UnorderedCommunication
         logger.info("Instance of Network has been initialized.")
 
     #### Overriding methods from Graph and DiGraph ####
@@ -154,43 +142,10 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         self._copy_observers_to_nodes(node)
         return node
 
+    def nodes(self, *args, **kwargs) -> Iterable["Node"]:
+        return super().nodes(*args, **kwargs)
+
     #### Network attribute management ####
-
-    @property
-    def algorithms(self):
-        """
-        Set algorithms by passing tuple of Algorithm subclasses.
-
-        >>> net.algorithms = (Algorithm1, Algorithm2,)
-
-        For params pass tuples in form (Algorithm, params) like this
-
-        >>> net.algorithms = ((Algorithm1, {'param1': value,}), Algorithm2)
-
-        """
-        return self._algorithms
-
-    @algorithms.setter
-    def algorithms(self, algorithms: AlgorithmsParam):
-        self.reset()
-        self._algorithms = ()
-        if not isinstance(algorithms, tuple):
-            raise NetworkException(NetworkErrorMsg.ALGORITHM)
-        for algorithm in algorithms:
-            if inspect.isclass(algorithm) and issubclass(algorithm, BaseAlgorithm):
-                self._algorithms += (algorithm(self),)
-            elif (
-                isinstance(algorithm, tuple)
-                and len(algorithm) == 2
-                and issubclass(algorithm[0], BaseAlgorithm)
-                and isinstance(algorithm[1], dict)
-            ):
-                self._algorithms += (algorithm[0](self, **algorithm[1]),)
-            else:
-                raise NetworkException(NetworkErrorMsg.ALGORITHM)
-
-        # If everything went ok, set algorithms param for coping
-        self._algorithms_param = algorithms
 
     @property
     def environment(self):
@@ -235,7 +190,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         Does not reset the observers of the network nor the observers of the nodes.
         """
         logger.info("Resetting network.")
-        self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self.reset_all_nodes()
 
     def reset_all_nodes(self):
@@ -246,7 +200,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         """
         logger.info("Resetting all nodes.")
         for node in self.nodes():
-            node: "Node"
             node.reset()
 
     #### Network methods ####
@@ -284,9 +237,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
             else:
                 H.remove_node(node_H)
 
-        # Copy network attributes and reinitialize algorithms
-        H.algorithms = deepcopy(self._algorithms_param) or settings.ALGORITHMS
-        H.algorithmState = {"index": 0, "step": 1, "finished": False}
+        # Copy network attributes
         H.simulation = None
         H.clear_observers()
 
@@ -395,6 +346,17 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
             return set(self.predecessors(node))
         return set(self.neighbors(node))
 
+    def increment_node_clocks(self):
+        """
+        Increment the clock of all nodes in the network.
+
+        Follows the clock increment function defined in the behavioral properties.
+
+        :return: None
+        """
+        for node in self.nodes():
+            node.clock += self.behavioral_properties.get_clock_increment(node)
+
     #### Node communication methods ####
 
     def transit_messages(self, u: "Node", v: "Node") -> dict["Message", int]:
@@ -478,21 +440,17 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         # Process messages in outboxes
         for node in self.nodes():
-            node: "Node"
-
             # reversed to process messages in the order they were added
             for message in reversed(node.outbox.copy()):
-                next_dest = message.destination
+                next_dest: "Node" = message.destination
                 node.outbox.remove(message)
 
-                if self.communication_properties.should_lose(self, message):
+                if self.behavioral_properties.should_lose(self, message):
                     logger.debug("Message lost: {}", message)
                     self.add_lost_message(node, next_dest, message)
                     continue
 
-                self.add_transit_message(
-                    node, next_dest, message, self.communication_properties.get_delay(self, message)
-                )
+                self.add_transit_message(node, next_dest, message, self.behavioral_properties.get_delay(self, message))
 
         # Process messages in transit
         for u, v in self.edges():
@@ -500,7 +458,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
             if not messages_delay:
                 continue
 
-            message_ordering = self.communication_properties.message_ordering
+            message_ordering = self.behavioral_properties.message_ordering
 
             # Decrease delay for all messages
             for message in messages_delay:
@@ -533,7 +491,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
             if message.destination is not None:
                 # Destination is neighbor
-                if message.source in self.nodes() and message.destination in self.neighbors(
+                if message.source in self and message.destination in self.neighbors(
                     message.source
                 ):  # for DiGraph, `self.neighbors` are the out-neighbors
                     self.deliver_to(message.destination, message)
@@ -555,31 +513,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
             destination.push_to_inbox(message)
         else:
             raise MessageUndeliverableException("Destination not in network.", message)
-
-    #### Algorithm relation methods ####
-
-    def get_current_algorithm(self) -> BaseAlgorithm | None:
-        """
-        Try to return the current algorithm based on the algorithmState.
-
-        :return: The current algorithm.
-        :rtype: BaseAlgorithm or None
-
-        :raises NetworkException: If there are no algorithms defined in the network.
-        """
-        if len(self.algorithms) == 0:
-            logger.error("There is no algorithm defined in the network.")
-            raise NetworkException(NetworkErrorMsg.ALGORITHM_NOT_FOUND)
-
-        if self.algorithmState["finished"]:
-            if len(self.algorithms) > self.algorithmState["index"] + 1:
-                self.algorithmState["index"] += 1
-                self.algorithmState["step"] = 1
-                self.algorithmState["finished"] = False
-            else:
-                return None
-
-        return self.algorithms[self.algorithmState["index"]]
 
     #### Visualization methods ####
 
@@ -672,10 +605,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         :return: A dictionary containing the network data.
         :rtype: dict
         """
-        algorithms = {
-            "%d %s" % (ind, alg.name): ("active" if alg == self.algorithms[self.algorithmState["index"]] else "")
-            for ind, alg in enumerate(self.algorithms)
-        }
         pos = {
             n: f"x: {self.pos[n][0]:.2f} y: {self.pos[n][1]:.2f} theta: {self.ori[n] * 180.0 / pi:.2f} deg"
             for n in self.nodes_sorted()
@@ -684,14 +613,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         return {
             "nodes": pos,  # A dictionary mapping nodes to their positions in the network.
             "edges": edges,  # A list of pairs (id1, id2) representing the edges by node id.
-            "algorithms": algorithms,  # A dictionary mapping algorithm names to their status (active or not).
-            "algorithmState": {
-                "name": (  # The name of the current algorithm.
-                    self.get_current_algorithm().name if self.get_current_algorithm() else ""
-                ),
-                "step": self.algorithmState["step"],  # The current step of the algorithm.
-                "finished": self.algorithmState["finished"],  # Whether the algorithm has finished or not.
-            },
         }
 
     #### Test helper methods ####
@@ -742,16 +663,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
                     for sensor in node.sensors:
                         if sensor.name() == "DistSensor":
                             assert sensor.probabilityFunction.scale == value
-            # TODO: refactor this part as setting algorithms resets nodes
-            """
-                elif param=='algorithms':
-                    alg = self._algorithms
-                    self.algorithms = value
-                    assert(all(map(lambda a1, a2: pydistsim_equal_objects(a1, a2),
-                                   alg, self.algorithms)))
-                    #restore alg
-                    self._algorithms = alg
-                """
 
 
 class Network(NetworkMixin, DiGraph):

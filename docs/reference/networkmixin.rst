@@ -29,9 +29,9 @@ For class and method documentation refer to :class:`NetworkMixin`.
 ************************
 Communication properties
 ************************
-.. currentmodule:: pydistsim.network.communicationproperties
+.. currentmodule:: pydistsim.network.networkbehavior
 
-The communication properties of the network are defined in the :class:`CommunicationPropertiesModel` class. This
+The communication properties of the network are defined in the :class:`NetworkBehaviorModel` class. This
 class defines the three parameters that are used to model the communication properties of the network:
 
    #. Whether or not the messages being sent at a given time will arrive in the same order they were sent (massage
@@ -39,8 +39,8 @@ class defines the three parameters that are used to model the communication prop
    #. The amount of delay that the messages will have when being sent.
    #. The frequency at which the messages will be lost.
 
-To apply these properties to a network, simply set :attr:`NetworkMixin.communication_properties` to an instance of
-:class:`CommunicationPropertiesModel`.
+To apply these properties to a network, simply set :attr:`NetworkMixin.behavioral_properties` to an instance of
+:class:`NetworkBehaviorModel`.
 
 
 Some predefined models are available in the :class:`ExampleProperties` class:
