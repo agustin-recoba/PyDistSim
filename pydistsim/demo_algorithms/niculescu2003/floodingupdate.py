@@ -1,5 +1,8 @@
 from pydistsim.algorithm import NodeAlgorithm, StatusValues
 from pydistsim.message import Message
+from pydistsim.restrictions.communication import BidirectionalLinks
+from pydistsim.restrictions.reliability import TotalReliability
+from pydistsim.restrictions.topological import Connectivity
 
 
 class FloodingUpdate(NodeAlgorithm):
@@ -18,8 +21,19 @@ class FloodingUpdate(NodeAlgorithm):
         FLOODING = "FLOODING"
         INITIATOR = "INITIATOR"
 
+    S_init = (Status.INITIATOR, Status.FLOODING)
+    S_term = (Status.FLOODING,)
+
+    restrictions = (
+        BidirectionalLinks,
+        TotalReliability,
+        Connectivity,
+    )
+
     def initializer(self):
-        """Starts in every node satisfying initiator condition."""
+        """
+        Starts in every node satisfying initiator condition.
+        """
 
         for node in self.network.nodes():
             if self.initiator_condition(node):

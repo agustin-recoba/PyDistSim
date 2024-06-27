@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from pydistsim.algorithm.node_algorithm import NodeAlgorithm, StatusValues
-from pydistsim.algorithm.node_wrapper import NeighborLabel, NodeAccess
+from pydistsim.algorithm.node_wrapper import NodeAccess
 from pydistsim.message import Message
 from pydistsim.restrictions.communication import BidirectionalLinks
 from pydistsim.restrictions.reliability import TotalReliability

@@ -29,7 +29,6 @@ class YoYo(NodeAlgorithm):
         BidirectionalLinks,
         TotalReliability,
         Connectivity,
-        UniqueInitiator,
         InitialDistinctValues,
     )
 

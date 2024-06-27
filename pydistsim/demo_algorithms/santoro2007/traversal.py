@@ -15,6 +15,16 @@ class DFT(NodeAlgorithm):
         DONE = "DONE"
         VISITED = "VISITED"
 
+    S_init = (Status.INITIATOR, Status.IDLE)
+    S_term = Status.DONE
+
+    restrictions = (
+        BidirectionalLinks,
+        TotalReliability,
+        Connectivity,
+        UniqueInitiator,
+    )
+
     def initializer(self):
         for node in self.network.nodes():
             node.status = self.Status.IDLE
