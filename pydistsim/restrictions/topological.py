@@ -1,3 +1,9 @@
+"""
+Restrictions related to the communication topology of the underlying graph of the network.
+
+These restrict some communication properties of the network, such as connectivity, shape, and the number of initiators.
+"""
+
 from abc import ABC
 from typing import TYPE_CHECKING
 

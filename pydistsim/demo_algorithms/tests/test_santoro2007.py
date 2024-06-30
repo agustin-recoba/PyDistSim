@@ -1,10 +1,9 @@
 import unittest
 
 from pydistsim import NetworkGenerator, Simulation
-from pydistsim.algorithm.node_algorithm import NodeAlgorithm
 from pydistsim.demo_algorithms.santoro2007.traversal import DFT, DFStar
 from pydistsim.demo_algorithms.santoro2007.yoyo import YoYo
-from pydistsim.network import RangeNetwork
+from pydistsim.network.rangenetwork import BidirectionalRangeNetwork
 from pydistsim.utils.testing import PyDistSimTestCase
 
 
@@ -30,7 +29,7 @@ class TestYoYo(PyDistSimTestCase):
 
         for i, node_positions in enumerate(nets, start=1):
             with self.subTest(i=i):
-                net = RangeNetwork()
+                net = BidirectionalRangeNetwork()
                 for node_pos in node_positions:
                     net.add_node(pos=node_pos, commRange=node_range)
 
@@ -41,7 +40,6 @@ class TestYoYo(PyDistSimTestCase):
 
                 sim.run(1)
 
-                sim.algorithms[0].check_restrictions()
                 sim.algorithms[0].check_algorithm_initialization()
 
                 sim.run(100_000)
@@ -145,10 +143,6 @@ class TestTraversalDFStar(PyDistSimTestCase):
     def test_traversal(self):
         sim = Simulation(self.net)
         sim.algorithms = self.algorithms
-
-        for algo in sim.algorithms:
-            algo: "NodeAlgorithm"
-            algo.check_restrictions()
 
         sim.run(100_000)
 

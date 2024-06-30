@@ -1,3 +1,10 @@
+"""
+This module contains the definition of the axioms of the simulation environment.
+
+These axioms are the basis of the definition of the distributed computing environment. They are modeled in the
+implementation itself so there is no need to implement the check method.
+"""
+
 from typing import TYPE_CHECKING
 
 from pydistsim.restrictions.base_restriction import CheckableRestriction
@@ -9,7 +16,7 @@ from abc import ABC
 
 
 class SimulationAxiom(CheckableRestriction, ABC):
-    "Bases of the definition of the distributed computing environment."
+    "Base class for simulation axioms."
 
     @classmethod
     def check(cls, network: "NetworkType") -> bool:

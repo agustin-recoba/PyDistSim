@@ -24,7 +24,7 @@ class FloodingUpdate(NodeAlgorithm):
     S_init = (Status.INITIATOR, Status.FLOODING)
     S_term = (Status.FLOODING,)
 
-    restrictions = (
+    algorithm_restrictions = (
         BidirectionalLinks,
         TotalReliability,
         Connectivity,

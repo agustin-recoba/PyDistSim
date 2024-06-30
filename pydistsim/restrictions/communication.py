@@ -1,3 +1,9 @@
+"""
+Restrictions related to communication among entities/nodes.
+
+These restrictions are related to the communication topology of the underlying graph of the network.
+"""
+
 from abc import ABC
 from typing import TYPE_CHECKING
 
@@ -9,7 +15,7 @@ if TYPE_CHECKING:
 
 class CommunicationRestriction(CheckableRestriction, ABC):
     """
-    Restriction related to communication among entities.
+    Base class for restrictions related to communication among entities.
     """
 
 

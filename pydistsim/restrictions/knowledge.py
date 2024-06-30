@@ -1,3 +1,7 @@
+"""
+Restrictions relating to `a priori` knowledge of the network.
+"""
+
 from abc import ABC
 from typing import TYPE_CHECKING
 
@@ -12,7 +16,7 @@ if TYPE_CHECKING:
 
 class KnowledgeRestriction(CheckableRestriction, ABC):
     """
-    Restrictions relating to `a priori` knowledge of the network.
+    Base class for restrictions relating to `a priori` knowledge of the network.
     """
 
 

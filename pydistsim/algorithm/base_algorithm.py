@@ -66,17 +66,17 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
     Abstract base class for all algorithms.
 
     Currently there are two main subclasses:
-        * NodeAlgorithm used for distributed algorithms
-        * NetworkAlgorithm used for centralized algorithms
+    * NodeAlgorithm used for distributed algorithms
+    * NetworkAlgorithm used for centralized algorithms
 
     When writing new algorithms make them subclass either of NodeAlgorithm or
     NetworkAlgorithm.
 
     Every algorithm instance has a set of required and default params:
-        * Required params must be given to algorithm initializer as a keyword
-            arguments.
-        * Default params can be given to algorithm initializer as a keyword
-            arguments, if not their class defines default value.
+    * Required params must be given to algorithm initializer as a keyword
+        arguments.
+    * Default params can be given to algorithm initializer as a keyword
+        arguments, if not their class defines default value.
 
     Note: On algorithm initialization all params are converted to instance
     attributes.
@@ -100,7 +100,6 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
       classes.
     * default_params are updated so default values are overridden in
       subclasses
-
     """
 
     required_params = ()
@@ -153,16 +152,19 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
         """
         Check if the restrictions are satisfied. Does not apply ApplicableRestrictions.
         """
-        for restriction in self.__class__.algorithm_restrictions:
-            if isinstance(restriction, CheckableRestriction) and not restriction.check(self.network):
-                raise AlgorithmException(f"Restriction {restriction.__name__} not satisfied.")
+        logger.debug("Checking restrictions for algorithm {}.", self.name)
+        for restriction in self.algorithm_restrictions:
+            if issubclass(restriction, CheckableRestriction):
+                logger.debug("Checking restriction {}.", restriction.__name__)
+                if not restriction.check(self.network):
+                    raise AlgorithmException(f"Restriction {restriction.__name__} not satisfied.")
 
     def apply_restrictions(self):
         """
         Apply all applicable restrictions.
         """
-        for restriction in self.__class__.algorithm_restrictions:
-            if isinstance(restriction, ApplicableRestriction):
+        for restriction in self.algorithm_restrictions:
+            if issubclass(restriction, ApplicableRestriction):
                 restriction.apply(self.network)
 
 

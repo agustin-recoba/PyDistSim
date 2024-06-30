@@ -14,6 +14,7 @@ class TestBroadcastSimple(PyDistSimTestCase):
         self.net = net_gen.generate_random_network()
         self.sim = Simulation(self.net)
         self.sim.algorithms = ((Flood, {"informationKey": "greet"}),)
+
         # Asigna el mensaje a enviar, la información inicial
         self.initiator = self.net.nodes_sorted()[0]
         self.initiator.memory["greet"] = HELLO
@@ -21,8 +22,6 @@ class TestBroadcastSimple(PyDistSimTestCase):
     def test_broadcast(self):
         sim = self.sim
         algo = sim.algorithms[0]
-
-        algo.check_restrictions()
 
         for node in self.net.nodes():
             if node == self.initiator:
@@ -63,8 +62,6 @@ class TestBroadcastConcatenated(PyDistSimTestCase):
         sim = self.sim
         first_algo = sim.algorithms[0]
         last_algo = sim.algorithms[-1]
-
-        first_algo.check_restrictions()
 
         for node in self.net.nodes():
             with self.subTest(node=node):

@@ -15,6 +15,7 @@
     "python.analysis.fixAll": ["source.unusedImports"],
     "remote.autoForwardPortsFallback": 0,
     "remote.autoForwardPorts": false,
-    "cSpell.enabled": true
+    "cSpell.enabled": true,
+    "cSpell.words": ["Santoro"]
   }
 }

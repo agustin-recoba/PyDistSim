@@ -1,3 +1,7 @@
+"""
+This module contains restrictions related to time and how it is handled in the simulation.
+"""
+
 from abc import ABC
 from typing import TYPE_CHECKING
 
@@ -11,7 +15,7 @@ if TYPE_CHECKING:
 
 class TimeRestriction(CheckableRestriction, ABC):
     """
-    Restrictions relating to time.
+    Base class for restrictions relating to time.
 
     In fact, the general model makes no assumption about delays (except that they are finite).
     """

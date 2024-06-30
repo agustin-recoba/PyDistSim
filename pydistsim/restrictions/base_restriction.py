@@ -1,5 +1,14 @@
+"""
+Base classes for restrictions over message passing networks.
+
+All restrictions are based on "Design and Analysis of Distributed Algorithms" by Nicola Santoro.
+
+There are two types of restrictions: checkable and applicable. Checkable restrictions can be checked for a network,
+while applicable restrictions can be applied to a network. Sometimes, an applicable restriction may check itself.
+"""
+
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from pydistsim.network.network import NetworkType
@@ -9,26 +18,24 @@ def abstractclassmethod(method):
     return classmethod(abstractmethod(method))
 
 
-RestrictionType = Union["CheckableRestriction", "ApplicableRestriction"]
-"""
-A restriction over a message passing network.
-
-All implemented restrictions are based on "Design and Analysis of Distributed Algorithms" by Nicola Santoro.
-"""
-
-
-class CheckableRestriction(ABC):
+class Restriction(ABC):
     """
-    Model a checkable restriction over a message passing network.
+    Base class for all restrictions over a message passing network.
+    """
+
+
+class CheckableRestriction(Restriction, ABC):
+    """
+    Base class for checkable restrictions over a message passing network.
     """
 
     @abstractclassmethod
     def check(cls, network: "NetworkType") -> bool: ...
 
 
-class ApplicableRestriction(ABC):
+class ApplicableRestriction(Restriction, ABC):
     """
-    A restriction that can be applied to a network.
+    Base class for restrictions that can be applied to a network.
 
     This is a separate class from :class:`Restriction` to allow for restrictions that are not checkable.
     """

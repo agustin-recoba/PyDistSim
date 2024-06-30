@@ -1,3 +1,7 @@
+"""
+Restrictions related to reliability, faults, and their detection.
+"""
+
 from abc import ABC
 from typing import TYPE_CHECKING
 
@@ -9,7 +13,7 @@ if TYPE_CHECKING:
 
 class ReliabilityRestriction(CheckableRestriction, ABC):
     """
-    Restrictions related to reliability, faults, ant their detection.
+    Base class for restrictions related to reliability.
     """
 
 

@@ -25,7 +25,7 @@ class YoYo(NodeAlgorithm):
     S_init = (Status.INITIATOR, Status.IDLE)
     S_term = (Status.LEADER, Status.PRUNED)
 
-    restrictions = (
+    algorithm_restrictions = (
         BidirectionalLinks,
         TotalReliability,
         Connectivity,

@@ -22,7 +22,7 @@ class Flood(NodeAlgorithm):
     S_init = (Status.INITIATOR, Status.IDLE)
     S_term = (Status.DONE,)
 
-    restrictions = (
+    algorithm_restrictions = (
         BidirectionalLinks,
         TotalReliability,
         Connectivity,
