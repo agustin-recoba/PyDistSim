@@ -3,9 +3,12 @@ from typing import TYPE_CHECKING
 
 from pydistsim.logger import logger
 from pydistsim.observers import ObserverManagerMixin
+from pydistsim.restrictions import CheckableRestriction
+from pydistsim.restrictions.base_restriction import ApplicableRestriction
 
 if TYPE_CHECKING:
     from pydistsim.network import NetworkType
+    from pydistsim.simulation import Simulation
 
 
 class AlgorithmMeta(type):
@@ -63,17 +66,17 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
     Abstract base class for all algorithms.
 
     Currently there are two main subclasses:
-        * NodeAlgorithm used for distributed algorithms
-        * NetworkAlgorithm used for centralized algorithms
+    * NodeAlgorithm used for distributed algorithms
+    * NetworkAlgorithm used for centralized algorithms
 
     When writing new algorithms make them subclass either of NodeAlgorithm or
     NetworkAlgorithm.
 
     Every algorithm instance has a set of required and default params:
-        * Required params must be given to algorithm initializer as a keyword
-            arguments.
-        * Default params can be given to algorithm initializer as a keyword
-            arguments, if not their class defines default value.
+    * Required params must be given to algorithm initializer as a keyword
+        arguments.
+    * Default params can be given to algorithm initializer as a keyword
+        arguments, if not their class defines default value.
 
     Note: On algorithm initialization all params are converted to instance
     attributes.
@@ -97,15 +100,17 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
       classes.
     * default_params are updated so default values are overridden in
       subclasses
-
     """
 
     required_params = ()
     default_params = {}
 
-    def __init__(self, network, **kwargs):
+    algorithm_restrictions = ()
+    "Tuple of restrictions that must be satisfied for the algorithm to run."
+
+    def __init__(self, simulation: "Simulation", **kwargs):
         super().__init__()
-        self.network: "NetworkType" = network
+        self.simulation: "NetworkType" = simulation
         self.name = self.__class__.__name__
         logger.debug("Instance of {} class has been initialized.", self.name)
 
@@ -127,17 +132,40 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.__dict__})"
 
-    def step(self):
+    @property
+    def network(self) -> "NetworkType":
+        return self.simulation.network
+
+    def step(self, check_restrictions: bool):
         raise NotImplementedError
 
     def is_initialized(self):
-        return self.network.algorithmState["step"] != 1 and self.network.get_current_algorithm() == self
+        return self.simulation.algorithmState["step"] != 1 and self.simulation.get_current_algorithm() == self
 
     def is_halted(self):
         """
         Check if the distributed algorithm has come to an end or deadlock.
         """
         raise NotImplementedError
+
+    def check_restrictions(self):
+        """
+        Check if the restrictions are satisfied. Does not apply ApplicableRestrictions.
+        """
+        logger.debug("Checking restrictions for algorithm {}.", self.name)
+        for restriction in self.algorithm_restrictions:
+            if issubclass(restriction, CheckableRestriction):
+                logger.debug("Checking restriction {}.", restriction.__name__)
+                if not restriction.check(self.network):
+                    raise AlgorithmException(f"Restriction {restriction.__name__} not satisfied.")
+
+    def apply_restrictions(self):
+        """
+        Apply all applicable restrictions.
+        """
+        for restriction in self.algorithm_restrictions:
+            if issubclass(restriction, ApplicableRestriction):
+                restriction.apply(self.network)
 
 
 class AlgorithmException(Exception):

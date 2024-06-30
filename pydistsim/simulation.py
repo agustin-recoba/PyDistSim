@@ -1,8 +1,11 @@
+import inspect
 from typing import TYPE_CHECKING, Optional
 
 from PySide6.QtCore import SIGNAL, QThread
 
 from pydistsim.algorithm import BaseAlgorithm
+from pydistsim.conf import settings
+from pydistsim.exceptions import SimulationException
 from pydistsim.logger import logger
 from pydistsim.observers import (
     AlgorithmObserver,
@@ -16,18 +19,29 @@ if TYPE_CHECKING:
     from pydistsim.network import NetworkType
 
 
+AlgorithmsParam = tuple[type["BaseAlgorithm"] | tuple[type["BaseAlgorithm"], dict]]
+
+
 class Simulation(ObserverManagerMixin, QThread):
     """
     Controls single network algorithm and node algorithms simulation.
     It is responsible for visualization and logging, also.
     """
 
-    def __init__(self, network: "NetworkType", **kwargs):
+    def __init__(
+        self,
+        network: "NetworkType",
+        algorithms: AlgorithmsParam | None = None,
+        check_restrictions: bool = True,
+        **kwargs,
+    ):
         """
         Initialize a Simulation object.
 
         :param network: The network object representing the simulation network.
         :type network: NetworkType
+        :param algorithms: The algorithms to be executed on the network. If not provided, the default algorithms defined in settings.ALGORITHMS will be used.
+        :type algorithms: AlgorithmsParam, optional
         :param logLevel: The log level for the simulation logger (default: LogLevels.DEBUG).
         :type logLevel: LogLevels
         :param kwargs: Additional keyword arguments.
@@ -36,7 +50,10 @@ class Simulation(ObserverManagerMixin, QThread):
 
         self._network = network
         self._network.simulation = self
+        self.algorithms = algorithms or settings.ALGORITHMS
+        self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self.stepsLeft = 0
+        self.check_restrictions = check_restrictions
         self.add_observers(QThreadObserver(self))
 
         logger.debug("Simulation {} created successfully.", hex(id(self)))
@@ -58,8 +75,8 @@ class Simulation(ObserverManagerMixin, QThread):
         :return: None
         """
         self.stepsLeft = steps
-        for _ in range(len(self.network.algorithms) * len(self.network)):
-            algorithm: Optional["BaseAlgorithm"] = self.network.get_current_algorithm()
+        for _ in range(len(self.algorithms) * len(self.network)):
+            algorithm: Optional["BaseAlgorithm"] = self.get_current_algorithm()
             if not algorithm:
                 logger.info(
                     "Simulation has finished. There are no "
@@ -88,14 +105,26 @@ class Simulation(ObserverManagerMixin, QThread):
         """
         Run the given algorithm on the given network.
 
-        Update stepsLeft and network.algorithmState['step'].
+        Update stepsLeft and sim.algorithmState['step'].
         If stepsLeft hit 0 it may return unfinished.
 
         :param algorithm: The algorithm to run on the network.
         """
         for _ in range(1000 * len(self.network)):
-            algorithm.step()
+            logger.debug(
+                "[{}] Step {} started",
+                algorithm.name,
+                self.algorithmState["step"],
+            )
+            algorithm.step(self.check_restrictions)
             self.stepsLeft -= 1
+            self.algorithmState["step"] += 1
+            self.network.increment_node_clocks()
+            logger.debug(
+                "[{}] Step {} finished",
+                algorithm.name,
+                self.algorithmState["step"],
+            )
 
             if algorithm.is_halted():
                 break  # algorithm finished
@@ -104,7 +133,7 @@ class Simulation(ObserverManagerMixin, QThread):
 
         self.notify_observers(ObservableEvents.algorithm_finished, algorithm)
         logger.debug("[{}] Algorithm finished", algorithm.name)
-        self.network.algorithmState["finished"] = True
+        self.algorithmState["finished"] = True
 
     def reset(self):
         """
@@ -113,6 +142,7 @@ class Simulation(ObserverManagerMixin, QThread):
         :return: None
         """
         logger.info("Resetting simulation.")
+        self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self._network.reset()
 
     def is_halted(self):
@@ -126,7 +156,7 @@ class Simulation(ObserverManagerMixin, QThread):
         :return: True if the algorithm is halted, False otherwise.
         :rtype: bool
         """
-        algorithm: Optional["BaseAlgorithm"] = self.network.get_current_algorithm()
+        algorithm: Optional["BaseAlgorithm"] = self.get_current_algorithm()
         return algorithm is None or algorithm.is_halted()
 
     @property
@@ -163,6 +193,91 @@ class Simulation(ObserverManagerMixin, QThread):
     def _copy_observers_to_network(self):
         self.network.add_observers(*(observer for observer in self.observers if isinstance(observer, NetworkObserver)))
 
+    #### Algorithm relation methods ####
+
+    def get_current_algorithm(self) -> BaseAlgorithm | None:
+        """
+        Try to return the current algorithm based on the algorithmState.
+
+        :return: The current algorithm.
+        :rtype: BaseAlgorithm or None
+
+        :raises NetworkException: If there are no algorithms defined in the network.
+        """
+        if len(self.algorithms) == 0:
+            logger.error("There is no algorithm defined in the network.")
+            raise SimulationException(SimulationException.ERRORS.ALGORITHM_NOT_FOUND)
+
+        if self.algorithmState["finished"]:
+            if len(self.algorithms) > self.algorithmState["index"] + 1:
+                self.algorithmState["index"] += 1
+                self.algorithmState["step"] = 1
+                self.algorithmState["finished"] = False
+            else:
+                return None
+
+        return self.algorithms[self.algorithmState["index"]]
+
+    @property
+    def algorithms(self):
+        """
+        Set algorithms by passing tuple of Algorithm subclasses.
+
+        >>> sim.algorithms = (Algorithm1, Algorithm2,)
+
+        For params pass tuples in form (Algorithm, params) like this
+
+        >>> sim.algorithms = ((Algorithm1, {'param1': value,}), Algorithm2)
+
+        """
+        return self._algorithms
+
+    @algorithms.setter
+    def algorithms(self, algorithms: AlgorithmsParam):
+        self.reset()
+        self._algorithms = ()
+        if not isinstance(algorithms, tuple):
+            raise SimulationException(SimulationException.ERRORS.ALGORITHM)
+        for algorithm in algorithms:
+            if inspect.isclass(algorithm) and issubclass(algorithm, BaseAlgorithm):
+                self._algorithms += (algorithm(self),)
+            elif (
+                isinstance(algorithm, tuple)
+                and len(algorithm) == 2
+                and issubclass(algorithm[0], BaseAlgorithm)
+                and isinstance(algorithm[1], dict)
+            ):
+                self._algorithms += (algorithm[0](self, **algorithm[1]),)
+            else:
+                raise SimulationException(SimulationException.ERRORS.ALGORITHM)
+
+        # If everything went ok, set algorithms param for coping
+        self._algorithms_param = algorithms
+
+    def get_dic(self):
+        """
+        Return all simulation data in the form of a dictionary.
+
+        :return: A dictionary containing the simulation data.
+        :rtype: dict
+        """
+
+        algorithms = {
+            "%d %s" % (ind, alg.name): ("active" if alg == self.algorithms[self.algorithmState["index"]] else "")
+            for ind, alg in enumerate(self.algorithms)
+        }
+
+        return {
+            "algorithms": algorithms,  # A dictionary mapping algorithm names to their status (active or not).
+            "algorithmState": {
+                "name": (  # The name of the current algorithm.
+                    self.get_current_algorithm().name if self.get_current_algorithm() else "No algorithm"
+                ),
+                "step": self.algorithmState["step"],  # The current step of the algorithm.
+                "finished": self.algorithmState["finished"],  # Whether the algorithm has finished or not.
+            },
+        }
+
 
 class QThreadObserver(AlgorithmObserver, SimulationObserver):
     def __init__(self, q_thread: QThread, *args, **kwargs) -> None:
@@ -174,7 +289,7 @@ class QThreadObserver(AlgorithmObserver, SimulationObserver):
             SIGNAL("updateLog(QString)"),
             "[{}] Step {} finished",
             algorithm.name,
-            algorithm.network.algorithmState["step"],
+            algorithm.simulation.algorithmState["step"],
         )
 
     def on_state_changed(self, simulation: Simulation) -> None:

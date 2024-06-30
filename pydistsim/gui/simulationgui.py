@@ -109,7 +109,7 @@ class SimulationGui(QMainWindow):
     def draw_network(self, net=None, clear=True, subclusters=None, drawMessages=True):
         if not net:
             net = self.net
-        currentAlgorithm = self.net.get_current_algorithm()
+        currentAlgorithm = self.sim.get_current_algorithm()
         if clear:
             self.axes.clear()
         self.axes.imshow(net.environment.image, vmin=0, cmap="binary_r", origin="lower")
@@ -127,14 +127,14 @@ class SimulationGui(QMainWindow):
         self.draw_labels(net)
         self.drawnNet = net
         step_text = (
-            " (step %d)" % self.net.algorithmState["step"] if isinstance(currentAlgorithm, NodeAlgorithm) else ""
+            " (step %d)" % self.sim.algorithmState["step"] if isinstance(currentAlgorithm, NodeAlgorithm) else ""
         )
         self.axes.set_title((currentAlgorithm.name if currentAlgorithm else "") + step_text)
 
         self.refresh_visibility()
         # To save multiple figs of the simulation uncomment next two lines:
         # self.fig.savefig('network-alg-%d-step-%d.png' %
-        #                 (self.net.algorithmState['index'], self.net.algorithmState['step']))
+        #                 (self.sim.algorithmState['index'], self.sim.algorithmState['step']))
 
     def draw_nodes(self, net=None, node_colors={}, node_radius={}):
         if not net:

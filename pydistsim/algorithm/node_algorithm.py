@@ -1,14 +1,16 @@
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
-from types import MethodType
+from types import NoneType
 from typing import TYPE_CHECKING
 
-from pydistsim.algorithm.base_algorithm import BaseAlgorithm
+from pydistsim.algorithm.base_algorithm import AlgorithmException, BaseAlgorithm
+from pydistsim.algorithm.node_wrapper import NodeAccess
 from pydistsim.logger import logger
 from pydistsim.message import Message
 from pydistsim.message import MetaHeader as MessageMetaHeader
 from pydistsim.observers import ObservableEvents
+from pydistsim.restrictions.axioms import FiniteCommunicationDelays, LocalOrientation
 
 if TYPE_CHECKING:
     from pydistsim.network import Node
@@ -16,11 +18,13 @@ if TYPE_CHECKING:
 
 @dataclass
 class Alarm:
-    "Dataclass that represents an alarm set for a node."
+    """
+    Dataclass that represents an alarm set for a node.
+    """
 
     time_left: int
     message: Message
-    node: "Node"
+    node: "NodeAccess"
     triggered: bool = False
 
 
@@ -42,14 +46,26 @@ MSG_META_HEADER_MAP = {
 }
 
 
+ActionMethod = Callable[["NodeAlgorithm", "NodeAccess", Message], NoneType]
+
+
 class StatusValues(StrEnum):
     """
     Enum that defines the possible statuses of the nodes.
 
-    Instances of this class should be used as decorators for methods in subclasses of NodeAlgorithm.
+    Instances of this class should be used as decorators for methods in subclasses of :class:`NodeAlgorithm`.
     """
 
-    def __call__(self, func: MethodType):
+    def __call__(self, func: ActionMethod):
+        """
+        Decorator that sets the method for the action and status.
+
+        :param func: The method to be set.
+        :type func: ActionMethod
+        :return: The method that was set.
+        :rtype: ActionMethod
+        """
+
         assert (
             func.__name__ in Actions.__members__
         ), f"Invalid function name '{func.__name__}', please make sure it is one of {list(Actions.__members__)}."
@@ -64,7 +80,7 @@ class StatusValues(StrEnum):
     def get_method(self, action: Actions):
         return getattr(self, str(action))
 
-    def set_method(self, method: MethodType):
+    def set_method(self, method: ActionMethod):
         setattr(self, method.__name__, method)
 
 
@@ -87,6 +103,20 @@ class NodeAlgorithm(BaseAlgorithm):
         "Example of StatusValues subclass that defines the possible statuses of the nodes."
         IDLE = "IDLE"
 
+    algorithm_restrictions = (
+        FiniteCommunicationDelays,
+        LocalOrientation,
+    )
+
+    S_init = ()
+    "Tuple of statuses that nodes should have at the beginning of the algorithm."
+
+    S_term = ()
+    "Tuple of statuses that nodes should have at the end of the algorithm."
+
+    NODE_ACCESS_TYPE: type[NodeAccess] = NodeAccess
+    "Type of the node access proxy. Default is :class:`NodeAccess`."
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -94,15 +124,12 @@ class NodeAlgorithm(BaseAlgorithm):
 
     ### BaseAlgorithm interface methods ###
 
-    def step(self):
-        logger.debug(
-            "[{}] Step {} started",
-            self.name,
-            self.network.algorithmState["step"],
-        )
+    def step(self, check_restrictions: bool):
         if not self.is_initialized():
             self.notify_observers(ObservableEvents.algorithm_started, self)
             self.initializer()
+            if check_restrictions:
+                self.check_restrictions()
 
             if not any(len(node.outbox) + len(node.inbox) > 0 for node in self.network.nodes()):
                 logger.warning("Initializer didn't send any message.")
@@ -111,12 +138,6 @@ class NodeAlgorithm(BaseAlgorithm):
             self._process_alarms()
             for node in self.network.nodes_sorted():
                 self._node_step(node)
-        logger.debug(
-            "[{}] Step {} finished",
-            self.name,
-            self.network.algorithmState["step"],
-        )
-        self.network.algorithmState["step"] += 1
 
         self.notify_observers(ObservableEvents.step_done, self)
 
@@ -142,15 +163,17 @@ class NodeAlgorithm(BaseAlgorithm):
         Method used to initialize the algorithm. Is always called first.
         :class:`NodeAlgorithm` subclasses may want to reimplement it.
 
-        Base implementation sends an INI message to the node with the lowest id.
+        Base implementation sends an INI message to the node with the lowest id and applies all restrictions.
         """
         logger.debug("Initializing algorithm {}.", self.name)
+        self.apply_restrictions()
+
         node: "Node" = self.network.nodes_sorted()[0]
         node.push_to_inbox(Message(meta_header=NodeAlgorithm.INI))
         for node in self.network.nodes_sorted():
             node.status = self.Status.IDLE
 
-    def send(self, source_node: "Node", message: Message):
+    def send(self, node_w: "NodeAccess", message: Message):
         """
         Send a message to nodes listed in message's destination field.
 
@@ -162,15 +185,18 @@ class NodeAlgorithm(BaseAlgorithm):
         :param message: The message to be sent.
         :type message: Message
         """
+        source_node: "Node" = node_w.unbox()  # unwrap the proxy
+
         message.source = source_node
         if not isinstance(message.destination, Iterable):
             message.destination = [message.destination]
-        for destination in message.destination:
+        for destination_w in message.destination:
+            destination: "Node" = destination_w.unbox()  # unwrap the proxy
             source_node.push_to_outbox(message.copy(), destination)
 
     ### Alarm methods ###
 
-    def set_alarm(self, node: "Node", time: int, message: Message | None = None):
+    def set_alarm(self, node_p: "NodeAccess", time: int, message: Message | None = None):
         """
         Set an alarm for the node.
         One unit of time is one step of the algorithm.
@@ -179,8 +205,8 @@ class NodeAlgorithm(BaseAlgorithm):
 
         Returns the alarm that was set, useful for disabling it later.
 
-        :param node: The node for which the alarm is set.
-        :type node: Node
+        :param node_p: The node for which the alarm is set.
+        :type node: NodeProxy
         :param time: The time after which the alarm will trigger.
         :type time: int
         :param message: The message to be sent when the alarm triggers.
@@ -193,25 +219,25 @@ class NodeAlgorithm(BaseAlgorithm):
         if message is None:
             message = Message()
         message.meta_header = MessageMetaHeader.ALARM_MESSAGE
-        message.destination = node
+        message.destination = node_p.unbox()
 
-        alarm = Alarm(time, message, node)
+        alarm = Alarm(time, message, node_p)
         self.alarms.append(alarm)
         return alarm
 
-    def disable_all_node_alarms(self, node: "Node"):
+    def disable_all_node_alarms(self, node_p: "NodeAccess"):
         """
         Disable all alarms set for the node.
 
         :param node: The node for which the alarms are disabled.
-        :type node: Node
+        :type node: NodeProxy
         """
-        to_delete_messages = [alarm.message for alarm in self.alarms if alarm.node == node]
-        self.alarms = [alarm for alarm in self.alarms if alarm.node != node]
+        to_delete_messages = [alarm.message for alarm in self.alarms if alarm.node == node_p]
+        self.alarms = [alarm for alarm in self.alarms if alarm.node != node_p]
 
-        for message in node.inbox.copy():
-            if message in to_delete_messages and message in node.inbox:
-                node.inbox.remove(message)
+        for message in node_p.unbox().inbox.copy():
+            if message in to_delete_messages and message in node_p.inbox:
+                node_p.inbox.remove(message)
 
     def disable_alarm(self, alarm: Alarm):
         """
@@ -222,8 +248,8 @@ class NodeAlgorithm(BaseAlgorithm):
         """
         if alarm in self.alarms:
             self.alarms.remove(alarm)
-        elif alarm.message in alarm.node.inbox:
-            alarm.node.inbox.remove(alarm.message)
+        elif alarm.message in alarm.node.unbox().inbox:
+            alarm.node.unbox().inbox.remove(alarm.message)
 
     def update_alarm_time(self, alarm: Alarm, time_diff: int):
         """
@@ -237,13 +263,39 @@ class NodeAlgorithm(BaseAlgorithm):
         """
         if alarm in self.alarms:
             alarm.time_left += time_diff
-        elif alarm.message in alarm.node.inbox:
-            alarm.node.inbox.remove(alarm.message)
+        elif alarm.message in alarm.node.unbox().inbox:
+            alarm.node.unbox().inbox.remove(alarm.message)
             alarm.time_left += time_diff
             alarm.triggered = False
             self.alarms.append(alarm)
         else:
             raise ValueError("Alarm not found.")
+
+    ### Methods for algorithm evaluation ###
+
+    def check_algorithm_initialization(self):
+        """
+        Check if the algorithm's current state matches the expected initial state.
+
+        This method depends on the correct configuration of the :attr:`S_init` class attribute of the algorithm.
+        """
+        for node in self.network.nodes():
+            if node.status not in self.S_init:
+                raise AlgorithmException(
+                    f"Node status not initialized as expected. Found {node.status} instead of any of {self.S_init}."
+                )
+
+    def check_algorithm_termination(self):
+        """
+        Check if the algorithm's current state matches the expected termination state.
+
+        This method depends on the correct configuration of the :attr:`S_term` class attribute of the algorithm.
+        """
+        for node in self.network.nodes():
+            if node.status not in self.S_term:
+                raise AlgorithmException(
+                    f"Node status not terminated as expected. Found {node.status} instead of any of {self.S_term}."
+                )
 
     ### Private methods for algorithm execution ###
 
@@ -256,16 +308,6 @@ class NodeAlgorithm(BaseAlgorithm):
             if message.destination is None or message.destination == node:
                 # when destination is None it is broadcast message
                 self._process_message(node, message)
-            elif message.nexthop == node.id:
-                self._forward_message(node, message)
-
-    def _forward_message(self, node: "Node", message: Message):
-        try:
-            message.nexthop = node.memory["routing"][message.destination]
-        except KeyError:
-            logger.warning("Missing routing table or destination node not in it.")
-        else:
-            self.send(node, message)
 
     def _process_alarms(self):
         for alarm in self.alarms.copy():
@@ -274,7 +316,7 @@ class NodeAlgorithm(BaseAlgorithm):
             if alarm.time_left <= 0:
                 self.alarms.remove(alarm)
                 alarm.triggered = True
-                alarm.node.push_to_inbox(alarm.message)
+                alarm.node.unbox().push_to_inbox(alarm.message)
 
     def _process_message(self, node: "Node", message: Message):
         logger.debug("Processing message: 0x%x" % id(message))
@@ -282,17 +324,23 @@ class NodeAlgorithm(BaseAlgorithm):
         return self._process_action(method_name, node, message)
 
     def _process_action(self, action: Actions, node: "Node", message: Message):
-        status: StatusValues = getattr(self.Status, node.status.value)
+        status: StatusValues = getattr(self.Status, node.status)
+
+        node_proxy = self.NODE_ACCESS_TYPE(node)  # TODO: set offuscation here
+        if message.source is not None:
+            message.source = node_proxy._get_in_neighbor_proxy(message.source)
+        if message.destination is not None:
+            message.destination = node_proxy
 
         method_name = f"{action}_{status}"
         default_name = f"{Actions.default}_{status}"
 
         if hasattr(self, method_name):
             method = getattr(self, method_name)
-            return method(node, message)
+            return method(node_proxy, message)
         elif hasattr(self, default_name):
             method = getattr(self, default_name)
-            return method(node, message)
+            return method(node_proxy, message)
 
         logger.error(f"Method {self.name}.{action} not implemented for status {node.status}.")
 
@@ -326,7 +374,7 @@ class NodeAlgorithm(BaseAlgorithm):
 
             # Create a method for invocations like `self.default(node, message)`
             # CAUTION: the resolution of the method is deferred to the instance, super() will not work
-            def __unresolved_action_method__(alg_instance: "NodeAlgorithm", node: "Node", message: Message):
+            def __unresolved_action_method__(alg_instance: "NodeAlgorithm", node: "NodeAccess", message: Message):
                 alg_instance._process_action(action, node, message)
 
             dct[action] = __unresolved_action_method__

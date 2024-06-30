@@ -1,9 +1,7 @@
 """
 Sensors provide a way for node to interact with its environment.
 
-Sensors can also be used to satisfy algorithm prerequisites. For example
-if algorithm depends on the assumption that all nodes know who their neighbors
-are then nodes should be equipped with :class:`NeighborsSensor`.
+Sensors can also be used to satisfy algorithm prerequisites.
 
 Generally sensors should incorporate some model of measurement insecurity that
 is inherent in real world sensors. This is implemented as a
@@ -11,9 +9,9 @@ is inherent in real world sensors. This is implemented as a
 
 Basic usage:
 
->>> node.compositeSensor = ('NeighborsSensor','AoASensor')
+>>> node.compositeSensor = ('DistSensor','AoASensor')
 >>> node.compositeSensor.sensors
-(<pydistsim.sensor.NeighborsSensor at 0x6d3fbb0>,
+(<pydistsim.sensor.DistSensor at 0x6d3fbb0>,
  <pydistsim.sensor.AoASensor at 0x6d3f950>)
 
 To manually set sensor parameters first make an sensor instance:
@@ -25,6 +23,7 @@ To manually set sensor parameters first make an sensor instance:
 """
 
 import inspect
+from abc import ABC, abstractmethod
 from collections.abc import Callable
 from functools import wraps
 from typing import TYPE_CHECKING
@@ -38,7 +37,7 @@ if TYPE_CHECKING:
     from pydistsim.network import Node
 
 
-class Sensor:
+class Sensor(ABC):
     """
     Abstract base class for all Sensors.
 
@@ -76,6 +75,7 @@ class Sensor:
         """
         return self.__class__.__name__
 
+    @abstractmethod
     def read(self) -> dict:
         """
         Read the sensor data.
@@ -104,25 +104,6 @@ def node_in_network(fun: Callable):
         return fun(sensor, node)
 
     return f
-
-
-class NeighborsSensor(Sensor):
-    """Provides a list of a node's neighbors.
-
-    This sensor class is used to retrieve the list of neighbors for a given node in a network.
-    """
-
-    @node_in_network
-    def read(self, node: "Node"):
-        """
-        Retrieve the list of neighbors for a given node.
-
-        :param node: The node for which to retrieve the neighbors.
-        :type node: Node
-        :return: A dictionary containing the list of neighbors.
-        :rtype: dict
-        """
-        return {"Neighbors": list(node.network.neighbors(node))}
 
 
 class AoASensor(Sensor):
@@ -210,7 +191,7 @@ class CompositeSensor:
 
     """
 
-    def __init__(self, node: "Node", componentSensors: tuple[type[Sensor] | str, ...] = None):
+    def __init__(self, node: "Node", componentSensors: tuple[type[Sensor] | str, ...] | None = None):
         """
         Initialize the Sensor object.
 

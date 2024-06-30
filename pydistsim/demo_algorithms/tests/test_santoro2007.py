@@ -1,13 +1,13 @@
 import unittest
 
-from pydistsim import Network, NetworkGenerator, Simulation
+from pydistsim import NetworkGenerator, Simulation
 from pydistsim.demo_algorithms.santoro2007.traversal import DFT, DFStar
 from pydistsim.demo_algorithms.santoro2007.yoyo import YoYo
-from pydistsim.network import RangeNetwork
+from pydistsim.network.rangenetwork import BidirectionalRangeNetwork
 from pydistsim.utils.testing import PyDistSimTestCase
 
 
-class TestYoYo(unittest.TestCase):
+class TestYoYo(PyDistSimTestCase):
 
     def test_santoro2007(self):
         node_range = 100
@@ -29,15 +29,22 @@ class TestYoYo(unittest.TestCase):
 
         for i, node_positions in enumerate(nets, start=1):
             with self.subTest(i=i):
-                net = RangeNetwork()
+                net = BidirectionalRangeNetwork()
                 for node_pos in node_positions:
                     net.add_node(pos=node_pos, commRange=node_range)
 
                 name = "Special %d" % i
 
-                net.algorithms = (YoYo,)
                 sim = Simulation(net)
+                sim.algorithms = (YoYo,)
+
+                sim.run(1)
+
+                sim.algorithms[0].check_algorithm_initialization()
+
                 sim.run(100_000)
+
+                sim.algorithms[0].check_algorithm_termination()
 
                 min_id = min(sim.network.nodes(), key=lambda node: node.id).id
                 for node in sim.network.nodes():
@@ -67,11 +74,19 @@ class TestYoYo(unittest.TestCase):
                     net_gen = NetworkGenerator(n_nodes, directed=False)
                     net = net_gen.generate_random_network()
 
-                    name = "Random %d, %d nodes" % (i, n_nodes)
+                    name = " %d, %d nodes" % (i, n_nodes)
 
-                    net.algorithms = (YoYo,)
                     sim = Simulation(net)
+                    sim.algorithms = (YoYo,)
+
+                    sim.run(1)
+
+                    sim.algorithms[0].check_restrictions()
+                    sim.algorithms[0].check_algorithm_initialization()
+
                     sim.run(100_000)
+
+                    sim.algorithms[0].check_algorithm_termination()
 
                     min_id = min(sim.network.nodes(), key=lambda node: node.id).id
                     for node in sim.network.nodes():
@@ -100,10 +115,11 @@ class TestTraversalDFT(unittest.TestCase):
         self.visited = []
 
         # Asigna el algoritmo
-        self.net.algorithms = ((DFT, {"visitedAction": lambda node: self.visited.append(node.id)}),)
+        self.algorithms = ((DFT, {"visitedAction": lambda node: self.visited.append(node.unbox().id)}),)
 
     def test_traversal(self):
         sim = Simulation(self.net)
+        sim.algorithms = self.algorithms
 
         sim.run(100_000)
 
@@ -122,10 +138,11 @@ class TestTraversalDFStar(PyDistSimTestCase):
         self.visited = []
 
         # Asigna el algoritmo
-        self.net.algorithms = ((DFStar, {"visitedAction": lambda node: self.visited.append(node.id)}),)
+        self.algorithms = ((DFStar, {"visitedAction": lambda node: self.visited.append(node.unbox().id)}),)
 
     def test_traversal(self):
         sim = Simulation(self.net)
+        sim.algorithms = self.algorithms
 
         sim.run(100_000)
 

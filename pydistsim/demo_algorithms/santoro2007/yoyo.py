@@ -1,5 +1,9 @@
 from pydistsim.algorithm import NodeAlgorithm, StatusValues
 from pydistsim.message import Message
+from pydistsim.restrictions.communication import BidirectionalLinks
+from pydistsim.restrictions.knowledge import InitialDistinctValues
+from pydistsim.restrictions.reliability import TotalReliability
+from pydistsim.restrictions.topological import Connectivity, UniqueInitiator
 
 
 class YoYo(NodeAlgorithm):
@@ -18,8 +22,18 @@ class YoYo(NodeAlgorithm):
         PRUNED = "PRUNED"
         LEADER = "LEADER"
 
+    S_init = (Status.INITIATOR, Status.IDLE)
+    S_term = (Status.LEADER, Status.PRUNED)
+
+    algorithm_restrictions = (
+        BidirectionalLinks,
+        TotalReliability,
+        Connectivity,
+        InitialDistinctValues,
+    )
+
     # Store assigned id (assigned in SetupYoYo)
-    ID_KEY = "id"
+    ID_KEY = InitialDistinctValues.KEY
 
     # Store received ids, I'll use a dict {id_value: [source_nodes]}
     RECEIVED_IDS_KEY = "received_ids"
@@ -42,11 +56,12 @@ class YoYo(NodeAlgorithm):
     PRUNE_REQUEST = "prune"
 
     def initializer(self):
+        InitialDistinctValues.apply(self.network)
+
         for node in self.network.nodes():
             node.memory[self.inNeighborsKey] = []
             node.memory[self.outNeighborsKey] = []
 
-            node.memory[self.neighborsKey] = node.compositeSensor.read()["Neighbors"]
             node.status = self.Status.INITIATOR
 
             node.memory[self.RECEIVED_IDS_KEY] = {}
@@ -218,7 +233,7 @@ class YoYo(NodeAlgorithm):
                 Message(
                     destination=node.memory[self.outNeighborsKey],
                     header="id",
-                    data=node.id,
+                    data=node.memory[self.ID_KEY],
                 ),
             )
 
@@ -356,18 +371,25 @@ class YoYo(NodeAlgorithm):
     def spontaneously(self, node, message):
         # Special case. Only one node in graph
         # If node has no neighbors set its status to LEADER
-        if not node.memory[self.neighborsKey]:
+        if not node.neighbors():
             node.status = self.Status.LEADER
             return
 
-        self.send(node, Message(header="init_id", data=node.id, destination=node.memory[self.neighborsKey]))
+        self.send(
+            node,
+            Message(
+                header="init_id",
+                data=node.memory[self.ID_KEY],
+                destination=node.neighbors(),
+            ),
+        )
 
         node.status = self.Status.IDLE
 
     @Status.IDLE
     def receiving(self, node, message):
         if message.header == "init_id":
-            if message.data < node.id:
+            if message.data < node.memory[self.ID_KEY]:
                 node.memory[self.inNeighborsKey].append(message.source)
             else:
                 node.memory[self.outNeighborsKey].append(message.source)
@@ -376,7 +398,7 @@ class YoYo(NodeAlgorithm):
             num_of_out_neighbors = len(node.memory[self.outNeighborsKey])
 
             if num_of_in_neighbors + num_of_out_neighbors >= len(
-                node.memory[self.neighborsKey]
+                node.neighbors()
             ):  # if all neighbors have sent their ids
                 self.change_status(node)
 

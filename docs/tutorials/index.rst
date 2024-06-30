@@ -13,9 +13,10 @@ Full explanation of topics
 **************************
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    implementing
+   restrictions
 
 **************
 Demo notebooks

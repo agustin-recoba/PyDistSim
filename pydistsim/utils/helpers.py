@@ -1,9 +1,6 @@
 from collections.abc import Callable, Iterable
 from itertools import product
-from random import choice, choices, shuffle
 from typing import TYPE_CHECKING, Any, TypeVar
-
-from pydistsim.logger import logger
 
 T = TypeVar("T")
 U = TypeVar("U")
@@ -89,3 +86,26 @@ def measure_sortedness(sequence: Iterable[T], key: Callable[[T], Any] = None, re
             inverted_pairs.append(pair)
 
     return (sortedness / (len(sequence) * (len(sequence) - 1) / 2), inverted_pairs)
+
+
+def len_is_one(iterable):
+    """
+    Returns true if the iterable has one element without consuming it entirely.
+    """
+    it = iter(iterable)
+    try:
+        next(it)
+        return not next(it, False)
+    except StopIteration:
+        return False
+
+
+def len_is_not_zero(iterable):
+    """
+    Returns true if the iterable has at least one element without consuming it entirely.
+    """
+    try:
+        next(iter(iterable))
+        return True
+    except StopIteration:
+        return False

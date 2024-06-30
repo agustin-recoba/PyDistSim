@@ -74,22 +74,15 @@ class ObserverForTests(AlgorithmObserver, SimulationObserver, NetworkObserver, N
 
 class TestObserver(PyDistSimTestCase):
     def setUp(self):
-        self.sim.reset()
-        self.net.algorithms = ((Flood, {"informationKey": "greet"}),)
+        super().setUpClass()
+        self.observer = ObserverForTests()
+        self.net = NetworkGenerator(10, directed=False).generate_random_network()
+
+        self.sim = Simulation(self.net)
+        self.sim.algorithms = ((Flood, {"informationKey": "greet"}),)
+
         self.initiator = self.net.nodes_sorted()[0]
         self.initiator.memory["greet"] = "HELLO"
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
-        cls.observer = ObserverForTests()
-        cls.net = NetworkGenerator(10, directed=False).generate_random_network()
-        cls.net.algorithms = ((Flood, {"informationKey": "greet"}),)
-
-        cls.initiator = cls.net.nodes_sorted()[0]
-        cls.initiator.memory["greet"] = "HELLO"
-
-        cls.sim = Simulation(cls.net)
 
     def test_added(self):
         with self.observer.do_raise(ObservableEvents.added):

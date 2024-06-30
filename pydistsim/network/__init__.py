@@ -1,13 +1,8 @@
 # flake8: noqa: F401
 
+from ..simulation import AlgorithmsParam
 from .generator import NetworkGenerator, NetworkGeneratorException
-from .network import (
-    AlgorithmsParam,
-    BidirectionalNetwork,
-    Network,
-    NetworkException,
-    NetworkType,
-)
+from .network import BidirectionalNetwork, Network, NetworkException, NetworkType
 from .node import Node
 from .rangenetwork import (
     BidirectionalRangeNetwork,

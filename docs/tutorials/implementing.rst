@@ -11,7 +11,7 @@ In order to implement a distributed algorithm, the class must fulfill these requ
     2.  It should have a class attribute :attr:`NodeAlgorithm.Status` which is an
         enumeration of the possible states of the node. This enumeration must subclass :class:`StatusValues`.
     3.  Action implementations must be methods of the class, they must be called as the action itself and must be
-        decorated with a member of the Status enumeration. One such Implementation should look like this:
+        decorated with a member of the Status enumeration. One such implementation should look like this:
 
 .. code-block:: python
 
@@ -33,6 +33,9 @@ In order to implement a distributed algorithm, the class must fulfill these requ
 
 Send a message
 ==============
+The :meth:`NodeAlgorithm.send` method receives a source node and a message. The message will be sent to the destinations
+specified in the message itself. The destinations must be a list of nodes or a single node. The message will be sent to
+all the destinations.
 
 Set an alarm
 ============

@@ -1,5 +1,5 @@
 from numpy import arctan2, array, concatenate, dot, isnan, mod, nan, outer, pi, sqrt
-from numpy.lib.type_check import imag, real
+from numpy.lib._type_check_impl import imag, real
 from numpy.linalg import det, eig
 
 from pydistsim.utils.localization.stitchsubclusterselectors import (

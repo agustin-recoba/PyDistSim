@@ -12,16 +12,16 @@ class TestBroadcastSimple(PyDistSimTestCase):
     def setUp(self):
         net_gen = NetworkGenerator(100, directed=False)
         self.net = net_gen.generate_random_network()
-
-        # Asigna el algoritmo
-        self.net.algorithms = ((Flood, {"informationKey": "greet"}),)
+        self.sim = Simulation(self.net)
+        self.sim.algorithms = ((Flood, {"informationKey": "greet"}),)
 
         # Asigna el mensaje a enviar, la información inicial
         self.initiator = self.net.nodes_sorted()[0]
         self.initiator.memory["greet"] = HELLO
 
     def test_broadcast(self):
-        sim = Simulation(self.net)
+        sim = self.sim
+        algo = sim.algorithms[0]
 
         for node in self.net.nodes():
             if node == self.initiator:
@@ -29,7 +29,13 @@ class TestBroadcastSimple(PyDistSimTestCase):
             else:
                 assert "greet" not in node.memory
 
+        sim.run(1)
+
+        algo.check_algorithm_initialization()
+
         sim.run(100_000)
+
+        algo.check_algorithm_termination()
 
         for node in self.net.nodes():
             self.assertEqual(node.memory["greet"], HELLO)
@@ -40,13 +46,11 @@ class TestBroadcastConcatenated(PyDistSimTestCase):
     def setUp(self):
         net_gen = NetworkGenerator(100, directed=False)
         self.net = net_gen.generate_random_network()
-
-        # Asigna el algoritmo
-        self.net.algorithms = (
+        self.sim = Simulation(self.net)
+        self.sim.algorithms = (
             (Flood, {"informationKey": "greet"}),
             (Flood, {"informationKey": "bye"}),
         )
-
         # Asigna el mensaje a enviar, la información inicial
         self.initiator = self.net.nodes_sorted()[0]
         self.initiator.memory["greet"] = HELLO
@@ -55,7 +59,9 @@ class TestBroadcastConcatenated(PyDistSimTestCase):
         self.initiator2.memory["bye"] = BYE
 
     def test_broadcast(self):
-        sim = Simulation(self.net)
+        sim = self.sim
+        first_algo = sim.algorithms[0]
+        last_algo = sim.algorithms[-1]
 
         for node in self.net.nodes():
             with self.subTest(node=node):
@@ -69,7 +75,13 @@ class TestBroadcastConcatenated(PyDistSimTestCase):
                     assert "greet" not in node.memory
                     assert "bye" not in node.memory
 
+        sim.run(1)
+
+        first_algo.check_algorithm_initialization()
+
         sim.run(100_000)
+
+        last_algo.check_algorithm_termination()
 
         for node in self.net.nodes():
             with self.subTest(node=node):

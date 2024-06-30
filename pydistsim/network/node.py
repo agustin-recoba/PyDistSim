@@ -44,10 +44,15 @@ class Node(ObserverManagerMixin):
         self.__class__.next_node_id += 1
         self._inboxDelay = True
         self._status = None
+        self.clock = 0
         self.reset()
 
     def __repr__(self):
-        return "<Node id=%s>" % self.id
+        return self.__repr_str__(self.id)
+
+    @staticmethod
+    def __repr_str__(id):
+        return "<Node id=%s>" % id
 
     # TODO: Implement __deepcopy__ method, increment id
     # def __deepcopy__(self, memo):
@@ -89,6 +94,7 @@ class Node(ObserverManagerMixin):
         self._inbox: list["Message"] = []
         self._status = None
         self.memory = {}
+        self.clock = 0
 
     def receive(self):
         """
@@ -234,8 +240,9 @@ class Node(ObserverManagerMixin):
         """
         assert isinstance(message, str)
         context = {
-            "algorithm": str(self.network.get_current_algorithm()),
-            "algorithmState": self.network.algorithmState,
+            "algorithm": str(self.network.simulation.get_current_algorithm()),
+            "algorithmState": self.network.simulation.algorithmState,
+            "clock": self.clock,
         }
         if "log" not in self.memory:
             self.memory["log"] = [(level, message, context)]
@@ -274,6 +281,7 @@ class Node(ObserverManagerMixin):
                 )
                 for sensor in self.compositeSensor.sensors
             },
+            "5. clock": self.clock,
         }
 
     def box_as_dic(self, box: str):

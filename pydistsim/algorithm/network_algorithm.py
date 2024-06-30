@@ -16,7 +16,10 @@ class NetworkAlgorithm(BaseAlgorithm):
         super().__init__(*args, **kwargs)
         self._is_halted = False
 
-    def step(self):
+    def step(self, check_restrictions: bool):
+        if check_restrictions:
+            self.check_restrictions()
+
         self._is_halted = True
         return self.run()
 

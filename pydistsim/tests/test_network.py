@@ -32,8 +32,6 @@ class TestDirectedNetwork(unittest.TestCase):
         self.node3 = self.net.add_node(pos=[21.7, 21.7])
         self.node4 = self.net.add_node(pos=[23.7, 23.7])
 
-        self.net.algorithms = (NodeAlgorithm,)
-
         self.other_net = self.nw_class(rangeType=CompleteRangeType(env))
         self.node_in_other_net = self.other_net.add_node()
 
@@ -62,18 +60,6 @@ class TestDirectedNetwork(unittest.TestCase):
         subnetwork: "NetworkType" = self.net.subnetwork([self.node1, self.node2])
 
         assert len(subnetwork.nodes()) == 2
-        assert (
-            subnetwork._algorithms_param == self.net._algorithms_param
-        )  # compare the algorithms classes and their parameters
-
-        assert subnetwork.algorithms != self.net.algorithms  # compare algorithm instances
-
-        assert all(
-            algo1.network == subnetwork and algo2.network == self.net
-            for (algo1, algo2) in zip(subnetwork.algorithms, self.net.algorithms)
-        )  # compare algorithm network
-
-        assert subnetwork.networkRouting == self.net.networkRouting
 
         for node in [self.node1, self.node2]:
             node_in_subnetwork = subnetwork.node_by_id(node.id)
@@ -112,23 +98,11 @@ class TestDirectedNetwork(unittest.TestCase):
         with self.assertRaises(NetworkException):
             self.net.add_node(self.node_in_other_net)
 
-    def test_get_current_algorithm(self):
-        """Test getting current algorithm."""
-        assert isinstance(self.net.get_current_algorithm(), NodeAlgorithm)
-
-        self.net.algorithms = ()
-
-        with self.assertRaises(NetworkException):
-            self.net.get_current_algorithm()
-
-        self.net.algorithms = (NodeAlgorithm,)
-
     def test_get_dic(self):
         """Test getting dictionary representation of the network."""
         dic = self.net.get_dic()
         assert "nodes" in dic
-        assert "algorithms" in dic
-        assert "algorithmState" in dic
+        assert "edges" in dic
 
     def test_get_tree_net(self):
         """Test getting tree representation of the network."""

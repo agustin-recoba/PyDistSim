@@ -17,7 +17,7 @@ def show_mst(net: "Network", treeKey="mst"):
     """
     nodesToCheck = [(get_root_node(net, treeKey), 0)]
     edgelist = []
-    levels = [0] * len(net.nodes())  # level of node in tree, root is 0
+    levels = [0] * len(net)  # level of node in tree, root is 0
     while nodesToCheck:
         (node, level) = nodesToCheck.pop()
         edgelist += [(node, child) for child in node.memory[treeKey]["children"]]

@@ -38,12 +38,11 @@ class TestMetricCollector(PyDistSimTestCase):
     def setUp(self):
         self.observer = MetricCollector()
         self.net = NetworkGenerator(10, directed=False).generate_random_network()
-        self.net.algorithms = ((Flood, {"informationKey": "greet"}),)
+        self.sim = Simulation(self.net)
+        self.sim.algorithms = ((Flood, {"informationKey": "greet"}),)
 
         self.initiator = self.net.nodes_sorted()[0]
         self.initiator.memory["greet"] = "HELLO"
-
-        self.sim = Simulation(self.net)
 
     def test_all(self):
         self.sim.add_observers(self.observer)
@@ -72,12 +71,11 @@ class TestCustomMetricCollector(PyDistSimTestCase):
     def setUp(self):
         self.observer = CustomMetricCollector()
         self.net = NetworkGenerator(10, directed=False).generate_random_network()
-        self.net.algorithms = ((CustomAlgorithm, {"informationKey": "greet"}),)
+        self.sim = Simulation(self.net)
+        self.sim.algorithms = ((CustomAlgorithm, {"informationKey": "greet"}),)
 
         self.initiator = self.net.nodes_sorted()[0]
         self.initiator.memory["greet"] = "HELLO"
-
-        self.sim = Simulation(self.net)
 
     def test_all(self):
         self.sim.add_observers(self.observer)

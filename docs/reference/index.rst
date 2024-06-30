@@ -12,6 +12,7 @@ Reference
    nodealgorithm
    networkgenerator
    rangenetwork
+   simulation
    observers
    sensors
    conf

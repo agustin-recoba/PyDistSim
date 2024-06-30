@@ -28,7 +28,7 @@ class LevelFilter:
         return record["level"].no >= level_no
 
 
-main_filter = LevelFilter("WARNING")
+main_filter = LevelFilter(LogLevels.WARNING)
 
 logger.remove()
 
@@ -37,7 +37,7 @@ logger.add(sys.stdout, filter=main_filter, level=0)
 logger.disable("pydistsim")
 
 
-def set_log_level(level: StrEnum):
+def set_log_level(level: LogLevels):
     main_filter.level = level
 
 

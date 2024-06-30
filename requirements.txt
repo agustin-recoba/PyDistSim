@@ -1,8 +1,8 @@
 ipython==8.24.0
 matplotlib==3.9.0
 networkx==3.3
-numpy==1.26.4
+numpy==2.0.0
 pypng==0.20220715.0
-PySide6==6.7.0
-scipy==1.13.0
+PySide6==6.7.2
+scipy==1.13.1
 loguru==0.7.2

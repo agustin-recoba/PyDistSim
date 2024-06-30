@@ -15,7 +15,6 @@ class TestPickle(unittest.TestCase):
             500,
         ):  # TODO at npickle.py says a recursion error occurs with 6000, couldnt reproduce it
             net = NetworkGenerator(size).generate_random_network()
-            net.algorithms = ((Flood, {"informationKey": f"some_key_{size}"}),)
 
             net.elected = net.nodes_sorted()[0]
             net.elected.memory[f"some_key_{size}"] = f"some_value_{size}"

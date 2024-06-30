@@ -38,8 +38,8 @@ DEG_ATOL = 1
 #: Default communication range of nodes.
 COMM_RANGE = 100
 
-#: By default nodes have one sensor: :class:`pydistsim.sensor.NeighborsSensor`.
-SENSORS = ("NeighborsSensor",)
+#: By default nodes have no sensors.
+SENSORS = ()
 
 #: Not implemented yet
 ACTUATORS = ()

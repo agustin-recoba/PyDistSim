@@ -1,7 +1,6 @@
 import unittest
 
-from numpy import array
-from numpy.core.numeric import concatenate, dot, nan
+from numpy import array, concatenate, dot, nan
 from numpy.ma.core import cos, sin
 from numpy.random import rand
 from scipy.constants import pi

@@ -1,9 +1,8 @@
-numpy
-sphinx_rtd_theme
-pydata-sphinx-theme
-nbsphinx
-ipython
-jupytext
-jupyter
-matplotlib
-numpy
+numpy==2.0.0
+sphinx_rtd_theme==2.0.0
+pydata-sphinx-theme==0.15.3
+nbsphinx==0.9.4
+ipython==8.25.0
+jupytext==1.16.2
+jupyter==1.0.0
+matplotlib==3.9.0
