@@ -20,6 +20,8 @@ class EdgeFailureDetection(ReliabilityRestriction):
 
     In this context, a failure is a temporary loss of the ability to send messages over an edge. Not to be confused with
     delay or a message loss, even though a failure might cause these effects.
+
+    *TODO*: Edge failures are not implemented by the simulation.
     """
 
     @classmethod
@@ -33,6 +35,8 @@ class EntityFailureDetection(ReliabilityRestriction):
     failure, whether it has recovered.
 
     In this context, a failure is a temporary loss of the ability of a node to react to events.
+
+    *TODO*: Entity failures are not implemented by the simulation.
     """
 
     @classmethod
@@ -45,6 +49,8 @@ class TotalReliability(ReliabilityRestriction):
     A totally fault-free system.
 
     Neither have any failures occurred nor will they occur.
+
+    *TODO*: Entity failures are not implemented by the simulation.
     """
 
     @classmethod
@@ -61,6 +67,8 @@ class PartialReliability(ReliabilityRestriction):
     Under this restriction, protocols do not need to take failures into account. Note
     that under PartialReliability, failures might have occurred before the execution of a
     computation.
+
+    *TODO*: The simulation does not support partial reliability so this is the same as TotalReliability.
     """
 
     @classmethod
@@ -71,9 +79,10 @@ class PartialReliability(ReliabilityRestriction):
 class GuaranteedDelivery(ReliabilityRestriction):
     """
     Any message that is sent will be received with its content uncorrupted.
+
+    *TODO*: Implement optional message corruption. this only checks for message loss.
     """
 
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
-        # TODO: implement optional message corruption
         return network.behavioral_properties.message_loss_indicator is None  # Check only no message loss (for now)

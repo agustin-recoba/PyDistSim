@@ -52,6 +52,9 @@ class SynchronizedClocks(TimeRestriction):
 class SimultaneousStart(TimeRestriction):
     """
     All nodes start the algorithm at the same time.
+
+    Note that "at the same time" is a given under this simulation model but that does not mean that the nodes are
+    synchronized, nor that their messages arrive with the same delay.
     """
 
     @classmethod

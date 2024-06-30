@@ -50,13 +50,15 @@ class ShapeRestriction(TopologicalRestriction, ABC):
     The communication topology has a specific shape.
 
     Only the given shape is checked, not the connectivity, even if connectivity is often used with the shape.
-    For connectivity, use :class:`Connectivity`.
+    For strong connectivity, use :class:`Connectivity`.
     """
 
 
 class CompleteGraph(ShapeRestriction):
     """
     The communication topology is a complete graph.
+
+    No self-loops are allowed.
     """
 
     @classmethod
@@ -71,13 +73,14 @@ class CycleGraph(ShapeRestriction):
     """
     The communication topology is a cycle.
 
-    Connectivity is not required as this restriction can be used with :class:`Connectivity`.
+    Strong connectivity is not required as this restriction can be used with :class:`Connectivity`.
     """
 
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
+        network = network.to_undirected()
         return all(len(neighbors_of_node) == 2 for node, neighbors_of_node in network.adj.items()) and len_is_one(
-            connected_components(network.to_undirected())
+            connected_components(network)
         )
 
 
@@ -90,6 +93,8 @@ class OrientedCycleGraph(CycleGraph):
     The communication topology is an oriented cycle.
 
     This means that every node shares the meaning of "left" and "right" with its neighbors.
+
+    *TODO*: This check is not implemented.
     """
 
     @classmethod
@@ -105,7 +110,7 @@ class TreeGraph(ShapeRestriction):
     """
     The communication topology is a tree.
 
-    Connectivity is not required as this restriction can be used with :class:`Connectivity`.
+    Strong connectivity is not required as this restriction can be used with :class:`Connectivity`.
     """
 
     @classmethod
@@ -122,11 +127,14 @@ class StarGraph(ShapeRestriction):
 
     If the network has only one or two nodes, it is considered a star.
 
-    Connectivity is not required as this restriction can be used with :class:`Connectivity`.
+    Strong connectivity is not required as this restriction can be used with :class:`Connectivity`.
     """
 
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
+        def neig(node):
+            return len(set(network.in_neighbors(node)) | set(network.out_neighbors(node)))
+
         if len(network) <= 2:
             return True
 
@@ -134,15 +142,16 @@ class StarGraph(ShapeRestriction):
         center_count = 0
         others_count = 0
         for node in network:
-            if len(network[node]) == N:
+            if neig(node) == N:
                 center_count += 1
                 if center_count > 1:
                     return False
-            elif len(network[node]) == 1:
+            elif neig(node) == 1:
                 others_count += 1
             else:
                 return False
 
+        print(center_count, others_count, N)
         return center_count == 1 and others_count == N
 
 
@@ -150,7 +159,9 @@ class HyperCubeGraph(ShapeRestriction):
     """
     The communication topology is a hypercube of any dimension.
 
-    Connectivity is not required as this restriction can be used with :class:`Connectivity`.
+    Strong connectivity is not required as this restriction can be used with :class:`Connectivity`.
+
+    *TODO*: This check is not implemented.
     """
 
     @classmethod
@@ -164,6 +175,8 @@ class OrientedHyperCubeGraph(HyperCubeGraph):
 
     Details of the definition can be found in section "3.5 ELECTION IN CUBE NETWORKS" of "Design and Analysis of
     Distributed Algorithms" by Nicola Santoro
+
+    *TODO*: This check is not implemented.
     """
 
     @classmethod
