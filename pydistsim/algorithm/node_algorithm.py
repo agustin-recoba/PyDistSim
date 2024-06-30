@@ -124,10 +124,12 @@ class NodeAlgorithm(BaseAlgorithm):
 
     ### BaseAlgorithm interface methods ###
 
-    def step(self):
+    def step(self, check_restrictions: bool):
         if not self.is_initialized():
             self.notify_observers(ObservableEvents.algorithm_started, self)
             self.initializer()
+            if check_restrictions:
+                self.check_restrictions()
 
             if not any(len(node.outbox) + len(node.inbox) > 0 for node in self.network.nodes()):
                 logger.warning("Initializer didn't send any message.")
@@ -161,9 +163,11 @@ class NodeAlgorithm(BaseAlgorithm):
         Method used to initialize the algorithm. Is always called first.
         :class:`NodeAlgorithm` subclasses may want to reimplement it.
 
-        Base implementation sends an INI message to the node with the lowest id.
+        Base implementation sends an INI message to the node with the lowest id and applies all restrictions.
         """
         logger.debug("Initializing algorithm {}.", self.name)
+        self.apply_restrictions()
+
         node: "Node" = self.network.nodes_sorted()[0]
         node.push_to_inbox(Message(meta_header=NodeAlgorithm.INI))
         for node in self.network.nodes_sorted():

@@ -28,7 +28,13 @@ class Simulation(ObserverManagerMixin, QThread):
     It is responsible for visualization and logging, also.
     """
 
-    def __init__(self, network: "NetworkType", algorithms: AlgorithmsParam | None = None, **kwargs):
+    def __init__(
+        self,
+        network: "NetworkType",
+        algorithms: AlgorithmsParam | None = None,
+        check_restrictions: bool = True,
+        **kwargs,
+    ):
         """
         Initialize a Simulation object.
 
@@ -47,6 +53,7 @@ class Simulation(ObserverManagerMixin, QThread):
         self.algorithms = algorithms or settings.ALGORITHMS
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self.stepsLeft = 0
+        self.check_restrictions = check_restrictions
         self.add_observers(QThreadObserver(self))
 
         logger.debug("Simulation {} created successfully.", hex(id(self)))
@@ -109,7 +116,7 @@ class Simulation(ObserverManagerMixin, QThread):
                 algorithm.name,
                 self.algorithmState["step"],
             )
-            algorithm.step()
+            algorithm.step(self.check_restrictions)
             self.stepsLeft -= 1
             self.algorithmState["step"] += 1
             self.network.increment_node_clocks()

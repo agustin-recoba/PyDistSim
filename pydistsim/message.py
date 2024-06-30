@@ -9,7 +9,7 @@ class MetaHeader(StrEnum):
 
 
 class Message:
-
+    META_HEADERS = MetaHeader
     next_message_id = 1
 
     def __init__(
@@ -17,7 +17,7 @@ class Message:
         source=None,
         destination=None,
         header="",
-        meta_header=MetaHeader.NORMAL_MESSAGE,
+        meta_header=META_HEADERS.NORMAL_MESSAGE,
         data=None,
         meta_data=None,
     ):

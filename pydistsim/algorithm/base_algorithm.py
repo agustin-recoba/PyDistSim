@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 from pydistsim.logger import logger
 from pydistsim.observers import ObserverManagerMixin
 from pydistsim.restrictions import CheckableRestriction
+from pydistsim.restrictions.base_restriction import ApplicableRestriction
 
 if TYPE_CHECKING:
     from pydistsim.network import NetworkType
@@ -136,7 +137,7 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
     def network(self) -> "NetworkType":
         return self.simulation.network
 
-    def step(self):
+    def step(self, check_restrictions: bool):
         raise NotImplementedError
 
     def is_initialized(self):
@@ -150,11 +151,19 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
 
     def check_restrictions(self):
         """
-        Check if the restrictions are satisfied.
+        Check if the restrictions are satisfied. Does not apply ApplicableRestrictions.
         """
         for restriction in self.__class__.algorithm_restrictions:
             if isinstance(restriction, CheckableRestriction) and not restriction.check(self.network):
                 raise AlgorithmException(f"Restriction {restriction.__name__} not satisfied.")
+
+    def apply_restrictions(self):
+        """
+        Apply all applicable restrictions.
+        """
+        for restriction in self.__class__.algorithm_restrictions:
+            if isinstance(restriction, ApplicableRestriction):
+                restriction.apply(self.network)
 
 
 class AlgorithmException(Exception):
