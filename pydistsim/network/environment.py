@@ -1,3 +1,4 @@
+from copy import deepcopy
 from math import inf as Inf
 
 import png
@@ -86,25 +87,42 @@ class Environment2D(Environment):
             try:
                 r = png.Reader(path)
                 planes = r.read()[3]["planes"]
-                self.image = vstack(map(uint8, r.asDirect()[2]))[:, ::planes]
-                self.image = self.image[::-1, :]  # flip-up-down
-                assert (r.height, r.width) == self.image.shape
+                self._image = vstack(map(uint8, r.asDirect()[2]))[:, ::planes]
+                self._image = self._image[::-1, :]  # flip-up-down
+                assert (r.height, r.width) == self._image.shape
             except OSError:
                 logger.exception("Can't open {} creating new default environment.", path)
 
-                self.image = uint8(ones(shape) * 255)
+                self._image = uint8(ones(shape) * 255)
         else:
-            self.image = uint8(ones(shape) * 255)
+            self._image = uint8(ones(shape) * 255)
 
-        self.dim = 2
+        self._dim = 2
         scale = not scale and 1 or int(scale)
         if scale > 1:
             raise NotImplementedError
 
+    @property
+    def image(self):
+        return self._image
+
+    @property
+    def dim(self):
+        return self._dim
+
+    @image.setter
+    def image(self, image):
+        # Immutable object
+        raise AttributeError("Can't set attribute 'image'")
+
+    @dim.setter
+    def dim(self, dim):
+        # Immutable object
+        raise AttributeError("Can't set attribute 'dim'")
+
     def __deepcopy__(self, memo):
-        dup = Environment2D()
-        dup.image = self.image.copy()
-        return dup
+        memo[id(self)] = self
+        return self
 
     def is_space(self, xy):
         """
@@ -117,7 +135,7 @@ class Environment2D(Environment):
         :rtype: bool
         """
         x, y = xy
-        h, w = self.image.shape
+        h, w = self._image.shape
         if x < 0 or x > w or y < 0 or y > h:
             return False
         check = True
@@ -130,7 +148,7 @@ class Environment2D(Environment):
             points.append([xy[0] - 1, xy[1] - 1])
         try:
             for p in points:
-                check = check and self.image[int(p[1]), int(p[0])] != 0
+                check = check and self._image[int(p[1]), int(p[0])] != 0
         except IndexError:
             check = False
         return check
@@ -207,7 +225,7 @@ class Environment2D(Environment):
         """
         n_init = n
         while n > 0:
-            pos = rand(self.dim) * tuple(reversed(self.image.shape))
+            pos = rand(self._dim) * tuple(reversed(self._image.shape))
             if self.is_space(pos):
                 break
             n -= 1

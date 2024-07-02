@@ -14,9 +14,6 @@ class NetworkErrorMsg(StrEnum):
     NODE = "Node is already in another network."
     NODE_SPACE = "Given position is not free space."
     NODE_NOT_IN_NET = "Node not in network."
-    LIST_TREE_DOWNSTREAM_ONLY = (
-        "Downstream only is not supported for list tree. It's impossible to determine direction."
-    )
 
 
 class SimulationErrorMsg(StrEnum):

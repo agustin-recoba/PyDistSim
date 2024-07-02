@@ -1,4 +1,5 @@
 import inspect
+from copy import copy, deepcopy
 from typing import TYPE_CHECKING, Optional
 
 from PySide6.QtCore import SIGNAL, QThread
@@ -57,6 +58,28 @@ class Simulation(ObserverManagerMixin, QThread):
         self.add_observers(QThreadObserver(self))
 
         logger.debug("Simulation {} created successfully.", hex(id(self)))
+
+    def __deepcopy__(self, memo):
+        if id(self) in memo:
+            return memo[id(self)]
+
+        # Shallow copy of the object
+        copy_s = type(self)(deepcopy(self._network, memo))
+        memo[id(self)] = copy_s
+
+        # Shallow copy of the immutable attributes
+        copy_s.algorithms = self._algorithms_param
+        copy_s.algorithmState = copy(self.algorithmState)
+        copy_s.stepsLeft = self.stepsLeft
+        copy_s.check_restrictions = self.check_restrictions
+
+        # Deep copy of the mutable attributes
+        copy_s.algorithmState = deepcopy(self.algorithmState, memo)
+        copy_s.stepsLeft = self.stepsLeft
+
+        copy_s.clear_observers()
+
+        return copy_s
 
     def __del__(self):
         self.exiting = True

@@ -76,8 +76,57 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         return BidirectionalNetwork
 
     def copy(self, as_view=False):
-        """Return a copy of the graph."""
+        """
+        Return a copy of the graph. Parameters as_view is not used and is only for compatibility with NetworkX.
+
+        :param as_view: Unused parameter. Defaults to False.
+        :type as_view: bool, optional
+        :return: A deepcopy of the graph.
+        :rtype: NetworkMixin
+        """
         return deepcopy(self)
+
+    def __deepcopy__(self, memo, nodes=None, edges=None, init_args=None, cls=None):
+        """
+        Deepcopy the network.
+
+        :param memo: A dictionary that maps object ids to the copied objects.
+        :type memo: dict
+        :param nodes: A list of nodes to include in the deepcopy. Defaults to None.
+        :type nodes: Iterable[Node], optional
+        :param edges: A list of edges to include in the deepcopy. Defaults to None.
+        :type edges: Iterable[tuple[Node, Node]], optional
+        :param init_args: A dictionary of additional arguments to pass to the constructor of the copied network. Defaults to None.
+        :type init_args: dict, optional
+        :param cls: The class to use for the copied network. Defaults to None.
+        :type cls: type, optional
+        """
+        if id(self) in memo:
+            return memo[id(self)]
+
+        new_network = (cls or type(self))(**(init_args or {}))
+        memo[id(self)] = new_network
+
+        # Immutable attributes
+        new_network._environment = self._environment
+        new_network.behavioral_properties = self.behavioral_properties
+
+        nodes = nodes or self.nodes()
+        edges = edges or self.edges()
+
+        nodes_copy = {node: deepcopy(node, memo) for node in nodes}
+        for node, copy_node in nodes_copy.items():
+            copy_node.network = None
+            new_network.add_node(copy_node, pos=deepcopy(self.pos[node], memo), ori=deepcopy(self.ori[node], memo))
+
+        for u, v in edges:
+            if u not in nodes or v not in nodes:
+                continue
+            new_network.add_edge(nodes_copy[u], nodes_copy[v])
+        new_network.simulation = deepcopy(self.simulation, memo)
+
+        new_network.clear_observers()
+        return new_network
 
     def remove_node(self, node, skip_check=False):
         """
@@ -128,7 +177,8 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         pos = pos if pos is not None else self._environment.find_random_pos(n=100)
         ori = ori if ori is not None else rand() * 2 * pi
-        ori = ori % (2 * pi)
+        while ori > 2 * pi:
+            ori -= 2 * pi
 
         if not self._environment.is_space(pos):
             logger.error("Given position is not free space.")
@@ -209,52 +259,27 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
             return is_strongly_connected(self)
         return is_connected(self)
 
-    def subnetwork(self, nbunch, pos=None):
+    def subnetwork(
+        self,
+        nodes: list[Node],
+        edges: None | Iterable[tuple[Node, Node]] = None,
+    ):
         """
-        Returns a Network instance with the specified nodes.
+        Returns a Network instance with the specified nodes and edges.
 
         :param nbunch: A list of nodes to include in the subnetwork.
-        :type nbunch: list
-        :param pos: Optional dictionary of node positions.
-        :type pos: dict, optional
+        :type nbunch: list[Node]
+        :param edges: A list of edges to include in the subnetwork. Defaults to None.
+        :type edges: Iterable[tuple[Node, Node]], optional
         :return: A Network instance representing the subnetwork.
         :rtype: Network
         """
-        if not pos:
-            pos = self.pos
-        H = self.copy()
-        for node in self.nodes():
-            node_H = H.node_by_id(node.id)
-            if node in nbunch:
-                # Copy node attributes
-                H.pos.update({node_H: pos[node][:2]})
-                if len(pos[node]) > 2:
-                    H.ori.update({node_H: pos[node][2]})
-                else:
-                    H.ori.update({node_H: deepcopy(self.ori[node])})
-                H.labels.update({node_H: deepcopy(self.labels[node])})
-                node_H.network = H
-            else:
-                H.remove_node(node_H)
 
-        # Copy network attributes
-        H.simulation = None
-        H.clear_observers()
+        return self.__deepcopy__({}, nodes, edges)
 
-        assert isinstance(H, NetworkMixin)
-        return H
-
-    def get_tree_net(self, treeKey, downstream_only=False):
+    def get_tree_net(self, treeKey):
         """
         Returns a new network with edges that are not in a tree removed.
-
-        :param treeKey: The key in the nodes' memory that defines the tree. It can be a list of tree neighbors or a dictionary with 'parent' (node) and 'children' (list) keys.
-        :type treeKey: str
-        :param downstream_only: A flag indicating whether to include only downstream edges in the tree. Defaults to False. Downstream edges are edges from parent to children.
-        :type downstream_only: bool
-
-        :return: A new network object with only the edges that are part of the tree. If downstream_only is True, the network is directed.
-        :rtype: NetworkMixin
 
         The tree is defined in the nodes' memory under the specified treeKey. The method iterates over all nodes in the network and checks if the treeKey is present in their memory. If it is, it retrieves the tree neighbors or children and adds the corresponding edges to the tree_edges_ids list. It also adds the tree nodes to the tree_nodes list.
 
@@ -262,8 +287,12 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         Finally, the resulting subnetwork, representing the tree, is returned.
 
+        :param treeKey: The key in the nodes' memory that defines the tree. It can be a list of tree neighbors or a dictionary with 'parent' (node) and 'children' (list) keys.
+        :type treeKey: str
+        :return: A new network object with only the edges that are part of the tree.
+        :rtype: NetworkMixin
         """
-        tree_edges_ids = []
+        tree_edges = []
         tree_nodes = []
         for node in self.nodes():
             print(f"{node.memory=}")
@@ -271,32 +300,20 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
             if treeKey not in node.memory:
                 continue
             if isinstance(node.memory[treeKey], list):
-                if downstream_only:
-                    raise NetworkException(NetworkErrorMsg.LIST_TREE_DOWNSTREAM_ONLY)
                 neighbors_in_tree = node.memory[treeKey]
             elif isinstance(node.memory[treeKey], dict) and "children" in node.memory[treeKey]:
                 neighbors_in_tree += node.memory[treeKey]["children"]
-                if (
-                    not downstream_only
-                    and "parent" in node.memory[treeKey]
-                    and node.memory[treeKey]["parent"] is not None
-                ):
+                if "parent" in node.memory[treeKey] and node.memory[treeKey]["parent"] is not None:
                     neighbors_in_tree.append(node.memory[treeKey]["parent"])
 
-            tree_edges_ids.extend(
-                [(node.id, neighbor.id) for neighbor in neighbors_in_tree if neighbor in self.neighbors(node)]
-            )
+            tree_edges.extend([(node, neighbor) for neighbor in neighbors_in_tree if neighbor in self.neighbors(node)])
             tree_nodes.extend(neighbor for neighbor in neighbors_in_tree if neighbor in self.neighbors(node))
             if neighbors_in_tree:
-                print(f"{node}, {tree_edges_ids=}")
                 tree_nodes.append(node)
 
-        treeNet = self.subnetwork(tree_nodes)
-        if downstream_only:
-            treeNet = treeNet.to_directed()
-        for u, v in tuple(treeNet.edges()):
-            if (u.id, v.id) not in tree_edges_ids:
-                treeNet.remove_edge(u, v)
+        print(f"{tree_nodes=}, {tree_edges=}")
+        treeNet = self.subnetwork(tree_nodes, tree_edges)
+
         return treeNet
 
     def nodes_sorted(self) -> list["Node"]:

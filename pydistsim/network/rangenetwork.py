@@ -195,6 +195,12 @@ class RangeNetworkMixin(with_typehint(Network)):
     def to_undirected_class():
         return BidirectionalRangeNetwork
 
+    def __deepcopy__(self, memo, nodes=None, edges=None, init_args=None, cls=None):
+        init_args = init_args or {}
+        init_args["rangeType"] = self.rangeType
+
+        return super().__deepcopy__(memo, nodes, edges, init_args, cls)
+
     def add_node(self, node=None, pos=None, ori=None, commRange=None):
         node = super().add_node(node, pos, ori, commRange)
         self.recalculate_edges([node])
@@ -254,6 +260,8 @@ class RangeNetworkMixin(with_typehint(Network)):
 
     def modify_avg_degree(self, value):
         """
+        DEPRECATED AND UNTESTED
+
         Modifies (increases) average degree based on the given value by
         modifying nodes' commRange.
 
