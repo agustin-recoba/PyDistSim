@@ -1,3 +1,4 @@
+from copy import copy, deepcopy
 from inspect import getmembers
 from typing import TYPE_CHECKING
 
@@ -110,7 +111,7 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
 
     def __init__(self, simulation: "Simulation", **kwargs):
         super().__init__()
-        self.simulation: "NetworkType" = simulation
+        self.simulation: "Simulation" = simulation
         self.name = self.__class__.__name__
         logger.debug("Instance of {} class has been initialized.", self.name)
 
@@ -131,6 +132,19 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.__dict__})"
+
+    def __deepcopy__(self, memo):
+        if id(self) in memo:
+            return memo[id(self)]
+
+        # Shallow copy of the object
+        copy_a = copy(self)
+        memo[id(self)] = copy_a
+
+        # Deep copy of the mutable attributes
+        copy_a.simulation = deepcopy(self.simulation, memo)
+
+        return copy_a
 
     @property
     def network(self) -> "NetworkType":

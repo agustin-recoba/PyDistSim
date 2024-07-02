@@ -46,9 +46,12 @@ class _NodeWrapper:
         return self.node.__repr_str__(self.id)
 
     def __deepcopy__(self, memo):
+        # Do not copy the object, just return the same object
+        memo[id(self)] = self
         return self
 
     def __copy__(self):
+        # Do not copy the object, just return the same object
         return self
 
     def unbox(self) -> "Node":

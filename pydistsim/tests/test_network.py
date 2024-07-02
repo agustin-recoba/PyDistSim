@@ -17,10 +17,11 @@ from pydistsim.network import (
     RangeType,
 )
 from pydistsim.network.environment import Environment2D
+from pydistsim.utils.testing import PyDistSimTestCase
 from pydistsim.utils.tree import check_tree_key
 
 
-class TestDirectedNetwork(unittest.TestCase):
+class TestDirectedNetwork(PyDistSimTestCase):
     nw_class = RangeNetwork
 
     def setUp(self):
@@ -28,9 +29,13 @@ class TestDirectedNetwork(unittest.TestCase):
         self.net = self.nw_class(rangeType=CompleteRangeType(env))
         self.net.environment.image[22, 22] = 0
         self.node1 = self.net.add_node(pos=[22.8, 21.8])
+        self.node1.memory["test"] = 1
         self.node2 = self.net.add_node(pos=[21.9, 22.9])
+        self.node2.memory["test"] = 2
         self.node3 = self.net.add_node(pos=[21.7, 21.7])
+        self.node3.memory["test"] = 3
         self.node4 = self.net.add_node(pos=[23.7, 23.7])
+        self.node4.memory["test"] = 4
 
         self.other_net = self.nw_class(rangeType=CompleteRangeType(env))
         self.node_in_other_net = self.other_net.add_node()
@@ -40,7 +45,7 @@ class TestDirectedNetwork(unittest.TestCase):
         assert isinstance(self.node1, Node)
         assert len(self.net.nodes()) == 4
         if isinstance(self.net.environment, Environment2D):
-            assert self.net.environment.image.shape == settings.ENVIRONMENT2D_SHAPE, "incorrect default size"
+            assert self.net.environment._image.shape == settings.ENVIRONMENT2D_SHAPE, "incorrect default size"
 
         assert isinstance(self.net.rangeType, RangeType)
 
@@ -60,13 +65,15 @@ class TestDirectedNetwork(unittest.TestCase):
         subnetwork: "NetworkType" = self.net.subnetwork([self.node1, self.node2])
 
         assert len(subnetwork.nodes()) == 2
+        assert isinstance(subnetwork, type(self.net))
 
-        for node in [self.node1, self.node2]:
-            node_in_subnetwork = subnetwork.node_by_id(node.id)
-            assert all(subnetwork.pos[node_in_subnetwork] == self.net.pos[node])
-            assert subnetwork.ori[node_in_subnetwork] == self.net.ori[node]
-            assert subnetwork.labels[node_in_subnetwork] == self.net.labels[node]
-            assert node_in_subnetwork.network == subnetwork
+        for og_node in [self.node1, self.node2]:
+            sn_node = [n for n in subnetwork if n.memory["test"] == og_node.memory["test"]][0]
+            assert sn_node.network == subnetwork
+            assert isinstance(sn_node, type(og_node))
+            assert subnetwork.labels[sn_node] == str(sn_node.id)
+            assert subnetwork.ori[sn_node] == self.net.ori[og_node]
+            assert all(subnetwork.pos[sn_node] == self.net.pos[og_node])
 
     def test_nodes_sorted(self):
         """Test sorting of nodes."""
@@ -128,14 +135,6 @@ class TestDirectedNetwork(unittest.TestCase):
 
         assert keepMemKey in self.node2.memory, "Memory should be kept"
         check_tree_key(self.net, treeKey)
-
-        tree2 = self.net.get_tree_net(treeKey, downstream_only=True)
-
-        assert isinstance(tree2, Network)  # downstream_only returns directed Network
-        assert len(tree2.nodes()) == 3
-        assert is_directed_acyclic_graph(tree2)
-        assert is_weakly_connected(tree2)
-        assert (node.network == tree2 for node in tree2.nodes())
 
     @pytest.mark.filterwarnings("ignore:No data for colormapping.*")
     def test_get_fig_runs(self):

@@ -1,3 +1,4 @@
+from copy import copy, deepcopy
 from typing import TYPE_CHECKING, Optional
 
 from pydistsim.conf import settings
@@ -43,9 +44,12 @@ class Node(ObserverManagerMixin):
         self.id = self.__class__.next_node_id
         self.__class__.next_node_id += 1
         self._inboxDelay = True
+
         self._status = None
+        self.outbox: list["Message"] = []
+        self._inbox: list["Message"] = []
+        self.memory = {}
         self.clock = 0
-        self.reset()
 
     def __repr__(self):
         return self.__repr_str__(self.id)
@@ -54,9 +58,27 @@ class Node(ObserverManagerMixin):
     def __repr_str__(id):
         return "<Node id=%s>" % id
 
-    # TODO: Implement __deepcopy__ method, increment id
-    # def __deepcopy__(self, memo):
-    #     return self
+    def __deepcopy__(self, memo):
+        if id(self) in memo:
+            return memo[id(self)]
+
+        # Shallow copy of the object
+        copy_n = copy(self)
+        memo[id(self)] = copy_n
+
+        copy_n.id = self.__class__.next_node_id
+        self.__class__.next_node_id += 1
+
+        # Deep copy of the mutable attributes
+        copy_n._compositeSensor = deepcopy(self._compositeSensor, memo)
+        copy_n.network = deepcopy(self.network, memo)
+        copy_n.outbox = deepcopy(self.outbox, memo)
+        copy_n._inbox = deepcopy(self._inbox, memo)
+        copy_n.memory = deepcopy(self.memory, memo)
+
+        copy_n.clear_observers()
+
+        return copy_n
 
     @property
     def status(self):

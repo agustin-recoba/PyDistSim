@@ -1,4 +1,5 @@
 import unittest
+from copy import deepcopy
 
 from pydistsim.algorithm import NetworkAlgorithm, NodeAlgorithm
 from pydistsim.exceptions import SimulationException
@@ -140,3 +141,17 @@ class TestResetNetwork(unittest.TestCase):
         assert self.sim1.network == self.net2
         assert self.net2.simulation == self.sim1
         assert self.net1.simulation is None
+
+    def test_deepcopy(self):
+        sim_copy = deepcopy(self.sim1)
+
+        assert sim_copy is not self.sim1
+        assert sim_copy.network is not self.sim1.network
+        assert len(sim_copy.network) == len(self.net1)
+        assert len(sim_copy.network.edges()) == len(self.net1.edges())
+        assert isinstance(sim_copy.network, type(self.net1))
+        assert len(sim_copy.algorithms) == len(self.sim1.algorithms)
+        assert all(
+            isinstance(copy_algo, type(og_algo))
+            for copy_algo, og_algo in zip(sim_copy.algorithms, self.sim1.algorithms)
+        )

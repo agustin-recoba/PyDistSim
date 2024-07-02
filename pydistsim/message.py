@@ -57,6 +57,25 @@ class Message:
             " \n     header = '%s' \nid(message) = 0x%x>"
         ) % (self.meta_header, self.source, destination, self.header, id(self))
 
+    def __deepcopy__(self, memo):
+        if id(self) in memo:
+            return memo[id(self)]
+
+        # Shallow copy of the object
+        copy_m = copy(self)
+        memo[id(self)] = copy_m
+
+        copy_m.id = self.__class__.next_message_id
+        self.__class__.next_message_id += 1
+
+        # Deep copy of the mutable attributes
+        copy_m.source = deepcopy(self.source, memo)
+        copy_m.destination = deepcopy(self.destination, memo)
+        copy_m.data = deepcopy(self.data, memo)
+        copy_m.meta_data = deepcopy(self.meta_data, memo)
+
+        return copy_m
+
     def copy(self):
         """
         Create a copy of the Message object.
