@@ -6,7 +6,8 @@ from numpy.random import rand
 
 from pydistsim.conf import settings
 from pydistsim.logger import logger
-from pydistsim.network.network import Node
+from pydistsim.network.network import BidirectionalNetwork, Network
+from pydistsim.network.node import Node
 from pydistsim.network.rangenetwork import BidirectionalRangeNetwork, RangeNetwork
 
 if TYPE_CHECKING:
@@ -191,7 +192,7 @@ class NetworkGenerator:
         This generator ignores all other parameters except comm_range and n counts.
 
         :return: The generated network.
-        :rtype: Network
+        :rtype: RangeNetworkType
         """
         net = self._create_modify_network()
 
@@ -212,7 +213,7 @@ class NetworkGenerator:
         :type randomness: float
 
         :return: The generated random network.
-        :rtype: Network
+        :rtype: RangeNetworkType
         """
         net = self._create_modify_network()
         n = len(net)

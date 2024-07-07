@@ -25,7 +25,7 @@ N_COUNT = 100
 ALGORITHMS = ()
 
 #: Default edge type
-DIRECTED = True
+DIRECTED = False
 
 #: Unit disc graph is the default channel type.
 CHANNEL_TYPE = "UdgRangeType"
