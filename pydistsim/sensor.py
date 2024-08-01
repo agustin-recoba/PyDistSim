@@ -191,21 +191,21 @@ class CompositeSensor:
 
     """
 
-    def __init__(self, node: "Node", componentSensors: tuple[type[Sensor] | str, ...] | None = None):
+    def __init__(self, node: "Node", componentSensors: tuple[type[Sensor] | str] | None = None):
         """
         Initialize the Sensor object.
 
         :param node: The Node that has this composite sensor attached to.
         :type node: Node
         :param componentSensors: Tuple of Sensor subclasses or their class names.
-        :type componentSensors: tuple[type[Sensor] | str, ...]
+        :type componentSensors: tuple[type[Sensor] | str]
         """
         self.node = node
         self._sensors = ()
         self.sensors = componentSensors or ()
 
     @property
-    def sensors(self) -> tuple[Sensor, ...]:
+    def sensors(self) -> tuple[Sensor]:
         """
         Get the sensors associated with the object.
 
@@ -214,8 +214,8 @@ class CompositeSensor:
         return self._sensors
 
     @sensors.setter
-    def sensors(self, sensors: tuple[type[Sensor] | str, ...]):
-        self._sensors: tuple[Sensor, ...] = ()
+    def sensors(self, sensors: tuple[type[Sensor] | str]):
+        self._sensors: tuple[Sensor] = ()
         # instantiate sensors passed by class name
         for cls in Sensor.__subclasses__():
             if cls.__name__ in sensors:

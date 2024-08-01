@@ -23,8 +23,8 @@ from pydistsim.exceptions import (
     NetworkException,
 )
 from pydistsim.logger import logger
+from pydistsim.network.behavior import ExampleProperties, behaviorModel
 from pydistsim.network.environment import Environment
-from pydistsim.network.networkbehavior import ExampleProperties, NetworkBehaviorModel
 from pydistsim.network.node import Node
 from pydistsim.observers import NodeObserver, ObserverManagerMixin
 from pydistsim.sensor import CompositeSensor
@@ -46,7 +46,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         self,
         incoming_graph_data=None,  # Correct subclassing of Graph
         environment: Environment | None = None,
-        behavioral_properties: NetworkBehaviorModel | None = None,
+        behavioral_properties: behaviorModel | None = None,
         **kwargs,
     ):
         """
@@ -63,7 +63,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         self.labels = {}
         self.simulation = None
         self.behavioral_properties = behavioral_properties or ExampleProperties.UnorderedCommunication
-        logger.info("Instance of Network has been initialized.")
+        logger.debug("Instance of Network has been initialized.")
 
     #### Overriding methods from Graph and DiGraph ####
 
@@ -233,13 +233,13 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         for node in self.nodes():
             node.clear_observers()
 
-    def reset(self):
+    def reset(self, log=True):
         """
         Reset the network to its initial state.
 
         Does not reset the observers of the network nor the observers of the nodes.
         """
-        logger.info("Resetting network.")
+        logger.debug("Resetting network.")
         self.reset_all_nodes()
 
     def reset_all_nodes(self):
@@ -248,7 +248,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         :return: None
         """
-        logger.info("Resetting all nodes.")
+        logger.debug("Resetting all nodes.")
         for node in self.nodes():
             node.reset()
 
@@ -448,7 +448,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         :return: None
         """
-        logger.info("Communicating messages in the network.")
+        logger.debug("Communicating messages in the network.")
 
         if len(self) == 0:
             return
@@ -643,7 +643,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         :raises AssertionError: If any of the network parameters do not match the real parameters.
         """
-        logger.info("Validating params")
+        logger.debug("Validating params")
         count = params.get("count", None)  #  for unit tests
         if count:
             if isinstance(count, list):

@@ -12,7 +12,7 @@ from pydistsim.network.network import BidirectionalNetwork, Network
 from pydistsim.utils.helpers import with_typehint
 
 if TYPE_CHECKING:
-    from pydistsim.network.networkbehavior import NetworkBehaviorModel
+    from pydistsim.network.behavior import behaviorModel
     from pydistsim.network.node import Node
 
 
@@ -169,7 +169,7 @@ class RangeNetworkMixin(with_typehint(Network)):
         incoming_graph_data=None,
         environment: Optional["Environment"] = None,
         rangeType: RangeType | None = None,
-        behavioral_properties: Optional["NetworkBehaviorModel"] = None,
+        behavioral_properties: Optional["behaviorModel"] = None,
         **kwargs,
     ):
         """

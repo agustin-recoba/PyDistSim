@@ -3,10 +3,10 @@ from typing import TYPE_CHECKING
 from pydistsim.utils.tree import get_root_node
 
 if TYPE_CHECKING:
-    from pydistsim.network import Network
+    from pydistsim.network import NetworkType
 
 
-def show_mst(net: "Network", treeKey="mst"):
+def show_mst(net: "NetworkType", treeKey="mst"):
     """
     Show tree representation of network.
 

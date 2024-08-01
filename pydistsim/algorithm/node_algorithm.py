@@ -154,6 +154,7 @@ class NodeAlgorithm(BaseAlgorithm):
         return (
             all((len(node.inbox) == 0 and len(node.outbox) == 0) for node in self.network.nodes())
             and len(self.alarms) == 0
+            and all(len(self.network.transit_messages(u, v)) == 0 for u, v in self.network.edges())
         )
 
     ### Algorithm methods ###
@@ -346,14 +347,14 @@ class NodeAlgorithm(BaseAlgorithm):
 
     ### Metaclass methods ###
 
-    def __configure_class__(clsname: str, bases: tuple[type, ...], dct: dict):
+    def __configure_class__(clsname: str, bases: tuple[type], dct: dict):
         """
         Metaclass method that configures the class by adding methods for all possible actions and statuses.
 
         :param clsname: The name of the class.
         :type clsname: str
         :param bases: The base classes of the class.
-        :type bases: tuple[type, ...]
+        :type bases: tuple[type]
         :param dct: The dictionary of the class.
         :type dct: dict
         """

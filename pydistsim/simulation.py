@@ -102,8 +102,7 @@ class Simulation(ObserverManagerMixin, QThread):
             algorithm: Optional["BaseAlgorithm"] = self.get_current_algorithm()
             if not algorithm:
                 logger.info(
-                    "Simulation has finished. There are no "
-                    "algorithms left to run. "
+                    "Simulation has finished. There are no algorithms left to run. "
                     "To run it from the start use sim.reset()."
                 )
                 self.notify_observers(ObservableEvents.sim_state_changed, self)
@@ -164,7 +163,7 @@ class Simulation(ObserverManagerMixin, QThread):
 
         :return: None
         """
-        logger.info("Resetting simulation.")
+        logger.debug("Resetting simulation.")
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self._network.reset()
 

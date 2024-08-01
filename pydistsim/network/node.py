@@ -23,7 +23,7 @@ class Node(ObserverManagerMixin):
         self,
         network: Optional["NetworkType"] = None,
         commRange: None | int = None,
-        sensors: None | tuple[type["Sensor"] | str, ...] = None,
+        sensors: None | tuple[type["Sensor"] | str] = None,
         **kwargs,
     ):
         """
@@ -209,12 +209,12 @@ class Node(ObserverManagerMixin):
         return self._compositeSensor.sensors
 
     @sensors.setter
-    def sensors(self, sensors: tuple[type["Sensor"] | str, ...]):
+    def sensors(self, sensors: tuple[type["Sensor"] | str]):
         """
         Set the sensors of the node.
 
         :param sensors: The sensors to be set.
-        :type sensors: tuple[type[Sensor] | str, ...]
+        :type sensors: tuple[type[Sensor] | str]
         """
         self._compositeSensor = CompositeSensor(self, sensors)
 

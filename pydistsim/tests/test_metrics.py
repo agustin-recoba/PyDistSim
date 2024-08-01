@@ -20,8 +20,8 @@ class CustomMetricCollector(MetricCollector):
     def on_example_custom_event(self, message: "Message"):
         self.example_custom_event_msgs.append(message.source)
 
-    def make_report(self):
-        report = super().make_report()
+    def create_report(self):
+        report = super().create_report()
         report["example_custom_event_msgs_sources"] = self.example_custom_event_msgs
         return report
 
@@ -47,11 +47,12 @@ class TestMetricCollector(PyDistSimTestCase):
     def test_all(self):
         self.sim.add_observers(self.observer)
         self.sim.run(100_000)
-        report = self.observer.make_report()
+        report = self.observer.create_report()
 
-        assert "messages_sent" in report and report["messages_sent"] > 0
-        assert "messages_delivered" in report and report["messages_delivered"] > 0
-        assert "qty_nodes_status_changed" in report and report["qty_nodes_status_changed"] > 0
+        assert "Qty. of messages sent" in report and report["Qty. of messages sent"] > 0
+        assert "Qty. of messages delivered" in report and report["Qty. of messages delivered"] > 0
+        assert "Qty. of status changes" in report and report["Qty. of status changes"] > 0
+        assert "Qty. of steps" in report and report["Qty. of steps"] > 0
 
 
 class TestWrongEvent(PyDistSimTestCase):
@@ -80,9 +81,10 @@ class TestCustomMetricCollector(PyDistSimTestCase):
     def test_all(self):
         self.sim.add_observers(self.observer)
         self.sim.run(100_000)
-        report = self.observer.make_report()
+        report = self.observer.create_report()
 
-        assert "messages_sent" in report and report["messages_sent"] > 0
-        assert "messages_delivered" in report and report["messages_delivered"] > 0
-        assert "qty_nodes_status_changed" in report and report["qty_nodes_status_changed"] > 0
+        assert "Qty. of messages sent" in report and report["Qty. of messages sent"] > 0
+        assert "Qty. of messages delivered" in report and report["Qty. of messages delivered"] > 0
+        assert "Qty. of status changes" in report and report["Qty. of status changes"] > 0
+        assert "Qty. of steps" in report and report["Qty. of steps"] > 0
         assert "example_custom_event_msgs_sources" in report and len(report["example_custom_event_msgs_sources"]) > 0

@@ -51,7 +51,7 @@ def write_pickle(obj: Any, path: str, makedir=True):
         pickle.dump(obj, fh, pickle.HIGHEST_PROTOCOL)
     finally:
         fh.close()
-    logger.info(f"instance of {str(obj.__class__)} saved in {path}")
+    logger.info(f"Instance of {str(obj.__class__)} saved in {path}")
 
 
 write_npickle = write_pickle
@@ -72,7 +72,7 @@ def read_pickle(path: str, not_found_raises=True):
     try:
         fh = _get_fh(str(path), "rb")
         obj = pickle.load(fh)
-        logger.info(f"instance of {str(obj.__class__)} loaded: {path}")
+        logger.info(f"Instance of {str(obj.__class__)} loaded: {path}")
         return obj
     except OSError as e:
         # if error is some other than errno.ENOENT ='file not found raise
