@@ -13,21 +13,14 @@ class TestBroadcastSimple(PyDistSimTestCase):
         net_gen = NetworkGenerator(100, directed=False)
         self.net = net_gen.generate_random_network()
         self.sim = Simulation(self.net)
-        self.sim.algorithms = ((Flood, {"informationKey": "greet"}),)
-
-        # Asigna el mensaje a enviar, la información inicial
-        self.initiator = self.net.nodes_sorted()[0]
-        self.initiator.memory["greet"] = HELLO
+        self.sim.algorithms = ((Flood, {"informationKey": "greet", "initial_information": HELLO}),)
 
     def test_broadcast(self):
         sim = self.sim
         algo = sim.algorithms[0]
 
         for node in self.net.nodes():
-            if node == self.initiator:
-                assert node.memory["greet"] == HELLO
-            else:
-                assert "greet" not in node.memory
+            assert "greet" not in node.memory
 
         sim.run(1)
 
@@ -48,15 +41,11 @@ class TestBroadcastConcatenated(PyDistSimTestCase):
         self.net = net_gen.generate_random_network()
         self.sim = Simulation(self.net)
         self.sim.algorithms = (
-            (Flood, {"informationKey": "greet"}),
-            (Flood, {"informationKey": "bye"}),
+            (Flood, {"informationKey": "greet", "initial_information": HELLO}),
+            (Flood, {"informationKey": "bye", "initial_information": BYE}),
         )
         # Asigna el mensaje a enviar, la información inicial
         self.initiator = self.net.nodes_sorted()[0]
-        self.initiator.memory["greet"] = HELLO
-
-        self.initiator2 = self.net.nodes_sorted()[-1]
-        self.initiator2.memory["bye"] = BYE
 
     def test_broadcast(self):
         sim = self.sim
@@ -65,15 +54,8 @@ class TestBroadcastConcatenated(PyDistSimTestCase):
 
         for node in self.net.nodes():
             with self.subTest(node=node):
-                if node == self.initiator:
-                    assert node.memory["greet"] == HELLO
-                    assert "bye" not in node.memory
-                elif node == self.initiator2:
-                    assert "greet" not in node.memory
-                    assert node.memory["bye"] == BYE
-                else:
-                    assert "greet" not in node.memory
-                    assert "bye" not in node.memory
+                assert "greet" not in node.memory
+                assert "bye" not in node.memory
 
         sim.run(1)
 

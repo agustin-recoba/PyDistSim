@@ -16,18 +16,14 @@ from networkx import (
 from numpy import allclose, array, average, max, min, pi
 from numpy.random import rand
 
+from pydistsim._exceptions import MessageUndeliverableException, NetworkException
 from pydistsim.conf import settings
-from pydistsim.exceptions import (
-    MessageUndeliverableException,
-    NetworkErrorMsg,
-    NetworkException,
-)
 from pydistsim.logger import logger
+from pydistsim.network.behavior import ExampleProperties, NetworkBehaviorModel
 from pydistsim.network.environment import Environment
-from pydistsim.network.networkbehavior import ExampleProperties, NetworkBehaviorModel
 from pydistsim.network.node import Node
+from pydistsim.network.sensor import CompositeSensor
 from pydistsim.observers import NodeObserver, ObserverManagerMixin
-from pydistsim.sensor import CompositeSensor
 from pydistsim.utils.helpers import pydistsim_equal_objects, with_typehint
 
 if TYPE_CHECKING:
@@ -63,7 +59,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         self.labels = {}
         self.simulation = None
         self.behavioral_properties = behavioral_properties or ExampleProperties.UnorderedCommunication
-        logger.info("Instance of Network has been initialized.")
+        logger.debug("Instance of Network has been initialized.")
 
     #### Overriding methods from Graph and DiGraph ####
 
@@ -138,7 +134,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         """
         if not skip_check and node not in self.nodes():
             logger.error("Node not in network")
-            raise NetworkException(NetworkErrorMsg.NODE_NOT_IN_NET)
+            raise NetworkException(NetworkException.ERRORS.NODE_NOT_IN_NET)
         super().remove_node(node)
         del self.pos[node]
         del self.labels[node]
@@ -171,7 +167,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         if node.network:
             logger.exception("Node is already in another network, can't add.")
-            raise NetworkException(NetworkErrorMsg.NODE)
+            raise NetworkException(NetworkException.ERRORS.NODE)
 
         node.network = self
 
@@ -182,7 +178,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         if not self._environment.is_space(pos):
             logger.error("Given position is not free space.")
-            raise NetworkException(NetworkErrorMsg.NODE_SPACE)
+            raise NetworkException(NetworkException.ERRORS.NODE_SPACE)
 
         super().add_node(node)
         self.pos[node] = array(pos)
@@ -233,13 +229,13 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         for node in self.nodes():
             node.clear_observers()
 
-    def reset(self):
+    def reset(self, log=True):
         """
         Reset the network to its initial state.
 
         Does not reset the observers of the network nor the observers of the nodes.
         """
-        logger.info("Resetting network.")
+        logger.debug("Resetting network.")
         self.reset_all_nodes()
 
     def reset_all_nodes(self):
@@ -248,7 +244,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         :return: None
         """
-        logger.info("Resetting all nodes.")
+        logger.debug("Resetting all nodes.")
         for node in self.nodes():
             node.reset()
 
@@ -340,7 +336,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
                 return n
 
         logger.error("Network has no node with id {}.", id_)
-        raise NetworkException(NetworkErrorMsg.NODE_NOT_IN_NET)
+        raise NetworkException(NetworkException.ERRORS.NODE_NOT_IN_NET)
 
     def avg_degree(self):
         """
@@ -448,7 +444,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         :return: None
         """
-        logger.info("Communicating messages in the network.")
+        logger.debug("Communicating messages in the network.")
 
         if len(self) == 0:
             return
@@ -643,7 +639,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         :raises AssertionError: If any of the network parameters do not match the real parameters.
         """
-        logger.info("Validating params")
+        logger.debug("Validating params")
         count = params.get("count", None)  #  for unit tests
         if count:
             if isinstance(count, list):

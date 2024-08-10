@@ -29,7 +29,7 @@ For class and method documentation refer to :class:`NetworkMixin`.
 ************************
 Communication properties
 ************************
-.. currentmodule:: pydistsim.network.networkbehavior
+.. currentmodule:: pydistsim.network.behavior
 
 The communication properties of the network are defined in the :class:`NetworkBehaviorModel` class. This
 class defines the three parameters that are used to model the communication properties of the network:

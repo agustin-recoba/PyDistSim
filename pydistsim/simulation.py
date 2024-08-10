@@ -1,12 +1,16 @@
+"""
+Simulation module for the PyDistSim package.
+"""
+
 import inspect
 from copy import copy, deepcopy
 from typing import TYPE_CHECKING, Optional
 
 from PySide6.QtCore import SIGNAL, QThread
 
+from pydistsim._exceptions import SimulationException
 from pydistsim.algorithm import BaseAlgorithm
 from pydistsim.conf import settings
-from pydistsim.exceptions import SimulationException
 from pydistsim.logger import logger
 from pydistsim.observers import (
     AlgorithmObserver,
@@ -102,8 +106,7 @@ class Simulation(ObserverManagerMixin, QThread):
             algorithm: Optional["BaseAlgorithm"] = self.get_current_algorithm()
             if not algorithm:
                 logger.info(
-                    "Simulation has finished. There are no "
-                    "algorithms left to run. "
+                    "Simulation has finished. There are no algorithms left to run. "
                     "To run it from the start use sim.reset()."
                 )
                 self.notify_observers(ObservableEvents.sim_state_changed, self)
@@ -164,7 +167,7 @@ class Simulation(ObserverManagerMixin, QThread):
 
         :return: None
         """
-        logger.info("Resetting simulation.")
+        logger.debug("Resetting simulation.")
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self._network.reset()
 

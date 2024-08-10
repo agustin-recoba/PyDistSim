@@ -2,8 +2,8 @@
 
 from pydistsim.message import Message
 from pydistsim.network import NetworkGenerator
+from pydistsim.network.behavior import NetworkBehaviorModel
 from pydistsim.network.network import Network
-from pydistsim.network.networkbehavior import NetworkBehaviorModel
 from pydistsim.restrictions.communication import (
     BidirectionalLinks,
     MessageOrdering,

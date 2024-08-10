@@ -9,10 +9,8 @@ Reference
    :maxdepth: 2
 
    networkmixin
-   nodealgorithm
    networkgenerator
    rangenetwork
-   simulation
    observers
    sensors
    conf

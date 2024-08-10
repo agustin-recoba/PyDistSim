@@ -2,7 +2,7 @@ from functools import cached_property
 from random import randint
 from typing import TYPE_CHECKING, Any
 
-from pydistsim import logger
+from pydistsim.logger import logger
 
 if TYPE_CHECKING:
     from pydistsim.network import Node

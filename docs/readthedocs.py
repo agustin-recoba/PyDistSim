@@ -37,6 +37,8 @@ MOCK_MODULES = [
     "scipy",
     "scipy.stats",
     "loguru",
+    "pandas",
+    "seaborn",
 ]
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()

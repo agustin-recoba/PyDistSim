@@ -12,7 +12,7 @@ from pydistsim.network.network import BidirectionalNetwork, Network
 from pydistsim.utils.helpers import with_typehint
 
 if TYPE_CHECKING:
-    from pydistsim.network.networkbehavior import NetworkBehaviorModel
+    from pydistsim.network.behavior import NetworkBehaviorModel
     from pydistsim.network.node import Node
 
 

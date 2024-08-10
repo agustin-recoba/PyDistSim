@@ -1,3 +1,7 @@
+"""
+Logger configuration for the package.
+"""
+
 import sys
 from enum import StrEnum
 

@@ -1,7 +1,7 @@
 .. _modules:
 
 ############################
-Modules, classes and methods
+Modules overview
 ############################
 
 .. autosummary::
@@ -10,3 +10,8 @@ Modules, classes and methods
    :recursive:
 
    pydistsim
+   pydistsim.algorithm
+   pydistsim.benchmark
+   pydistsim.demo_algorithms
+   pydistsim.network
+   pydistsim.simulation

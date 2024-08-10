@@ -53,14 +53,14 @@ Windows
 Windows version should be as simple as installing `Python 3.11 for windows <https://www.python.org/downloads/release/python-3110/>`_ and running ``pip install pydistsim``.
 
 *****************************
-Linux (tested only on Ubuntu)
+Linux (Debian/Ubuntu based)
 *****************************
 
 To install Python 3.11, run::
 
     $ sudo apt install python3.11
 
-Depending of the version of Ubuntu, some packages are required for getting and compiling the source::
+Depending of the flavour of linux, some packages are required for getting and compiling the source::
 
     $ sudo apt-get install libxkbcommon-x11-0 libegl1 opencv-python-headless libgl1-mesa-glx
 
@@ -97,7 +97,7 @@ Finally, in order to download and install PyDistSim and all other required packa
 
 #. *Development*: to install latest development version of the PyDistSim use source from github repo::
 
-    (pydistsim_env)> pip install -e git+https://github.com/agustin-recoba/PyDistSim#egg=PyDistrSim
+    (pydistsim_env)> pip install -e git+https://github.com/agustin-recoba/PyDistSim#egg=PyDistSim
 
 Starting PyDistSim
 ==================

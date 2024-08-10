@@ -4,7 +4,7 @@ import unittest
 
 from pydistsim.message import Message
 from pydistsim.network import NetworkGenerator
-from pydistsim.network.networkbehavior import ExampleProperties, NetworkBehaviorModel
+from pydistsim.network.behavior import ExampleProperties, NetworkBehaviorModel
 
 CANT_MESSAGES = 100
 
@@ -68,7 +68,7 @@ DelayOnlyFirstMessage = NetworkBehaviorModel(
 )
 
 
-class TestNetworkBehaviorModel(unittest.TestCase):
+class TestbehaviorModel(unittest.TestCase):
     TESTS = {
         ExampleProperties.LikelyRandomLossCommunication: (
             "LikelyRandomLossCommunication",

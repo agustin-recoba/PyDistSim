@@ -3,7 +3,7 @@ from pydistsim.message import Message
 from pydistsim.restrictions.communication import BidirectionalLinks
 from pydistsim.restrictions.knowledge import InitialDistinctValues
 from pydistsim.restrictions.reliability import TotalReliability
-from pydistsim.restrictions.topological import Connectivity, UniqueInitiator
+from pydistsim.restrictions.topological import Connectivity
 
 
 class YoYo(NodeAlgorithm):

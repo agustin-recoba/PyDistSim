@@ -40,6 +40,8 @@ help:
 
 clean:
 	-rm -rf $(BUILDDIR)/*
+	-rm -rf $(BUILDDIR)/../reference/_autosummary/*
+	-rm -rf $(BUILDDIR)/../reference/generated/*
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html

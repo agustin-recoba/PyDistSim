@@ -3,13 +3,13 @@ from typing import TYPE_CHECKING, Optional
 
 from pydistsim.conf import settings
 from pydistsim.logger import LogLevels, logger
+from pydistsim.network.sensor import CompositeSensor
 from pydistsim.observers import ObservableEvents, ObserverManagerMixin
-from pydistsim.sensor import CompositeSensor
 
 if TYPE_CHECKING:
     from pydistsim.message import Message
     from pydistsim.network.network import NetworkType
-    from pydistsim.sensor import Sensor
+    from pydistsim.network.sensor import Sensor
 
 
 class Node(ObserverManagerMixin):
@@ -23,7 +23,7 @@ class Node(ObserverManagerMixin):
         self,
         network: Optional["NetworkType"] = None,
         commRange: None | int = None,
-        sensors: None | tuple[type["Sensor"] | str, ...] = None,
+        sensors: None | tuple[type["Sensor"] | str] = None,
         **kwargs,
     ):
         """
@@ -209,12 +209,12 @@ class Node(ObserverManagerMixin):
         return self._compositeSensor.sensors
 
     @sensors.setter
-    def sensors(self, sensors: tuple[type["Sensor"] | str, ...]):
+    def sensors(self, sensors: tuple[type["Sensor"] | str]):
         """
         Set the sensors of the node.
 
         :param sensors: The sensors to be set.
-        :type sensors: tuple[type[Sensor] | str, ...]
+        :type sensors: tuple[type[Sensor] | str]
         """
         self._compositeSensor = CompositeSensor(self, sensors)
 

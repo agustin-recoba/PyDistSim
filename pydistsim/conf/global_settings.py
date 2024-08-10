@@ -25,7 +25,7 @@ N_COUNT = 100
 ALGORITHMS = ()
 
 #: Default edge type
-DIRECTED = True
+DIRECTED = False
 
 #: Unit disc graph is the default channel type.
 CHANNEL_TYPE = "UdgRangeType"
@@ -45,9 +45,9 @@ SENSORS = ()
 ACTUATORS = ()
 
 #: Probability function (by default :py:data:`scipy.stats.norm`) and its
-#: parameters for :class:`pydistsim.sensor.AoASensor`
+#: parameters for :class:`pydistsim.network.sensor.AoASensor`
 AOA_PF_PARAMS = {"pf": scipy.stats.norm, "scale": 10 * pi / 180}  # in radians
 
 #: Probability function (by default :py:data:`scipy.stats.norm`) and its
-#: :class:`pydistsim.sensor.DistSensor`
+#: :class:`pydistsim.network.sensor.DistSensor`
 DIST_PF_PARAMS = {"pf": scipy.stats.norm, "scale": 10}

@@ -14,7 +14,7 @@ For example, for a broadcast algorithm, the restrictions could be:
 
 .. code-block:: python
 
-    algorithm_restrictions: tuple[type[Restriction], ...] = (
+    algorithm_restrictions = (
         BidirectionalLinks,
         TotalReliability,
         Connectivity,

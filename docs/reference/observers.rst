@@ -55,7 +55,7 @@ To enable the metric collection, the simulation object must be configured with a
    sim = Simulation(net)
    sim.add_observers(metrics)
 
-To access the collected metrics, the :meth:`MetricCollector.make_report` method can be used.
+To access the collected metrics, the :meth:`MetricCollector.create_report` method can be used.
 
 Subclassing :class:`MetricCollector`
 ====================================

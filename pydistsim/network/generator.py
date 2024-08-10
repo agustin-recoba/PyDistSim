@@ -1,16 +1,22 @@
+from collections import OrderedDict
 from itertools import product
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, TypeVar
 
-from numpy import array, sign, sqrt
+from numpy import array, cos, log2, pi, sign, sin, sqrt
 from numpy.random import rand
 
 from pydistsim.conf import settings
 from pydistsim.logger import logger
-from pydistsim.network.network import Node
+from pydistsim.network.network import BidirectionalNetwork
+from pydistsim.network.node import Node
 from pydistsim.network.rangenetwork import BidirectionalRangeNetwork, RangeNetwork
 
 if TYPE_CHECKING:
+    from pydistsim.network.environment import Environment2D
+    from pydistsim.network.network import NetworkType
     from pydistsim.network.rangenetwork import RangeNetworkType
+
+T = TypeVar("T", bound="NetworkType")
 
 
 class NetworkGenerator:
@@ -191,7 +197,7 @@ class NetworkGenerator:
         This generator ignores all other parameters except comm_range and n counts.
 
         :return: The generated network.
-        :rtype: Network
+        :rtype: RangeNetworkType
         """
         net = self._create_modify_network()
 
@@ -212,7 +218,7 @@ class NetworkGenerator:
         :type randomness: float
 
         :return: The generated random network.
-        :rtype: Network
+        :rtype: RangeNetworkType
         """
         net = self._create_modify_network()
         n = len(net)
@@ -234,6 +240,286 @@ class NetworkGenerator:
         # accordingly, to change only commRange set limits to number of nodes
         self.n_count = self.n_max = self.n_min = n
         return self.generate_random_network(net)
+
+    @staticmethod
+    def __get_ring_pos(n: int, env: "Environment2D") -> list[tuple[float, float]]:
+        """
+        A helper method for generating positions of nodes on a circle.
+
+        :param n: The number of nodes.
+        :type n: int
+        :param env: The environment object.
+        :type env: Environment2D
+        :return: The list of positions.
+        :rtype: list[tuple[int, int]]
+        """
+
+        env_shape = env.image.shape
+        center = (env_shape[0] // 2, env_shape[1] // 2)
+        radius = 0.82 * (min(env_shape) / 2)  # 82% of the smallest dimension, leaves enough space for the node labels.
+
+        nodes = []
+        for i in range(n):
+            angle = 2 * i * pi / n
+            x = center[0] + radius * cos(angle)
+            y = center[1] + radius * sin(angle)
+            nodes.append((x, y))
+        return nodes
+
+    @classmethod
+    def generate_complete_network(cls, n: int, network_type: type[T] = BidirectionalNetwork) -> T:
+        """
+        Generate a complete network with n nodes. The nodes are placed on a circle.
+
+        :param n: The number of nodes in the complete network.
+        :type n: int
+        :return: The generated complete network.
+        :rtype: BidirectionalNetwork
+        """
+
+        net = network_type()
+        node_pos_list = cls.__get_ring_pos(n, net.environment)
+        nodes = [net.add_node(pos=node_pos_list) for node_pos_list in node_pos_list]
+
+        for i, j in product(range(n), range(n)):
+            if i != j:
+                net.add_edge(nodes[i], nodes[j])
+
+        return net
+
+    @classmethod
+    def generate_ring_network(cls, n: int, network_type: type[T] = BidirectionalNetwork) -> T:
+        """
+        Generate a ring network with n nodes. The nodes are placed on a circle.
+        If network_type is a directed type, the links between the nodes are one-way only so the network is fully
+        connected.
+
+        :param n: The number of nodes in the ring network.
+        :type n: int
+        :param network_type: The type of network to generate.
+        :type network_type: NetworkType
+        :return: The generated ring network. Same type as the network_type parameter.
+        :rtype: NetworkType
+        """
+
+        net = network_type()
+        node_pos_list = cls.__get_ring_pos(n, net.environment)
+        nodes = [net.add_node(pos=node_pos_list) for node_pos_list in node_pos_list]
+
+        for i in range(n):
+            if i != (i + 1) % n:
+                net.add_edge(nodes[i], nodes[(i + 1) % n])
+
+        return net
+
+    @classmethod
+    def generate_star_network(cls, n: int, network_type: type[T] = BidirectionalNetwork) -> T:
+        """
+        Generate a star network with n nodes. The nodes are placed on a circle with one node in the center.
+        If network_type is a directed type, the links are only from the center node to the other nodes.
+
+        :param n: The number of TOTAL nodes in the star network.
+        :type n: int
+        :param network_type: The type of network to generate.
+        :type network_type: NetworkType
+        :return: The generated star network.
+        :rtype: NetworkType
+        """
+
+        if n <= 1:
+            raise ValueError("Star network requires at least 2 nodes.")
+
+        net = network_type()
+        node_pos_list = cls.__get_ring_pos(n - 1, net.environment)
+
+        center = (net.environment.image.shape[0] / 2, net.environment.image.shape[1] / 2)
+
+        center_node = net.add_node(pos=center)
+
+        for i in range(n - 1):
+            node = net.add_node(pos=node_pos_list[i])
+            net.add_edge(center_node, node)
+
+        return net
+
+    @staticmethod
+    def generate_hypercube_network(
+        n: int | None = None, dimension: int | None = None, network_type: type[T] = BidirectionalNetwork
+    ) -> T:
+        """
+        Generate a hypercube network of the given dimension (or node count). The nodes are placed in a hypercube
+        structure.
+
+        :param n: The number of nodes in the hypercube. If None, the dimension parameter must be set.
+        :type n: int
+        :param dimension: The dimension of the hypercube. If None, the n parameter must be set.
+        :type dimension: int
+        :param network_type: The type of network to generate.
+        :type network_type: NetworkType
+        :return: The generated hypercube network.
+        :rtype: NetworkType
+        """
+        if n is None and dimension is None:
+            raise ValueError("Either the number of nodes or the dimension of the hypercube must be set.")
+        if n is not None and dimension is not None:
+            raise ValueError("Only one of the number of nodes or the dimension of the hypercube can be set.")
+        if n is not None:
+            dimension = int(log2(n))
+            if 2**dimension != n:
+                raise ValueError("The number of nodes must be a power of 2.")
+
+        LABEL_KEY = "HYPERCUBE_LABEL"
+
+        def create_hypercube(dim):
+            # Recursive function to create the hypercube
+            # A hypercube of dimension n is the disjoint union of two hypercubes of dimension n-1, forming a perfect
+            # matching between the nodes of the two hypercubes.
+            node_pos = OrderedDict()
+            edges = []
+            dist = 1
+
+            if dim == 0:
+                node = Node()
+                node.memory[LABEL_KEY] = "0"
+                node_pos[node] = (0, 0)
+            elif dim == 1:
+                node1 = Node()
+                node1.memory[LABEL_KEY] = "0"
+                node2 = Node()
+                node2.memory[LABEL_KEY] = "1"
+                node_pos[node1] = (0, 0)
+                node_pos[node2] = (dist, 0)
+                edges.append((node1, node2))
+            else:
+                part_1_nodes, part_1_edges = create_hypercube(dim - 1)
+                part_2_nodes, part_2_edges = create_hypercube(dim - 1)
+
+                edges += part_1_edges
+                edges += part_2_edges
+
+                part_1_width = max([pos[0] for pos in part_1_nodes.values()])
+                part_1_height = max([pos[1] for pos in part_1_nodes.values()])
+
+                if dim == 1:  # Grow only in the x-axis
+                    x_offset = dist
+                    y_offset = 0
+                elif dim == 2:  # Grow only in the y-axis
+                    x_offset = 0
+                    y_offset = dist
+                elif dim == 3:  # Grow equally in both axes
+                    x_offset = dist / 2
+                    y_offset = dist / 2
+                elif dim % 2 == 0:  # Even dimensions grow in the x-axis
+                    x_offset = part_1_width * 1.1
+                    y_offset = dist / 4
+                else:  # Odd dimensions grow in the y-axis
+                    x_offset = dist / 4
+                    y_offset = part_1_height * 1.1
+
+                for node, pos in part_1_nodes.items():
+                    node_pos[node] = pos
+                    node.memory[LABEL_KEY] = "0" + node.memory[LABEL_KEY]
+                for node, pos in part_2_nodes.items():
+                    node_pos[node] = (pos[0] + x_offset, pos[1] + y_offset)
+                    node.memory[LABEL_KEY] = "1" + node.memory[LABEL_KEY]
+
+                for node1, node2 in zip(part_1_nodes.keys(), part_2_nodes.keys()):
+                    edges.append((node1, node2))
+
+            return node_pos, edges
+
+        # Create the nodes
+        node_pos_list, edges = create_hypercube(dimension)
+
+        # Create the network
+        net = network_type()
+        canvas_shape = net.environment.image.shape
+        usable_shape = (canvas_shape[1] * 0.82, canvas_shape[0] * 0.82)
+
+        # Normalize the positions
+        max_x = max(max([pos[0] for pos in node_pos_list.values()]), 1)
+        max_y = max(max([pos[1] for pos in node_pos_list.values()]), 1)
+
+        for node, pos in node_pos_list.items():
+            # If the dimension is 0 or 1, the nodes are in the center
+            x = pos[0] if dimension != 0 else 0.5
+            y = pos[1] if dimension not in (0, 1) else 0.5
+            final_pos = (x / max_x * usable_shape[0], y / max_y * usable_shape[1])
+
+            # Add the node
+            net.add_node(node, pos=final_pos)
+            net.labels[node] = node.memory[LABEL_KEY]
+
+            # Remove the label from the memory as it represents some knowledge of the network
+            del node.memory[LABEL_KEY]
+
+        # Add the edges to the network
+        for node1, node2 in edges:
+            net.add_edge(node1, node2)
+            if net.is_directed():
+                net.add_edge(node2, node1)
+
+        return net
+
+    @classmethod
+    def generate_mesh_network(
+        cls,
+        n: int = None,
+        a: int = None,
+        b: int = None,
+        torus: bool = False,
+        network_type: type[T] = BidirectionalNetwork,
+    ) -> T:
+        """
+        Generate a mesh (or torus) network with n nodes (or a x b nodes).
+        If network_type is a directed type, the links are only north and east. Only with torus, this gives a fully
+        connected network nonetheless.
+
+        :param n: The number of nodes in the mesh/torus network. Optional.
+        :type n: int
+        :param a: Width of the mesh/torus. Optional.
+        :type a: int
+        :param b: Height of the mesh/torus. Optional.
+        :type b: int
+        :param torus: Whether or not to add "returning" edges.
+        :type torus: bool
+        :param network_type: The type of network to generate.
+        :type network_type: NetworkType
+        :return: The generated mesh/torus network.
+        :rtype: NetworkType
+        """
+
+        if a is None or b is None:
+            if n is None:
+                raise ValueError("Mesh network generator needs (a, b) or n.")
+            if int(sqrt(n)) != sqrt(n):
+                raise ValueError("Value n given must be a perfect square.")
+
+            a = b = int(sqrt(n))
+
+        node_pos_list = {(i, j): Node() for i in range(a) for j in range(b)}
+
+        net = network_type()
+        canvas_shape = net.environment.image.shape
+        usable_shape = (canvas_shape[1] * 0.82, canvas_shape[0] * 0.82)
+        bottom_margin = (canvas_shape[1] * (1 - 0.83) / 4, canvas_shape[0] * (1 - 0.83) / 4)
+
+        # Normalize the positions
+        max_x = max(max([pos[0] for pos in node_pos_list.keys()]), 1)
+        max_y = max(max([pos[1] for pos in node_pos_list.keys()]), 1)
+
+        for (x, y), node in node_pos_list.items():
+            # If the dimension is 0 or 1, the nodes are in the center
+            final_pos = (x / max_x * usable_shape[0] + bottom_margin[0], y / max_y * usable_shape[1] + bottom_margin[1])
+            net.add_node(node, pos=final_pos)
+
+        for (x, y), node in node_pos_list.items():
+            north_and_east_neighbors = [(x, y + 1), (x + 1, y)] if not torus else [(x, (y + 1) % b), ((x + 1) % a, y)]
+            for pos_neigh in north_and_east_neighbors:
+                if pos_neigh in node_pos_list:
+                    net.add_edge(node, node_pos_list[pos_neigh])
+
+        return net
 
 
 def generate_mesh_positions(env, n):

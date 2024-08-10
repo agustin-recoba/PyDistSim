@@ -1,3 +1,7 @@
+"""
+:class:`MetricCollector` is an observer that collects metrics from the simulation.
+"""
+
 from time import time
 from typing import TYPE_CHECKING
 
@@ -53,7 +57,11 @@ class MetricCollector(NodeNetworkObserver, AlgorithmObserver, SimulationObserver
         self.metrics.append((time(), event_type, event_data))
 
     # AlgorithmObserver methods
-    def on_step_done(self, algorithm: "BaseAlgorithm") -> None: ...
+    def on_step_done(self, algorithm: "BaseAlgorithm") -> None:
+        self._add_metric(
+            ObservableEvents.step_done,
+            None,
+        )
 
     def on_message_sent(self, message: "Message") -> None:
         self._add_metric(
@@ -96,7 +104,7 @@ class MetricCollector(NodeNetworkObserver, AlgorithmObserver, SimulationObserver
             },
         )
 
-    def make_report(self):
+    def create_report(self):
         """
         Returns a dictionary with the collected metrics.
 
@@ -106,6 +114,7 @@ class MetricCollector(NodeNetworkObserver, AlgorithmObserver, SimulationObserver
         msg_sent = 0
         msg_delivered = 0
         qty_nodes_status_changed = 0
+        qty_steps_done = 0
 
         for timestamp, event_type, event_data in self.metrics:
             match event_type:
@@ -115,9 +124,12 @@ class MetricCollector(NodeNetworkObserver, AlgorithmObserver, SimulationObserver
                     msg_delivered += 1
                 case ObservableEvents.node_status_changed:
                     qty_nodes_status_changed += 1
+                case ObservableEvents.step_done:
+                    qty_steps_done += 1
 
         return {
-            "messages_sent": msg_sent,
-            "messages_delivered": msg_delivered,
-            "qty_nodes_status_changed": qty_nodes_status_changed,
+            "Qty. of messages sent": msg_sent,
+            "Qty. of messages delivered": msg_delivered,
+            "Qty. of status changes": qty_nodes_status_changed,
+            "Qty. of steps": qty_steps_done,
         }
