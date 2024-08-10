@@ -239,7 +239,7 @@ class AlgorithmBenchmark:
         y_vars: Iterable[str] = None,
         result_filter: Callable[[dict[str, Any]], bool] = None,
         grouped=True,
-        pairplot_kwargs: dict[str, Any] = None,
+        pairplot_kwargs: dict[str, Any] = {},
     ):
         """
         Plot the results of the benchmark using seaborn pairplot.
