@@ -1,6 +1,6 @@
+from pydistsim.benchmark import MetricCollector
 from pydistsim.demo_algorithms.broadcast import Flood
 from pydistsim.message import Message
-from pydistsim.metrics import MetricCollector
 from pydistsim.network import NetworkGenerator
 from pydistsim.simulation import Simulation
 from pydistsim.utils.testing import PyDistSimTestCase

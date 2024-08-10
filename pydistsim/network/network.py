@@ -16,18 +16,14 @@ from networkx import (
 from numpy import allclose, array, average, max, min, pi
 from numpy.random import rand
 
+from pydistsim._exceptions import MessageUndeliverableException, NetworkException
 from pydistsim.conf import settings
-from pydistsim.exceptions import (
-    MessageUndeliverableException,
-    NetworkErrorMsg,
-    NetworkException,
-)
 from pydistsim.logger import logger
-from pydistsim.network.behavior import ExampleProperties, behaviorModel
+from pydistsim.network.behavior import ExampleProperties, NetworkBehaviorModel
 from pydistsim.network.environment import Environment
 from pydistsim.network.node import Node
+from pydistsim.network.sensor import CompositeSensor
 from pydistsim.observers import NodeObserver, ObserverManagerMixin
-from pydistsim.sensor import CompositeSensor
 from pydistsim.utils.helpers import pydistsim_equal_objects, with_typehint
 
 if TYPE_CHECKING:
@@ -46,7 +42,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         self,
         incoming_graph_data=None,  # Correct subclassing of Graph
         environment: Environment | None = None,
-        behavioral_properties: behaviorModel | None = None,
+        behavioral_properties: NetworkBehaviorModel | None = None,
         **kwargs,
     ):
         """
@@ -138,7 +134,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         """
         if not skip_check and node not in self.nodes():
             logger.error("Node not in network")
-            raise NetworkException(NetworkErrorMsg.NODE_NOT_IN_NET)
+            raise NetworkException(NetworkException.ERRORS.NODE_NOT_IN_NET)
         super().remove_node(node)
         del self.pos[node]
         del self.labels[node]
@@ -171,7 +167,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         if node.network:
             logger.exception("Node is already in another network, can't add.")
-            raise NetworkException(NetworkErrorMsg.NODE)
+            raise NetworkException(NetworkException.ERRORS.NODE)
 
         node.network = self
 
@@ -182,7 +178,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         if not self._environment.is_space(pos):
             logger.error("Given position is not free space.")
-            raise NetworkException(NetworkErrorMsg.NODE_SPACE)
+            raise NetworkException(NetworkException.ERRORS.NODE_SPACE)
 
         super().add_node(node)
         self.pos[node] = array(pos)
@@ -340,7 +336,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
                 return n
 
         logger.error("Network has no node with id {}.", id_)
-        raise NetworkException(NetworkErrorMsg.NODE_NOT_IN_NET)
+        raise NetworkException(NetworkException.ERRORS.NODE_NOT_IN_NET)
 
     def avg_degree(self):
         """

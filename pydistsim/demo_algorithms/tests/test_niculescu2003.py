@@ -3,7 +3,7 @@ import unittest
 from pydistsim.demo_algorithms.niculescu2003.dvhop import DVHop
 from pydistsim.demo_algorithms.niculescu2003.trilaterate import Trilaterate
 from pydistsim.network import NetworkGenerator
-from pydistsim.sensor import TruePosSensor
+from pydistsim.network.sensor import TruePosSensor
 from pydistsim.simulation import Simulation
 
 

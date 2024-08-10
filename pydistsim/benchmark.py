@@ -1,3 +1,7 @@
+"""
+This module contains the :class:`AlgorithmBenchmark` class, which is used to benchmark the performance of a given algorithm.
+"""
+
 from collections.abc import Callable, Iterable
 from random import randint, random
 from time import time
@@ -9,7 +13,7 @@ from pydistsim.algorithm.node_algorithm import AlgorithmException, NodeAlgorithm
 from pydistsim.conf import settings
 from pydistsim.logger import logger
 from pydistsim.metrics import MetricCollector
-from pydistsim.network.behavior import ExampleProperties, behaviorModel
+from pydistsim.network.behavior import ExampleProperties, NetworkBehaviorModel
 from pydistsim.network.generator import NetworkGenerator
 from pydistsim.network.network import BidirectionalNetwork, Network, NetworkType
 from pydistsim.simulation import AlgorithmsParam, Simulation
@@ -96,7 +100,7 @@ class AlgorithmBenchmark:
     :param check_algorithm_termination: Whether to check if the algorithm terminated correctly. Only for NodeAlgorithms.
     :type check_algorithm_termination: bool, optional
     :param network_behavior: The network behavior model to use.
-    :type network_behavior: behaviorModel, optional
+    :type network_behavior: NetworkBehaviorModel, optional
     :param metric_collector_factory: A factory function to create a MetricCollector instance.
     :type metric_collector_factory: Callable[[], MetricCollector], optional
     :param network_generators: A dict of dicts containing network generators.
@@ -112,7 +116,7 @@ class AlgorithmBenchmark:
         network_sizes: Iterable[int] = range(1, 20),
         directed_network: bool = settings.DIRECTED,
         check_algorithm_termination: bool = True,
-        network_behavior: "behaviorModel" = ExampleProperties.IdealCommunication,
+        network_behavior: "NetworkBehaviorModel" = ExampleProperties.IdealCommunication,
         metric_collector_factory: Callable[[], MetricCollector] = MetricCollector,
         network_generators: dict[
             Literal["DETERMINISTIC", "RANDOM"], dict[str, Callable[[int], "NetworkType"]]
@@ -142,7 +146,7 @@ class AlgorithmBenchmark:
 
         for network_size, gen_name, gen in tests:
             if time() - start_time > self.max_time:
-                logger.info(
+                logger.warning(
                     f"Time limit reached, stopping benchmark before on {gen_name} network of size {network_size}"
                 )
                 return
@@ -154,7 +158,7 @@ class AlgorithmBenchmark:
                 logger.debug(f"Failed to generate '{gen_name}' network of size {network_size}. Reason: {e}")
                 continue
 
-            logger.info(f"Running simulation on '{gen_name}' network of size {len(network)}")
+            logger.debug(f"Running simulation on '{gen_name}' network of size {len(network)}")
             network.behavioral_properties = self.network_behavior
 
             metrics = self.metric_collector_factory()
@@ -193,7 +197,7 @@ class AlgorithmBenchmark:
             {
                 "Net. node count": len(network),
                 "Net. edge count": len(network.edges()),
-                "Net. gen. type": gen_name,
+                "Network type": gen_name,
                 **metrics,
             }
         )
@@ -204,7 +208,7 @@ class AlgorithmBenchmark:
             {
                 "Net. node count": len(network),
                 "Net. edge count": len(network.edges()),
-                "Net. gen. type": gen_name,
+                "Network type": gen_name,
                 "Error type": error_type,
                 "exception_args": e.args,
             }
@@ -220,16 +224,13 @@ class AlgorithmBenchmark:
         :rtype: DataFrame
         """
 
-        # Group by "Net. node count", "Net. gen. type", "Net. edge count" and calculate the mean of the other columns
+        # Group by "Net. node count", "Network type", "Net. edge count" and calculate the mean of the other columns
         # and return without the grouped rows
         if not grouped:
             return DataFrame(self.results)
 
         return (
-            DataFrame(self.results)
-            .groupby(["Net. node count", "Net. gen. type", "Net. edge count"])
-            .mean()
-            .reset_index()
+            DataFrame(self.results).groupby(["Net. node count", "Network type", "Net. edge count"]).mean().reset_index()
         )
 
     def plot_analysis(
@@ -238,6 +239,7 @@ class AlgorithmBenchmark:
         y_vars: Iterable[str] = None,
         result_filter: Callable[[dict[str, Any]], bool] = None,
         grouped=True,
+        pairplot_kwargs: dict[str, Any] = None,
     ):
         """
         Plot the results of the benchmark using seaborn pairplot.
@@ -247,7 +249,7 @@ class AlgorithmBenchmark:
         benchmark.plot_analysis(
             x_vars=["Net. node count"],
             y_vars=["Qty. of messages sent", "Qty. of steps"],
-            result_filter=lambda df: df["Net. gen. type"] in ('complete', 'ring'),
+            result_filter=lambda df: df["Network type"] in ('complete', 'ring'),
         )
         ```
 
@@ -269,7 +271,7 @@ class AlgorithmBenchmark:
 
         if y_vars is None:
             y_vars = set(df.columns)
-            y_vars.remove("Net. gen. type")
+            y_vars.remove("Network type")
         else:
             y_vars = set(y_vars)
 
@@ -281,7 +283,7 @@ class AlgorithmBenchmark:
             df = df[df.apply(result_filter, axis=1)]
 
         hue = None
-        if df["Net. gen. type"].nunique() > 1:
-            hue = "Net. gen. type"
+        if df["Network type"].nunique() > 1:
+            hue = "Network type"
 
-        return sns.pairplot(df, x_vars=x_vars, y_vars=y_vars, hue=hue, diag_kind="hist")
+        return sns.pairplot(df, x_vars=x_vars, y_vars=y_vars, hue=hue, diag_kind="hist", **pairplot_kwargs)

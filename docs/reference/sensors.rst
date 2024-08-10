@@ -5,8 +5,8 @@ Sensors
 #######
 
 
-.. currentmodule:: pydistsim.sensor
-.. automodule:: pydistsim.sensor
+.. currentmodule:: pydistsim.network.sensor
+.. automodule:: pydistsim.network.sensor
 .. autoclass:: Sensor
     :members:
 

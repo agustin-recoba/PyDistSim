@@ -7,6 +7,25 @@ Network Generator
 Implementation of different methods for automated network creation.
 It defines parameters (conditions) that generated network must satisfy.
 
+It works in two modes:
+
+#. Instanced generation
+#. Static generation
+
+
+Static generation is used for quick network generation without any additional conditions. It is appropriately
+exemplified in `the network generation notebook`_.
+
+.. _the network generation notebook: ../notebooks/network_generators.ipynb
+
+
+Continue reading this document for a explanation of instanced generation.
+
+
+**************
+Class overview
+**************
+
 .. currentmodule:: pydistsim.network.generator
 .. automodule:: pydistsim.network.generator
 .. autoclass:: NetworkGenerator
@@ -18,11 +37,11 @@ Methods
 .. automethod:: pydistsim.network.generator.NetworkGenerator.generate_random_network
 .. automethod:: pydistsim.network.generator.NetworkGenerator.generate_neigborhood_network
 
-*****************
-Default procedure
-*****************
+**************************************************
+Default procedure for instanced network generation
+**************************************************
 
-For any generator method network attributes take default priorities
+For any generator *instance* method network attributes take default priorities
 which are defined like this:
 
 1. first network is created in given environment with `n_count` number

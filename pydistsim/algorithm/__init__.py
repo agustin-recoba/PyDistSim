@@ -1,3 +1,7 @@
+"""
+Algorithms behavior and base classes.
+"""
+
 # flake8: noqa: F401
 
 from pydistsim.algorithm.base_algorithm import AlgorithmException, BaseAlgorithm

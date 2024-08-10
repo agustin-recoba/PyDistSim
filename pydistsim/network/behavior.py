@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(slots=True, frozen=True)
-class behaviorModel:
+class NetworkBehaviorModel:
     "Behavioral properties for a network."
 
     message_ordering: bool
@@ -89,7 +89,7 @@ def small_random_increment(node: "Node") -> int:
 class ExampleProperties:
     "Example communication properties for networks."
 
-    IdealCommunication = behaviorModel(
+    IdealCommunication = NetworkBehaviorModel(
         message_ordering=True,
         message_delay_indicator=None,
         bounded_communication_delays=True,
@@ -98,7 +98,7 @@ class ExampleProperties:
     )
     "Properties for a network with message ordering, no message loss, no message delay and synchronized clocks."
 
-    UnorderedCommunication = behaviorModel(
+    UnorderedCommunication = NetworkBehaviorModel(
         message_ordering=False,
         message_delay_indicator=None,
         bounded_communication_delays=True,
@@ -107,7 +107,7 @@ class ExampleProperties:
     )
     "Properties for a network with no message ordering, no message loss, no message delay and unsynchronized clocks."
 
-    ThrottledCommunication = behaviorModel(
+    ThrottledCommunication = NetworkBehaviorModel(
         message_ordering=True,
         message_delay_indicator=delay_based_on_network_usage,
         bounded_communication_delays=False,
@@ -116,7 +116,7 @@ class ExampleProperties:
     )
     "Properties for a network with message ordering, no message loss, a delay based on network usage and unsynchronized clocks."
 
-    UnorderedThrottledCommunication = behaviorModel(
+    UnorderedThrottledCommunication = NetworkBehaviorModel(
         message_ordering=False,
         message_delay_indicator=delay_based_on_network_usage,
         bounded_communication_delays=False,
@@ -125,7 +125,7 @@ class ExampleProperties:
     )
     "Properties for a network with no message ordering, no message loss, a delay based on network usage and unsynchronized clocks."
 
-    RandomDelayCommunication = behaviorModel(
+    RandomDelayCommunication = NetworkBehaviorModel(
         message_ordering=True,
         message_delay_indicator=random_delay_max_size_network,
         bounded_communication_delays=True,
@@ -134,7 +134,7 @@ class ExampleProperties:
     )
     "Properties for a network with message ordering, no message loss, random delay based on the network size and unsynchronized clocks."
 
-    UnorderedRandomDelayCommunication = behaviorModel(
+    UnorderedRandomDelayCommunication = NetworkBehaviorModel(
         message_ordering=False,
         message_delay_indicator=random_delay_max_size_network,
         bounded_communication_delays=True,
@@ -143,7 +143,7 @@ class ExampleProperties:
     )
     "Properties for a network with no message ordering, no message loss, random delay based on the network size and unsynchronized clocks."
 
-    UnlikelyRandomLossCommunication = behaviorModel(
+    UnlikelyRandomLossCommunication = NetworkBehaviorModel(
         message_ordering=True,
         message_delay_indicator=None,
         bounded_communication_delays=True,
@@ -152,7 +152,7 @@ class ExampleProperties:
     )
     "Properties for a network with message ordering, a random (but unlikely) message loss, no message delay and unsynchronized clocks."
 
-    LikelyRandomLossCommunication = behaviorModel(
+    LikelyRandomLossCommunication = NetworkBehaviorModel(
         message_ordering=True,
         message_delay_indicator=None,
         bounded_communication_delays=True,

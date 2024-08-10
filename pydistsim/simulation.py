@@ -1,12 +1,16 @@
+"""
+Simulation module for the PyDistSim package.
+"""
+
 import inspect
 from copy import copy, deepcopy
 from typing import TYPE_CHECKING, Optional
 
 from PySide6.QtCore import SIGNAL, QThread
 
+from pydistsim._exceptions import SimulationException
 from pydistsim.algorithm import BaseAlgorithm
 from pydistsim.conf import settings
-from pydistsim.exceptions import SimulationException
 from pydistsim.logger import logger
 from pydistsim.observers import (
     AlgorithmObserver,

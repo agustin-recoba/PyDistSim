@@ -3,7 +3,7 @@ import unittest
 
 from pydistsim.demo_algorithms.broadcast import Flood
 from pydistsim.network import Network, NetworkGenerator, NetworkType
-from pydistsim.npickle import read_npickle, write_npickle
+from pydistsim.utils.npickle import read_npickle, write_npickle
 
 
 class TestPickle(unittest.TestCase):

@@ -14,8 +14,9 @@ from PySide6.QtCore import SIGNAL, QEvent, QRect, QSize
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QFileDialog, QMainWindow, QMenu, QMessageBox
 
-from pydistsim import *  # @UnusedWildImport
+from pydistsim import Simulation
 from pydistsim.algorithm import NodeAlgorithm
+from pydistsim.utils.npickle import read_pickle, write_pickle
 
 try:
     from .dictionarytreemodel import DictionaryTreeModel

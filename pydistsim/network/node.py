@@ -3,13 +3,13 @@ from typing import TYPE_CHECKING, Optional
 
 from pydistsim.conf import settings
 from pydistsim.logger import LogLevels, logger
+from pydistsim.network.sensor import CompositeSensor
 from pydistsim.observers import ObservableEvents, ObserverManagerMixin
-from pydistsim.sensor import CompositeSensor
 
 if TYPE_CHECKING:
     from pydistsim.message import Message
     from pydistsim.network.network import NetworkType
-    from pydistsim.sensor import Sensor
+    from pydistsim.network.sensor import Sensor
 
 
 class Node(ObserverManagerMixin):

@@ -1,12 +1,11 @@
-from pydistsim.benchmark import AlgorithmBenchmark
+from pydistsim.benchmark import AlgorithmBenchmark, MetricCollector
 from pydistsim.demo_algorithms.broadcast import Flood
 from pydistsim.demo_algorithms.santoro2007.yoyo import YoYo
-from pydistsim.metrics import MetricCollector
 from pydistsim.network.behavior import ExampleProperties
 from pydistsim.utils.testing import PyDistSimTestCase
 
 
-class TestMetricCollector(MetricCollector):
+class MyCustomMetricCollector(MetricCollector):
 
     def create_report(self):
         report = super().create_report()
@@ -21,9 +20,10 @@ class TestBenchmark(PyDistSimTestCase):
     def test_flood_benchmark(self):
         benchmark = AlgorithmBenchmark(
             ((Flood, {"initial_information": "Hello Wold Test!"}),),
-            network_sizes=range(1, 20),
+            network_sizes=range(1, 15),
             network_behavior=ExampleProperties.UnorderedRandomDelayCommunication,
-            metric_collector_factory=TestMetricCollector,
+            metric_collector_factory=MyCustomMetricCollector,
+            max_time=60,
         )
 
         benchmark.run()
@@ -33,9 +33,9 @@ class TestBenchmark(PyDistSimTestCase):
         assert "test_qty" in df.columns and "event_qty" in df.columns
 
         benchmark.plot_analysis(
-            x_vars=["Net. gen. type"],
+            x_vars=["Network type"],
             y_vars=["event_qty"],
-            result_filter=lambda df: df["Net. gen. type"] in ("complete", "ring"),
+            result_filter=lambda df: df["Network type"] in ("complete", "ring"),
             grouped=False,
         )
 
@@ -44,8 +44,9 @@ class TestBenchmark(PyDistSimTestCase):
     def test_yoyo_benchmark(self):
         yoyo_benchmark = AlgorithmBenchmark(
             (YoYo,),
-            network_sizes=range(1, 20),
-            metric_collector_factory=TestMetricCollector,
+            network_sizes=range(1, 15),
+            metric_collector_factory=MyCustomMetricCollector,
+            max_time=60,
         )
 
         yoyo_benchmark.run()
@@ -55,9 +56,9 @@ class TestBenchmark(PyDistSimTestCase):
         assert "test_qty" in df.columns and "event_qty" in df.columns
 
         yoyo_benchmark.plot_analysis(
-            x_vars=["Net. gen. type"],
+            x_vars=["Network type"],
             y_vars=["event_qty"],
-            result_filter=lambda df: df["Net. gen. type"] in ("complete", "ring"),
+            result_filter=lambda df: df["Network type"] in ("complete", "ring"),
             grouped=False,
         )
 

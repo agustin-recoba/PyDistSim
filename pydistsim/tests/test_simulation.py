@@ -1,8 +1,8 @@
 import unittest
 from copy import deepcopy
 
+from pydistsim._exceptions import SimulationException
 from pydistsim.algorithm import NetworkAlgorithm, NodeAlgorithm
-from pydistsim.exceptions import SimulationException
 from pydistsim.network import NetworkGenerator
 from pydistsim.simulation import Simulation
 from pydistsim.utils.testing import PyDistSimTestCase

@@ -2,7 +2,7 @@
 
 from pydistsim.message import Message
 from pydistsim.network import NetworkGenerator
-from pydistsim.network.behavior import behaviorModel
+from pydistsim.network.behavior import NetworkBehaviorModel
 from pydistsim.network.network import Network
 from pydistsim.restrictions.communication import (
     BidirectionalLinks,
@@ -33,7 +33,7 @@ class TestRestrictions(PyDistSimTestCase):
     def test_TotalReliability(self):
         net = NetworkGenerator(10).generate_random_network()
 
-        behavior = behaviorModel(
+        behavior = NetworkBehaviorModel(
             message_ordering=False,
             message_loss_indicator=None,
             clock_increment=lambda node: 100,
@@ -44,7 +44,7 @@ class TestRestrictions(PyDistSimTestCase):
         net.behavioral_properties = behavior
         assert TotalReliability.check(net)
 
-        behavior = behaviorModel(
+        behavior = NetworkBehaviorModel(
             message_ordering=False,
             message_loss_indicator=lambda network, message: True,
             clock_increment=lambda node: 100,
@@ -58,7 +58,7 @@ class TestRestrictions(PyDistSimTestCase):
     def test_MessageOrdering(self):
         net = NetworkGenerator(10).generate_random_network()
 
-        behavior = behaviorModel(
+        behavior = NetworkBehaviorModel(
             message_ordering=True,
             message_loss_indicator=lambda network, message: True,
             clock_increment=lambda node: 100,
@@ -69,7 +69,7 @@ class TestRestrictions(PyDistSimTestCase):
         net.behavioral_properties = behavior
         assert MessageOrdering.check(net)
 
-        behavior = behaviorModel(
+        behavior = NetworkBehaviorModel(
             message_ordering=False,
             message_loss_indicator=lambda network, message: True,
             clock_increment=lambda node: 100,
@@ -132,7 +132,7 @@ class TestRestrictions(PyDistSimTestCase):
     def test_SynchronizedClocks(self):
         net = NetworkGenerator(10).generate_random_network()
 
-        behavior = behaviorModel(
+        behavior = NetworkBehaviorModel(
             message_ordering=False,
             message_loss_indicator=lambda network, message: True,
             clock_increment=None,
@@ -143,7 +143,7 @@ class TestRestrictions(PyDistSimTestCase):
         net.behavioral_properties = behavior
         assert SynchronizedClocks.check(net)
 
-        behavior = behaviorModel(
+        behavior = NetworkBehaviorModel(
             message_ordering=False,
             message_loss_indicator=lambda network, message: True,
             clock_increment=lambda node: 100,
@@ -157,7 +157,7 @@ class TestRestrictions(PyDistSimTestCase):
     def test_BoundedCommunicationDelays(self):
         net = NetworkGenerator(10).generate_random_network()
 
-        behavior = behaviorModel(
+        behavior = NetworkBehaviorModel(
             message_ordering=False,
             message_loss_indicator=lambda network, message: True,
             clock_increment=lambda node: 100,
@@ -168,7 +168,7 @@ class TestRestrictions(PyDistSimTestCase):
         net.behavioral_properties = behavior
         assert BoundedCommunicationDelays.check(net)
 
-        behavior = behaviorModel(
+        behavior = NetworkBehaviorModel(
             message_ordering=False,
             message_loss_indicator=lambda network, message: True,
             clock_increment=lambda node: 100,
@@ -182,7 +182,7 @@ class TestRestrictions(PyDistSimTestCase):
     def test_UnitaryCommunicationDelays(self):
         net = NetworkGenerator(10).generate_random_network()
 
-        behavior = behaviorModel(
+        behavior = NetworkBehaviorModel(
             message_ordering=False,
             message_loss_indicator=lambda network, message: True,
             clock_increment=lambda node: 100,
@@ -193,7 +193,7 @@ class TestRestrictions(PyDistSimTestCase):
         net.behavioral_properties = behavior
         assert UnitaryCommunicationDelays.check(net)
 
-        behavior = behaviorModel(
+        behavior = NetworkBehaviorModel(
             message_ordering=False,
             message_loss_indicator=lambda network, message: True,
             clock_increment=lambda node: 100,

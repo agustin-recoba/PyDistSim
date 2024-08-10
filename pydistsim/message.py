@@ -1,3 +1,7 @@
+"""
+This module contains the :class:`Message` class, which is used to represent messages in the simulation.
+"""
+
 from copy import copy, deepcopy
 from enum import StrEnum
 

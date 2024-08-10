@@ -1,6 +1,7 @@
 import unittest
 
 from pydistsim import Node
+from pydistsim._exceptions import SimulationException
 from pydistsim.algorithm import (
     Actions,
     AlgorithmException,
@@ -9,7 +10,6 @@ from pydistsim.algorithm import (
     StatusValues,
 )
 from pydistsim.algorithm.node_wrapper import NodeAccess
-from pydistsim.exceptions import SimulationException
 from pydistsim.message import Message
 from pydistsim.network import NetworkException, NetworkGenerator
 from pydistsim.simulation import Simulation

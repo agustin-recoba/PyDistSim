@@ -1,3 +1,7 @@
+"""
+This module contains the classes for observers and the mixin class for objects that can have observers.
+"""
+
 from typing import TYPE_CHECKING
 
 from pydistsim.logger import logger

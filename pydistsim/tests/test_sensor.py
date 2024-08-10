@@ -3,7 +3,7 @@ import unittest
 import scipy.stats
 
 from pydistsim.network import Network, Node
-from pydistsim.sensor import DistSensor, SensorError
+from pydistsim.network.sensor import DistSensor, SensorError
 
 
 class TestSensor(unittest.TestCase):

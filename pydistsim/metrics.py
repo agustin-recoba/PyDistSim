@@ -1,3 +1,7 @@
+"""
+:class:`MetricCollector` is an observer that collects metrics from the simulation.
+"""
+
 from time import time
 from typing import TYPE_CHECKING
 
