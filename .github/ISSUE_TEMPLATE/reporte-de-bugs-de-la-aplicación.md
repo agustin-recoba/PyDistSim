@@ -1,7 +1,7 @@
 ---
 name: Reporte de bugs de la aplicación
 about: Reporta un bug que deberíamos solucionar
-title: "[BUG]"
+title: "[BUG] Título pendiente..."
 labels: bug
 assignees: agustin-recoba
 
