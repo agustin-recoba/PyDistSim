@@ -1,7 +1,7 @@
 ---
 name: Reporte de bugs en la documentación
 about: Reporta un bug en la documentación
-title: "[DOC BUG]"
+title: "[DOC BUG] Título pendiente..."
 labels: bug, documentation
 assignees: agustin-recoba
 
