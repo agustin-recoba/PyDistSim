@@ -6,8 +6,8 @@ PyDistSim
 .. |travis| image:: https://app.travis-ci.com/agustin-recoba/pydistsim.svg?token=zk1hY6ZALwZTY3bjX2Aq&branch=main
     :target: https://app.travis-ci.com/agustin-recoba/pydistsim
     :alt: Build Status
-.. |coveralls| image:: https://coveralls.io/repos/github/agustin-recoba/pydistsim/badge.svg
-    :target: https://coveralls.io/github/agustin-recoba/pydistsim
+.. |coveralls| image:: https://coveralls.io/repos/github/agustin-recoba/PyDistSim/badge.svg?branch=main
+    :target: https://coveralls.io/github/agustin-recoba/PyDistSim?branch=main
     :alt: Coverage Status
 .. |readthedocs| image:: https://readthedocs.org/projects/pydistsim/badge/?version=main
     :target: https://pydistsim.readthedocs.io/?badge=main
