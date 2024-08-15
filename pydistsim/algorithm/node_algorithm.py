@@ -2,7 +2,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 from types import NoneType
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 from pydistsim.algorithm.base_algorithm import AlgorithmException, BaseAlgorithm
 from pydistsim.algorithm.node_wrapper import NodeAccess
@@ -13,6 +13,7 @@ from pydistsim.observers import ObservableEvents
 from pydistsim.restrictions.axioms import FiniteCommunicationDelays, LocalOrientation
 
 if TYPE_CHECKING:
+    from pydistsim.algorithm.node_wrapper import NeighborLabel
     from pydistsim.network import Node
 
 
@@ -101,6 +102,7 @@ class NodeAlgorithm(BaseAlgorithm):
 
     class Status(StatusValues):
         "Example of StatusValues subclass that defines the possible statuses of the nodes."
+
         IDLE = "IDLE"
 
     algorithm_restrictions = (
@@ -174,7 +176,7 @@ class NodeAlgorithm(BaseAlgorithm):
         for node in self.network.nodes_sorted():
             node.status = self.Status.IDLE
 
-    def send(self, node_w: "NodeAccess", message: Message):
+    def send_msg(self, node_source: "NodeAccess", message: Message):
         """
         Send a message to nodes listed in message's destination field.
 
@@ -183,10 +185,12 @@ class NodeAlgorithm(BaseAlgorithm):
         Update message's source field and inserts in node's outbox one copy
         of it for each destination.
 
+        :param node_source: The node that sends the message.
+        :type node_source: NodeAccess
         :param message: The message to be sent.
         :type message: Message
         """
-        source_node: "Node" = node_w.unbox()  # unwrap the proxy
+        source_node: "Node" = node_source.unbox()  # unwrap the proxy
 
         message.source = source_node
         if not isinstance(message.destination, Iterable):
@@ -194,6 +198,23 @@ class NodeAlgorithm(BaseAlgorithm):
         for destination_w in message.destination:
             destination: "Node" = destination_w.unbox()  # unwrap the proxy
             source_node.push_to_outbox(message.copy(), destination)
+
+    def send(
+        self,
+        node_source: "NodeAccess",
+        data: object,
+        destination: Union["NeighborLabel", list["NeighborLabel"]],
+        header: str = None,
+    ):
+        """
+        Send content to destination, with header.
+
+        :param node_w: Sender node
+        :param data: Content to be received by destination nodes.
+        :param destination: Destination node or list of destinations.
+        :param header: Optional, header for the message.
+        """
+        self.send_msg(node_source, Message(data=data, header=header, destination=destination))
 
     ### Alarm methods ###
 
@@ -372,7 +393,6 @@ class NodeAlgorithm(BaseAlgorithm):
 
         # Create methods for all possible actions and statuses
         for action in Actions:
-
             # Create a method for invocations like `self.default(node, message)`
             # CAUTION: the resolution of the method is deferred to the instance, super() will not work
             def __unresolved_action_method__(alg_instance: "NodeAlgorithm", node: "NodeAccess", message: Message):

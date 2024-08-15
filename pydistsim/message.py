@@ -18,35 +18,35 @@ class Message:
 
     def __init__(
         self,
-        source=None,
         destination=None,
-        header="",
-        meta_header=META_HEADERS.NORMAL_MESSAGE,
+        header=None,
         data=None,
-        meta_data=None,
+        **kwargs,
     ):
         """
         Initialize a Message object.
 
-        :param source: The source of the message.
-        :type source: Any
         :param destination: The destination of the message.
         :type destination: Any
         :param header: The header of the message.
         :type header: str
-        :param meta_header: The meta header of the message.
-        :type meta_header: MetaHeader
         :param data: The data associated with the message.
         :type data: dict
+        :param source: The source of the message.
+        :type source: Any
+        :param meta_header: The meta header of the message.
+        :type meta_header: MetaHeader
         :param meta_data: The meta data associated with the message. This is meant to be used by the simulation.
         :type meta_data: dict
         """
-        self.source = source
         self.destination = destination
-        self.header = header
+        self.header = header or "NO HEADER"
         self.data = data
-        self.meta_header = meta_header
-        self.meta_data = meta_data or dict()
+
+        self.source = kwargs.get("source", None)
+        self.meta_header = kwargs.get("meta_header", MetaHeader.NORMAL_MESSAGE)
+        self.meta_data = kwargs.get("meta_data", {})
+
         self.id = self.__class__.next_message_id
         self.__class__.next_message_id += 1
 

@@ -291,7 +291,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         tree_edges = []
         tree_nodes = []
         for node in self.nodes():
-            print(f"{node.memory=}")
             neighbors_in_tree = []
             if treeKey not in node.memory:
                 continue
@@ -307,7 +306,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
             if neighbors_in_tree:
                 tree_nodes.append(node)
 
-        print(f"{tree_nodes=}, {tree_edges=}")
         treeNet = self.subnetwork(tree_nodes, tree_edges)
 
         return treeNet

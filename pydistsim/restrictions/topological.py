@@ -157,7 +157,6 @@ class StarGraph(ShapeRestriction):
             else:
                 return False
 
-        print(center_count, others_count, N)
         return center_count == 1 and others_count == N
 
 

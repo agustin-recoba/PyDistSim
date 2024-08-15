@@ -7,7 +7,10 @@ from pydistsim.restrictions.topological import Connectivity, UniqueInitiator
 
 
 class Flood(NodeAlgorithm):
-    default_params = {"informationKey": "information", "initial_information": "Hello, world!"}
+    default_params = {
+        "informationKey": "information",
+        "initial_information": "Hello, world!",
+    }
 
     class Status(StatusValues):
         INITIATOR = "INITIATOR"
@@ -37,11 +40,9 @@ class Flood(NodeAlgorithm):
     def spontaneously(self, node: NodeAccess, message: Message):
         self.send(
             node,
-            Message(
-                header="Information",
-                data=node.memory[self.informationKey],
-                destination=list(node.neighbors()),
-            ),
+            data=node.memory[self.informationKey],
+            destination=list(node.neighbors()),
+            header="Information",
         )
         node.status = self.Status.DONE
 
@@ -55,11 +56,9 @@ class Flood(NodeAlgorithm):
             if destination_nodes:
                 self.send(
                     node,
-                    Message(
-                        destination=destination_nodes,
-                        header="Information",
-                        data=message.data,
-                    ),
+                    destination=destination_nodes,
+                    header="Information",
+                    data=message.data,
                 )
         node.status = self.Status.DONE
 

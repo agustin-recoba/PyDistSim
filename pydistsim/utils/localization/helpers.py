@@ -167,8 +167,6 @@ def get_crb(net, sensor, compass="off", loc_type="anchor-free", anchors=[]):
 
     J = (dot(G.T, G)) / sigma**2
 
-    # print matrix_rank(J)
-
     if loc_type == "anchor-free":
         cov = pinv(J)
     elif loc_type == "anchored":
