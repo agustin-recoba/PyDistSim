@@ -16,6 +16,8 @@ script:
   - pytest
   - coverage report --show-missing
   - pip install .
+  - pip install .[dev]
+  - pip install .[gui]
 
 after_success:
   - curl -sL https://coveralls.io/coveralls-linux.tar.gz | tar -xz && ./coveralls
