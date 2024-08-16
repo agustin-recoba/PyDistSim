@@ -23,7 +23,6 @@ class LogLevels(StrEnum):
 
 
 class LevelFilter:
-
     def __init__(self, level: LogLevels):
         self.level = level
 

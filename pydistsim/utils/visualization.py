@@ -10,7 +10,8 @@ def show_mst(net: "NetworkType", treeKey="mst"):
     """
     Show tree representation of network.
 
-    treeKey -- key in nodes memory (dictionary) where parent and
+    :param net: network to show
+    :param treeKey: key in nodes memory (dictionary) where parent and
                children data is stored in format:
                 {'parent': parent_node,
                  'children': [child_node1, child_node2 ...]}

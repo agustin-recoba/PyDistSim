@@ -162,6 +162,15 @@ class RangeNetworkMixin(with_typehint(Network)):
     """
     Mixin to define a type of network that decides which nodes are connected based on their
     communication range.
+
+
+    :param environment: The environment in which the network operates. If not provided, a new Environment instance will be created.
+    :type environment: Environment, optional
+    :param rangeType: The type of channel to be used for communication. If not provided, a new RangeType instance will be created using the environment.
+    :type rangeType: RangeType, optional
+    :param graph: The graph representing the network topology. Defaults to None.
+    :type graph: NetworkX graph, optional
+    :param kwargs: Additional keyword arguments.
     """
 
     def __init__(
@@ -172,17 +181,6 @@ class RangeNetworkMixin(with_typehint(Network)):
         behavioral_properties: Optional["NetworkBehaviorModel"] = None,
         **kwargs,
     ):
-        """
-        Class constructor for RangeNetworkMixin.
-
-        :param environment: The environment in which the network operates. If not provided, a new Environment instance will be created.
-        :type environment: Environment, optional
-        :param rangeType: The type of channel to be used for communication. If not provided, a new RangeType instance will be created using the environment.
-        :type rangeType: RangeType, optional
-        :param graph: The graph representing the network topology. Defaults to None.
-        :type graph: NetworkX graph, optional
-        :param kwargs: Additional keyword arguments.
-        """
         super().__init__(incoming_graph_data, environment, behavioral_properties, **kwargs)
         self.rangeType = rangeType or RangeType(self._environment)
         self.rangeType.environment = self._environment

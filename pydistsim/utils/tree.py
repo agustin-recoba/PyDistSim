@@ -89,7 +89,6 @@ class TreeNetworkException(Exception):
 
 
 class MissingTreeKey(TreeNetworkException):
-
     def __init__(self, treeKey):
         self.treeKey = treeKey
 

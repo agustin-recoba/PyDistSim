@@ -22,6 +22,32 @@ T = TypeVar("T", bound="NetworkType")
 class NetworkGenerator:
     """
     Class for generating networks with specified properties.
+
+
+    :param n_count: int, number of nodes, if None settings.N_COUNT is used
+    :param n_min: int, minimum number of nodes, if not set it is equal to n_count
+    :param n_max: int, maximum number of nodes, if not set it is equal to n_count
+    :param enforce_connected: bool, if True network must be fully connected
+    :param degree: int, average number of neighbors per node
+    :param comm_range: int, nodes communication range, if None settings.COMM_RANGE is used
+        and it is a signal that this value can be changed if needed to
+        satisfy other wanted properties (connected and degree)
+    :param method: str, sufix of the name of the method used to generate network
+    :param degree_tolerance: float, tolerance for degree parameter
+    :param directed: bool, if True generated network is directed
+    :param kwargs: network and node __init__ kwargs i.e.:
+        - environment: Environment, environment in which the network should be created, if None
+        settings.ENVIRONMENT is used
+        - rangeType: RangeType
+        - algorithms: tuple
+        - commRange: int, overrides `comm_range`
+        - sensors: tuple
+
+    Basic usage:
+
+    >>> net_gen = NetworkGenerator()
+    >>> net = net_gen.generate()
+
     """
 
     DIRECTED_NETWORK_T = RangeNetwork
@@ -40,30 +66,6 @@ class NetworkGenerator:
         directed=settings.DIRECTED,
         **kwargs,
     ):
-        """
-        :param n_count: int, number of nodes, if None settings.N_COUNT is used
-        :param n_min: int, minimum number of nodes, if not set it is equal to n_count
-        :param n_max: int, maximum number of nodes, if not set it is equal to n_count
-        :param enforce_connected: bool, if True network must be fully connected
-        :param degree: int, average number of neighbors per node
-        :param comm_range: int, nodes communication range, if None settings.COMM_RANGE is used
-            and it is a signal that this value can be changed if needed to
-            satisfy other wanted properties (connected and degree)
-        :param method: str, sufix of the name of the method used to generate network
-        :param kwargs: network and node __init__ kwargs i.e.:
-            - environment: Environment, environment in which the network should be created, if None
-            settings.ENVIRONMENT is used
-            - rangeType: RangeType
-            - algorithms: tuple
-            - commRange: int, overrides `comm_range`
-            - sensors: tuple
-
-        Basic usage:
-
-        >>> net_gen = NetworkGenerator()
-        >>> net = net_gen.generate()
-
-        """
         self.n_count = n_count or settings.N_COUNT
         self.n_min = self.n_count if n_min is None else n_min
         self.n_max = self.n_count if n_max is None else n_max
@@ -332,7 +334,10 @@ class NetworkGenerator:
         net = network_type()
         node_pos_list = cls.__get_ring_pos(n - 1, net.environment)
 
-        center = (net.environment.image.shape[0] / 2, net.environment.image.shape[1] / 2)
+        center = (
+            net.environment.image.shape[0] / 2,
+            net.environment.image.shape[1] / 2,
+        )
 
         center_node = net.add_node(pos=center)
 
@@ -344,7 +349,9 @@ class NetworkGenerator:
 
     @staticmethod
     def generate_hypercube_network(
-        n: int | None = None, dimension: int | None = None, network_type: type[T] = BidirectionalNetwork
+        n: int | None = None,
+        dimension: int | None = None,
+        network_type: type[T] = BidirectionalNetwork,
     ) -> T:
         """
         Generate a hypercube network of the given dimension (or node count). The nodes are placed in a hypercube
@@ -502,7 +509,10 @@ class NetworkGenerator:
         net = network_type()
         canvas_shape = net.environment.image.shape
         usable_shape = (canvas_shape[1] * 0.82, canvas_shape[0] * 0.82)
-        bottom_margin = (canvas_shape[1] * (1 - 0.83) / 4, canvas_shape[0] * (1 - 0.83) / 4)
+        bottom_margin = (
+            canvas_shape[1] * (1 - 0.83) / 4,
+            canvas_shape[0] * (1 - 0.83) / 4,
+        )
 
         # Normalize the positions
         max_x = max(max([pos[0] for pos in node_pos_list.keys()]), 1)
@@ -510,7 +520,10 @@ class NetworkGenerator:
 
         for (x, y), node in node_pos_list.items():
             # If the dimension is 0 or 1, the nodes are in the center
-            final_pos = (x / max_x * usable_shape[0] + bottom_margin[0], y / max_y * usable_shape[1] + bottom_margin[1])
+            final_pos = (
+                x / max_x * usable_shape[0] + bottom_margin[0],
+                y / max_y * usable_shape[1] + bottom_margin[1],
+            )
             net.add_node(node, pos=final_pos)
 
         for (x, y), node in node_pos_list.items():

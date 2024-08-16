@@ -9,6 +9,7 @@ Reference
    :maxdepth: 2
 
    networkmixin
+   networkbehavior
    networkgenerator
    rangenetwork
    observers

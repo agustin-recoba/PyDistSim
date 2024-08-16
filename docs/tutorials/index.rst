@@ -8,16 +8,6 @@ Tutorials assume that the PyDistSim and all required packages are installed. If 
 the :doc:`../install/installation` section of this documentation.
 
 
-**************************
-Full explanation of topics
-**************************
-
-.. toctree::
-   :maxdepth: 1
-
-   implementing
-   restrictions
-
 **************
 Demo notebooks
 **************
@@ -45,6 +35,15 @@ This tutorial demonstrates how to benchmark a distributed algorithm. Access `the
 .. _the benchmarking notebook: ../notebooks/benchmarking.ipynb
 
 
+**************************
+Full explanation of topics
+**************************
+
+.. toctree::
+   :maxdepth: 1
+
+   implementing
+   restrictions
 
 
 Build date: |today|

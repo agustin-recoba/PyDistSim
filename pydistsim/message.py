@@ -13,6 +13,33 @@ class MetaHeader(StrEnum):
 
 
 class Message:
+    """
+    The Message class is used to represent messages in the simulation.
+
+    :param destination: The destination of the message.
+    :type destination: Any
+    :param header: The header of the message.
+    :type header: str
+    :param data: The data associated with the message.
+    :type data: dict
+    :param source: The source of the message.
+    :type source: Any
+    :param meta_header: The meta header of the message.
+    :type meta_header: MetaHeader
+    :param meta_data: The meta data associated with the message. This is meant to be used by the simulation.
+    :type meta_data: dict
+    """
+
+    __slots__ = [
+        "destination",
+        "header",
+        "data",
+        "source",
+        "meta_header",
+        "meta_data",
+        "id",
+    ]
+
     META_HEADERS = MetaHeader
     next_message_id = 1
 
@@ -23,22 +50,6 @@ class Message:
         data=None,
         **kwargs,
     ):
-        """
-        Initialize a Message object.
-
-        :param destination: The destination of the message.
-        :type destination: Any
-        :param header: The header of the message.
-        :type header: str
-        :param data: The data associated with the message.
-        :type data: dict
-        :param source: The source of the message.
-        :type source: Any
-        :param meta_header: The meta header of the message.
-        :type meta_header: MetaHeader
-        :param meta_data: The meta data associated with the message. This is meant to be used by the simulation.
-        :type meta_data: dict
-        """
         self.destination = destination
         self.header = header or "NO HEADER"
         self.data = data
