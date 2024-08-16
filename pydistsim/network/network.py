@@ -36,6 +36,12 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
     The Network classes (:class:`Network` and :class:`BidirectionalNetwork`) extend the Graph class and provides additional functionality
     for managing nodes and network properties.
+
+    :param environment: The environment in which the network operates. If not provided, a new Environment instance will be created.
+    :type environment: Environment, optional
+    :param graph: The graph representing the network topology. Defaults to None.
+    :type graph: NetworkX graph, optional
+    :param kwargs: Additional keyword arguments.
     """
 
     def __init__(
@@ -45,13 +51,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         behavioral_properties: NetworkBehaviorModel | None = None,
         **kwargs,
     ):
-        """
-        :param environment: The environment in which the network operates. If not provided, a new Environment instance will be created.
-        :type environment: Environment, optional
-        :param graph: The graph representing the network topology. Defaults to None.
-        :type graph: NetworkX graph, optional
-        :param kwargs: Additional keyword arguments.
-        """
         super().__init__(incoming_graph_data)
         self._environment = environment or Environment()
         self.pos = {}
@@ -113,7 +112,11 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         nodes_copy = {node: deepcopy(node, memo) for node in nodes}
         for node, copy_node in nodes_copy.items():
             copy_node.network = None
-            new_network.add_node(copy_node, pos=deepcopy(self.pos[node], memo), ori=deepcopy(self.ori[node], memo))
+            new_network.add_node(
+                copy_node,
+                pos=deepcopy(self.pos[node], memo),
+                ori=deepcopy(self.ori[node], memo),
+            )
 
         for u, v in edges:
             if u not in nodes or v not in nodes:
@@ -291,7 +294,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         tree_edges = []
         tree_nodes = []
         for node in self.nodes():
-            print(f"{node.memory=}")
             neighbors_in_tree = []
             if treeKey not in node.memory:
                 continue
@@ -307,7 +309,6 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
             if neighbors_in_tree:
                 tree_nodes.append(node)
 
-        print(f"{tree_nodes=}, {tree_edges=}")
         treeNet = self.subnetwork(tree_nodes, tree_edges)
 
         return treeNet
@@ -463,7 +464,12 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
                     self.add_lost_message(node, next_dest, message)
                     continue
 
-                self.add_transit_message(node, next_dest, message, self.behavioral_properties.get_delay(self, message))
+                self.add_transit_message(
+                    node,
+                    next_dest,
+                    message,
+                    self.behavioral_properties.get_delay(self, message),
+                )
 
         # Process messages in transit
         for u, v in self.edges():
@@ -484,7 +490,8 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
                 messages = sorted(messages_delay.keys(), key=lambda x: x.id)
                 cant_inversions = len(messages) // 4
                 artificial_inversions = choices(
-                    [(i, j) for i in range(len(messages)) for j in range(len(messages)) if i < j], k=cant_inversions
+                    [(i, j) for i in range(len(messages)) for j in range(len(messages)) if i < j],
+                    k=cant_inversions,
                 )
 
                 for i, j in artificial_inversions:

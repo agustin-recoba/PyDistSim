@@ -10,6 +10,11 @@ def pydistsim_equal_objects(obj1, obj2):
     """
     Compare two objects and their attributes, but allow for non immutable
     attributes to be equal up to their class.
+
+    :param obj1: The first object to compare.
+    :type obj1: object
+    :param obj2: The second object to compare.
+    :type obj2: object
     """
     classes = obj1.__class__ == obj2.__class__
     attr_names = attr_values = True
@@ -27,6 +32,11 @@ def pydistsim_equal_objects(obj1, obj2):
 def with_typehint(baseclass: type[T]) -> type[T]:
     """
     Useful function to make mixins with baseclass typehint without actually inheriting from it.
+
+    :param baseclass: The base class to use as a type hint.
+    :type baseclass: type[T]
+    :return: The base class if TYPE_CHECKING is True, otherwise object.
+    :rtype: type[T]
     """
     if TYPE_CHECKING:
         return baseclass

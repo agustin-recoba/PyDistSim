@@ -43,13 +43,13 @@ class FloodingUpdate(NodeAlgorithm):
 
     @Status.INITIATOR
     def spontaneously(self, node, message):
-        self.send(node, Message(header="Flood", data=self.initiator_data(node)))
+        self.send_msg(node, Message(header="Flood", data=self.initiator_data(node)))
 
     @Status.FLOODING
     def receiving(self, node, message):
         updated_data = self.handle_flood_message(node, message)
         if updated_data:
-            self.send(node, Message(header="Flood", data=updated_data))
+            self.send_msg(node, Message(header="Flood", data=updated_data))
 
     def initiator_condition(self, node):
         raise NotImplementedError

@@ -10,12 +10,14 @@ from matplotlib.collections import LineCollection, PatchCollection
 from matplotlib.figure import Figure
 from matplotlib.patches import Circle
 from networkx.drawing.nx_pylab import draw_networkx_edges
-from PySide6.QtCore import SIGNAL, QEvent, QRect, QSize
+from PySide6.QtCore import SIGNAL, QEvent, QRect, QSize, QThread
 from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QFileDialog, QMainWindow, QMenu, QMessageBox
 
 from pydistsim import Simulation
 from pydistsim.algorithm import NodeAlgorithm
+from pydistsim.algorithm.base_algorithm import BaseAlgorithm
+from pydistsim.observers import AlgorithmObserver, SimulationObserver
 from pydistsim.utils.npickle import read_pickle, write_pickle
 
 try:
@@ -29,6 +31,41 @@ from copy import deepcopy
 
 from pydistsim.utils.localization.helpers import align_clusters, get_rms
 from pydistsim.utils.memory.positions import Positions
+
+
+class QThreadObserver(AlgorithmObserver, SimulationObserver):
+    def __init__(self, q_thread: QThread, *args, **kwargs) -> None:
+        self.q_thread = q_thread
+        super().__init__(*args, **kwargs)
+
+    def on_step_done(self, algorithm: "BaseAlgorithm") -> None:
+        self.q_thread.emit(
+            SIGNAL("updateLog(QString)"),
+            "[{}] Step {} finished",
+            algorithm.name,
+            algorithm.simulation.algorithmState["step"],
+        )
+
+    def on_state_changed(self, simulation: Simulation) -> None:
+        self.q_thread.emit(SIGNAL("redraw()"))
+
+    def on_algorithm_finished(self, algorithm: "BaseAlgorithm") -> None:
+        self.q_thread.emit(SIGNAL("updateLog(QString)"), "[%s] Algorithm finished" % (algorithm.name))
+
+    def on_network_changed(self, simulation: Simulation) -> None:
+        self.q_thread.emit(SIGNAL("updateLog(QString)"), "Network loaded")
+        self.q_thread.emit(SIGNAL("redraw()"))
+
+
+class SimulationThread(Simulation, QThread):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.add_observers(QThreadObserver(self))
+
+    def __del__(self):
+        self.exiting = True
+        self.wait()
 
 
 class SimulationGui(QMainWindow):

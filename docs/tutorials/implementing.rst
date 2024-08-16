@@ -33,9 +33,13 @@ In order to implement a distributed algorithm, the class must fulfill these requ
 
 Send a message
 ==============
-The :meth:`NodeAlgorithm.send` method receives a source node and a message. The message will be sent to the destinations
+The :meth:`NodeAlgorithm.send_msg` method receives a source node and a message. The message will be sent to the destinations
 specified in the message itself. The destinations must be a list of nodes or a single node. The message will be sent to
 all the destinations.
+
+
+The :meth:`NodeAlgorithm.send` method receives a source node, a message content a list of destinations and, optionally,
+a header. Is equivalent to the :meth:`NodeAlgorithm.send_msg` method, but the message is created automatically.
 
 Set an alarm
 ============

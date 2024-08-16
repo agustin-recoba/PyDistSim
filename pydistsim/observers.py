@@ -58,7 +58,7 @@ class Observer:
 
     Example of concrete implementations are:
     - :class:`MetricCollector` class in :mod:`pydistsim.metrics`
-    - :class:`QThreadObserver` class in :mod:`pydistsim.simulation`
+    - :class:`QThreadObserver` class in :mod:`pydistsim.gui.simulationgui`
     """
 
     events = [ObservableEvents.added]

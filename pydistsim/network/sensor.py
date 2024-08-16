@@ -45,6 +45,9 @@ class Sensor(ABC):
     the outside world. It could be a capability to detect neighbors, measure
     distance to them, or retrieve the environment temperature.
 
+    :param pf_params: Additional parameters for the probability function.
+    :type pf_params: dict
+
     :cvar pf_settings_key: The key used to retrieve the probability function
                            settings from the settings module.
     :vartype pf_settings_key: str
@@ -53,12 +56,6 @@ class Sensor(ABC):
     pf_settings_key = ""
 
     def __init__(self, pf_params={}):
-        """
-        Initialize the Sensor object.
-
-        :param pf_params: Additional parameters for the probability function.
-        :type pf_params: dict
-        """
         pf_params_final = getattr(s.settings, self.pf_settings_key, {})
         pf_params_final.update(pf_params)
         if pf_params_final:
@@ -189,17 +186,14 @@ class CompositeSensor:
     instead it serves as a placeholder for multiple sensors that can be
     attached to a :class:`Node`.
 
+
+    :param node: The Node that has this composite sensor attached to.
+    :type node: Node
+    :param componentSensors: Tuple of Sensor subclasses or their class names.
+    :type componentSensors: tuple[type[Sensor] | str]
     """
 
     def __init__(self, node: "Node", componentSensors: tuple[type[Sensor] | str] | None = None):
-        """
-        Initialize the Sensor object.
-
-        :param node: The Node that has this composite sensor attached to.
-        :type node: Node
-        :param componentSensors: Tuple of Sensor subclasses or their class names.
-        :type componentSensors: tuple[type[Sensor] | str]
-        """
         self.node = node
         self._sensors = ()
         self.sensors = componentSensors or ()
@@ -258,18 +252,17 @@ class CompositeSensor:
 
 
 class ProbabilityFunction:
-    """Provides a way to get noisy reading."""
+    """
+    Provides a way to get noisy reading.
+
+    :param scale: The scale parameter for the probability function.
+    :type scale: float
+
+    :param pf: The probability function (e.g. :py:data:`scipy.stats.norm`).
+    :type pf: rv_continuous or rv_discrete
+    """
 
     def __init__(self, scale, pf: rv_continuous | rv_discrete):
-        """
-        Initialize the Sensor object.
-
-        :param scale: The scale parameter for the probability function.
-        :type scale: float
-
-        :param pf: The probability function (e.g. :py:data:`scipy.stats.norm`).
-        :type pf: rv_continuous or rv_discrete
-        """
         self.pf = pf  # class or gen object
         self.name = self.pf.__class__.__name__
         self.scale = scale

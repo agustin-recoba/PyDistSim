@@ -72,16 +72,13 @@ class Environment2D(Environment):
     """
     Base class for 2D environment.
     The Environment2D allows to define map and scale of 2D environment.
+
+    :param path: Optional. The path to an image file to load as the environment. If not provided, a default environment will be created.
+    :param scale: Optional. The scale factor for the environment image. If not provided, the default scale factor will be used.
+    :param shape: Optional. The shape of the environment. If not provided, the default shape will be used.
     """
 
     def __init__(self, path="", scale=None, shape=None):
-        """
-        Initialize the Environment object.
-
-        :param path: Optional. The path to an image file to load as the environment. If not provided, a default environment will be created.
-        :param scale: Optional. The scale factor for the environment image. If not provided, the default scale factor will be used.
-        :param shape: Optional. The shape of the environment. If not provided, the default shape will be used.
-        """
         shape = shape if shape else settings.ENVIRONMENT2D_SHAPE
         if path:
             try:

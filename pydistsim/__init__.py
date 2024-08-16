@@ -17,7 +17,14 @@ except metadata.PackageNotFoundError:
 # For interactive sessions these import names with from pydistsim import *
 import os
 
-os.environ["QT_API"] = "pyside"
+try:
+    from PySide6.QtCore import SIGNAL as __SIGNAL
+
+    os.environ["QT_API"] = "pyside"
+except ImportError:
+    "No PySide6 found."
+    ...
+
 # Declare namespace package
 from pkgutil import extend_path  # @Reimport
 
