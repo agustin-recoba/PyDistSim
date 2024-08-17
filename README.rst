@@ -17,13 +17,21 @@ PyDistSim
    :alt: CodeFactor
 
 
-PyDistSim is a Python package for event-based simulation and evaluation of distributed algorithms. It is a fork of the deprecated `Pymote <https://github.com/darbula/pymote>`_.
+PyDistSim is a Python package for event-based simulation and evaluation of distributed algorithms. It is a fork of the
+deprecated `Pymote <https://github.com/darbula/pymote>`_.
 
-This fork aims at providing new features, redesigned APIs and better documentation. It is being developed by Agustin Recoba in the context of his grade thesis at `Facultad de Ingeniería, Universidad de la República <https://www.fing.edu.uy/>`_.
+This fork aims at providing new features, redesigned APIs and better documentation. It is being developed by Agustin
+Recoba in the context of his grade thesis at `Facultad de Ingeniería, Universidad de la República <https://www.fing.edu.uy/>`_.
 
-Definition of the distributed environment, entities and actions used for making PyDistSim are taken mainly from `Design and Analysis of Distributed Algorithms <http://eu.wiley.com/WileyCDA/WileyTitle/productCd-0471719978,descCd-description.html>`_ by Nicola Santoro.
+Definition of the distributed environment, entities and actions used for making PyDistSim are taken mainly from
+`Design and Analysis of Distributed Algorithms <http://eu.wiley.com/WileyCDA/WileyTitle/productCd-0471719978,descCd-description.html>`_
+by Nicola Santoro.
 
-PyDistSim's main goal is to provide a framework for fast implementation, easy simulation and data-driven algorithmic analysis of distributed algorithms.
+PyDistSim's main goal is to provide a framework for fast implementation, easy simulation and data-driven algorithmic
+analysis of distributed algorithms.
+
+Currently, PyDistSim supports IPython console or Jupyter notebooks. The gui is still in development and is not recommended
+for any type of use.
 
 .. image:: ../docs/install/_images/pydistsim_console_gui.png
    :align: center
@@ -39,7 +47,7 @@ PyDistSim is being developed on top of `NetworkX <https://github.com/networkx/ne
 Installation
 ------------
 
-For installation instructions please visit `documentation <https://pydistsim.readthedocs.org>`_.
+For installation instructions please visit `the documentation <https://pydistsim.readthedocs.io/en/main/install/installation.html>`_.
 
 Literature
 ----------

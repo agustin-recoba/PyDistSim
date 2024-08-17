@@ -1,6 +1,6 @@
 License
 =======
-PyDistSim is a fork of Pymote, a project by originaly developed by Damir Arbula <damir.arbula@gmail.com> and distributed with the BSD license.
+PyDistSim is a fork of Pymote, a project by originally developed by Damir Arbula <damir.arbula@gmail.com> and distributed with the BSD license.
 PyDistSim, now authored by Agustin Recoba, is NOT distributed under the same license.
 
 PyDistSim © 2024 by Agustín Recoba is licensed under CC BY-NC-ND 4.0.
