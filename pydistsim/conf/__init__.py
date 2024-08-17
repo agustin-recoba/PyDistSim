@@ -133,7 +133,6 @@ class LazySettings:
 
 
 class Settings:
-
     def __init__(self, settings_module=None):
         # update this dict from global settings, but only for ALL_CAPS settings
         for setting in dir(global_settings):
@@ -169,17 +168,18 @@ class Settings:
 
 
 class UserSettingsHolder:
-    """Holder for user configured settings."""
+    """
+    Holder for user configured settings.
+
+    Requests for configuration variables not in this class are satisfied
+    from the module specified in default_settings (if possible).
+    """
 
     # SETTINGS_MODULE doesn't make much sense in the manually configured
     # (standalone) case.
     SETTINGS_MODULE = None
 
     def __init__(self, default_settings):
-        """
-        Requests for configuration variables not in this class are satisfied
-        from the module specified in default_settings (if possible).
-        """
         self.default_settings = default_settings
 
     def __getattr__(self, name):

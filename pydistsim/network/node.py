@@ -15,6 +15,14 @@ if TYPE_CHECKING:
 class Node(ObserverManagerMixin):
     """
     Represents a node in a network.
+
+    :param network: Optional network object to which the node belongs.
+    :type network: Network, optional
+    :param commRange: Communication range of the node.
+    :type commRange: int, optional
+    :param sensors: Tuple of sensor types or names.
+    :type sensors: tuple[type[Sensor] | str], optional
+    :param kwargs: Additional keyword arguments.
     """
 
     next_node_id = 1
@@ -26,17 +34,6 @@ class Node(ObserverManagerMixin):
         sensors: None | tuple[type["Sensor"] | str] = None,
         **kwargs,
     ):
-        """
-        Initialize a Node object.
-
-        :param network: Optional network object to which the node belongs.
-        :type network: Network, optional
-        :param commRange: Communication range of the node.
-        :type commRange: int, optional
-        :param sensors: Tuple of sensor types or names.
-        :type sensors: tuple[type[Sensor] | str], optional
-        :param kwargs: Additional keyword arguments.
-        """
         super().__init__()
         self._compositeSensor = CompositeSensor(self, sensors or settings.SENSORS)
         self.network = network

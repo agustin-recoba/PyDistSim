@@ -57,12 +57,15 @@ class AoAStitcher(BaseStitcher):
 
 
 class AoAStitcherHorn(AoAStitcher):
+    """
+    ``reflectable`` controls whether reflection is accepted when
+    calculating rotation matrix.
+
+    :param reflectable: If True, rotation matrix can reflect nodes.
+    :type reflectable: bool
+    """
 
     def __init__(self, *args, **kwargs):
-        """
-        ``reflectable`` controls whether reflection is accepted when
-        calculating rotation matrix.
-        """
         self.reflectable = kwargs.get("reflectable", False)
         self.get_rotation_matrix = self._get_rotation_matrix_horn
         super().__init__(*args, **kwargs)

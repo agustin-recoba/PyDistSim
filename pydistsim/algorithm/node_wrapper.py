@@ -117,10 +117,11 @@ class NodeAccess(_NodeWrapper):
     out_neighbors = neighbors
     "Alias for out_neighbors."
 
-    @property
+    @cached_property
     def id(self):
         """
         Get the id of the node. If the node does not have an id in memory, a random id will be generated.
+        It is not guaranteed that the id will be unique among all nodes in the network.
 
         Since the id is a read-only attribute, it is cached to avoid generating a new id every time it is accessed.
         """

@@ -51,7 +51,7 @@ license-files = [
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
-optional-dependencies = {dev = { file = ["requirements-dev.txt"] }}
+optional-dependencies = {dev = { file = ["requirements-dev.txt"] }, gui = { file = ["requirements-gui.txt"] }}
 
 [tool.pytest.ini_options]
 addopts = "--color=yes --cov=pydistsim --cov-report=xml --cov-append -n auto"

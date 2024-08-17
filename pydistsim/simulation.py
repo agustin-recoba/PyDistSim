@@ -6,14 +6,11 @@ import inspect
 from copy import copy, deepcopy
 from typing import TYPE_CHECKING, Optional
 
-from PySide6.QtCore import SIGNAL, QThread
-
 from pydistsim._exceptions import SimulationException
 from pydistsim.algorithm import BaseAlgorithm
 from pydistsim.conf import settings
 from pydistsim.logger import logger
 from pydistsim.observers import (
-    AlgorithmObserver,
     NetworkObserver,
     ObservableEvents,
     ObserverManagerMixin,
@@ -27,10 +24,18 @@ if TYPE_CHECKING:
 AlgorithmsParam = tuple[type["BaseAlgorithm"] | tuple[type["BaseAlgorithm"], dict]]
 
 
-class Simulation(ObserverManagerMixin, QThread):
+class Simulation(ObserverManagerMixin):
     """
     Controls single network algorithm and node algorithms simulation.
     It is responsible for visualization and logging, also.
+
+    :param network: The network object representing the simulation network.
+    :type network: NetworkType
+    :param algorithms: The algorithms to be executed on the network. If not provided, the default algorithms defined in settings.ALGORITHMS will be used.
+    :type algorithms: AlgorithmsParam, optional
+    :param check_restrictions: Whether to check restrictions during the simulation.
+    :type check_restrictions: bool, optional
+    :param kwargs: Additional keyword arguments.
     """
 
     def __init__(
@@ -40,17 +45,6 @@ class Simulation(ObserverManagerMixin, QThread):
         check_restrictions: bool = True,
         **kwargs,
     ):
-        """
-        Initialize a Simulation object.
-
-        :param network: The network object representing the simulation network.
-        :type network: NetworkType
-        :param algorithms: The algorithms to be executed on the network. If not provided, the default algorithms defined in settings.ALGORITHMS will be used.
-        :type algorithms: AlgorithmsParam, optional
-        :param logLevel: The log level for the simulation logger (default: LogLevels.DEBUG).
-        :type logLevel: LogLevels
-        :param kwargs: Additional keyword arguments.
-        """
         super().__init__()
 
         self._network = network
@@ -59,7 +53,6 @@ class Simulation(ObserverManagerMixin, QThread):
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self.stepsLeft = 0
         self.check_restrictions = check_restrictions
-        self.add_observers(QThreadObserver(self))
 
         logger.debug("Simulation {} created successfully.", hex(id(self)))
 
@@ -85,10 +78,6 @@ class Simulation(ObserverManagerMixin, QThread):
 
         return copy_s
 
-    def __del__(self):
-        self.exiting = True
-        self.wait()
-
     def run(self, steps=0):
         """
         Run simulation from the current state.
@@ -98,8 +87,6 @@ class Simulation(ObserverManagerMixin, QThread):
                       If steps > 0, the simulation is in stepping mode.
                       If steps > number of steps to finish the current algorithm, it finishes it.
         :type steps: int
-
-        :return: None
         """
         self.stepsLeft = steps
         for _ in range(len(self.algorithms) * len(self.network)):
@@ -122,8 +109,6 @@ class Simulation(ObserverManagerMixin, QThread):
         Run a single step of the simulation.
 
         This is equivalent to calling sim.run(1).
-
-        :return: None
         """
         self.run(1)
 
@@ -164,8 +149,6 @@ class Simulation(ObserverManagerMixin, QThread):
     def reset(self):
         """
         Reset the simulation.
-
-        :return: None
         """
         logger.debug("Resetting simulation.")
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
@@ -199,10 +182,6 @@ class Simulation(ObserverManagerMixin, QThread):
 
         :param network: The network object to set.
         :type network: NetworkType
-
-        :return: None
-        :rtype: None
-
         """
         self._network.simulation = None  # remove reference to this simulation in the old network
         self._network.clear_observers()
@@ -303,27 +282,3 @@ class Simulation(ObserverManagerMixin, QThread):
                 "finished": self.algorithmState["finished"],  # Whether the algorithm has finished or not.
             },
         }
-
-
-class QThreadObserver(AlgorithmObserver, SimulationObserver):
-    def __init__(self, q_thread: QThread, *args, **kwargs) -> None:
-        self.q_thread = q_thread
-        super().__init__(*args, **kwargs)
-
-    def on_step_done(self, algorithm: BaseAlgorithm) -> None:
-        self.q_thread.emit(
-            SIGNAL("updateLog(QString)"),
-            "[{}] Step {} finished",
-            algorithm.name,
-            algorithm.simulation.algorithmState["step"],
-        )
-
-    def on_state_changed(self, simulation: Simulation) -> None:
-        self.q_thread.emit(SIGNAL("redraw()"))
-
-    def on_algorithm_finished(self, algorithm: BaseAlgorithm) -> None:
-        self.q_thread.emit(SIGNAL("updateLog(QString)"), "[%s] Algorithm finished" % (algorithm.name))
-
-    def on_network_changed(self, simulation: Simulation) -> None:
-        self.q_thread.emit(SIGNAL("updateLog(QString)"), "Network loaded")
-        self.q_thread.emit(SIGNAL("redraw()"))

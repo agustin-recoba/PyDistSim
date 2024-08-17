@@ -52,8 +52,6 @@ class Trilaterate(FloodingUpdate):
                 )
                 pos_correction = dot(linalg.inv(dot(dot(J.T, W), J)), dot(dot(J.T, W), range_correction))
                 pos = pos + pos_correction
-                # print pos
-                # print pos_correction
                 counter += 1
                 if sqrt(sum(pos_correction**2)) < TRESHOLD or counter >= MAX_ITER:
                     break
