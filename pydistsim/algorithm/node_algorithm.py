@@ -156,7 +156,7 @@ class NodeAlgorithm(BaseAlgorithm):
         return (
             all((len(node.inbox) == 0 and len(node.outbox) == 0) for node in self.network.nodes())
             and len(self.alarms) == 0
-            and all(len(self.network.transit_messages(u, v)) == 0 for u, v in self.network.edges())
+            and all(len(self.network.get_transit_messages(u, v)) == 0 for u, v in self.network.edges())
         )
 
     ### Algorithm methods ###

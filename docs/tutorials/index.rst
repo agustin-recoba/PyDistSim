@@ -27,6 +27,14 @@ In this tutorial, we demonstrate how to generate a network automatically. Access
 
 .. _the network generation notebook: ../notebooks/network_generators.ipynb
 
+Creating an animation of a run
+==============================
+
+Here we demonstrate how to generate an animation of a simulated algorithm in any given network.
+Look at `the animation notebook`_.
+
+.. _the animation notebook: ../notebooks/animation.ipynb
+
 Algorithm benchmarking
 ======================
 
