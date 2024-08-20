@@ -2,11 +2,10 @@ import os  # @Reimport
 import sys
 from datetime import datetime
 
-import networkx as nx
 import numpy
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.collections import LineCollection, PatchCollection
+from matplotlib.collections import LineCollection
 from matplotlib.figure import Figure
 from matplotlib.patches import Circle
 from networkx.drawing.nx_pylab import draw_networkx_edges
@@ -29,6 +28,8 @@ except ImportError:
 
 from copy import deepcopy
 
+from pydistsim import logger
+from pydistsim.gui.drawing import draw_current_state
 from pydistsim.utils.localization.helpers import align_clusters, get_rms
 from pydistsim.utils.memory.positions import Positions
 
@@ -134,7 +135,7 @@ class SimulationGui(QMainWindow):
 
     def update_log(self, text):
         """Add item to list widget"""
-        print("Add: " + text)
+        logger.debug("Added item to list widget: " + text)
         self.ui.logListWidget.insertItem(0, text)
         # self.ui.logListWidget.sortItems()
 
@@ -144,156 +145,10 @@ class SimulationGui(QMainWindow):
         self.reset_zoom()
         self.refresh_visibility()
 
-    def draw_network(self, net=None, clear=True, subclusters=None, drawMessages=True):
-        if not net:
-            net = self.net
-        currentAlgorithm = self.sim.get_current_algorithm()
-        if clear:
-            self.axes.clear()
-        self.axes.imshow(net.environment.image, vmin=0, cmap="binary_r", origin="lower")
-
-        self.draw_tree(str(self.ui.treeKey.text()), net)
-        self.draw_edges(net)
-        self.draw_propagation_errors(str(self.ui.locKey.text()), net)
-        if subclusters:
-            node_colors = self.get_node_colors(net, subclusters=subclusters)
-        else:
-            node_colors = self.get_node_colors(net, algorithm=currentAlgorithm)
-        self.node_collection = self.draw_nodes(net, node_colors)
-        if drawMessages:
-            self.draw_messages(net)
-        self.draw_labels(net)
-        self.drawnNet = net
-        step_text = (
-            " (step %d)" % self.sim.algorithmState["step"] if isinstance(currentAlgorithm, NodeAlgorithm) else ""
+    def draw_network(self):
+        draw_current_state(
+            self.sim, self.axes, clear=True, treeKey=self.ui.treeKey.text(), locKey=self.ui.locKey.text()
         )
-        self.axes.set_title((currentAlgorithm.name if currentAlgorithm else "") + step_text)
-
-        self.refresh_visibility()
-        # To save multiple figs of the simulation uncomment next two lines:
-        # self.fig.savefig('network-alg-%d-step-%d.png' %
-        #                 (self.sim.algorithmState['index'], self.sim.algorithmState['step']))
-
-    def draw_nodes(self, net=None, node_colors={}, node_radius={}):
-        if not net:
-            net = self.net
-        if isinstance(node_colors, str):
-            node_colors = {node: node_colors for node in net.nodes()}
-        nodeCircles = []
-        for n in net.nodes():
-            c = NodeCircle(
-                tuple(net.pos[n]),
-                node_radius.get(n, 8.0),
-                color=node_colors.get(n, "r"),
-                ec="k",
-                lw=1.0,
-                ls="solid",
-                picker=3,
-            )
-            nodeCircles.append(c)
-        node_collection = PatchCollection(nodeCircles, match_original=True)
-        node_collection.set_picker(3)
-        self.axes.add_collection(node_collection)
-        return node_collection
-
-    def get_node_colors(self, net, algorithm=None, subclusters=None, drawLegend=True):
-        COLORS = "rgbcmyw" * 100
-        node_colors = {}
-        if algorithm:
-            color_map = {}
-            if isinstance(algorithm, NodeAlgorithm):
-                for ind, status in enumerate(algorithm.STATUS.keys()):
-                    if status == "IDLE":
-                        color_map.update({status: "k"})
-                    else:
-                        color_map.update({status: COLORS[ind]})
-                if drawLegend:
-                    proxy = []
-                    labels = []
-                    for status, color in list(color_map.items()):
-                        proxy.append(
-                            Circle(
-                                (0, 0),
-                                radius=8.0,
-                                color=color,
-                                ec="k",
-                                lw=1.0,
-                                ls="solid",
-                            )
-                        )
-                        labels.append(status)
-                    self.fig.legends = []
-                    self.fig.legend(
-                        proxy,
-                        labels,
-                        loc=8,
-                        prop={"size": "10.0"},
-                        ncol=len(proxy),
-                        title="Statuses for %s:" % algorithm.name,
-                    )
-            for n in net.nodes():
-                if n.status == "" or n.status not in list(color_map.keys()):
-                    node_colors[n] = "r"
-                else:
-                    node_colors[n] = color_map[n.status]
-        elif subclusters:
-            for i, sc in enumerate(subclusters):
-                for n in sc:
-                    if n in node_colors:
-                        node_colors[n] = "k"
-                    else:
-                        node_colors[n] = COLORS[i]
-        return node_colors
-
-    def draw_edges(self, net=None):
-        if not net:
-            net = self.net
-        self.edge_collection = nx.draw_networkx_edges(net, net.pos, alpha=0.6, edgelist=None, ax=self.axes)
-
-    def draw_messages(self, net=None):
-        if not net:
-            net = self.net
-        self.messages = []
-        msgCircles = []
-        for node in net.nodes():
-            for msg in node.outbox:
-                # broadcast
-                if msg.destination is None:
-                    for neighbor in list(net.adj[node].keys()):
-                        nbr_msg = msg.copy()
-                        nbr_msg.destination = neighbor
-                        c = MessageCircle(
-                            nbr_msg,
-                            net,
-                            "out",
-                            3.0,
-                            lw=0,
-                            picker=3,
-                            zorder=3,
-                            color="b",
-                        )
-                        self.messages.append(nbr_msg)
-                        msgCircles.append(c)
-                else:
-                    c = MessageCircle(msg, net, "out", 3.0, lw=0, picker=3, zorder=3, color="b")
-                    self.messages.append(msg)
-                    msgCircles.append(c)
-            for msg in node.inbox:
-                c = MessageCircle(msg, net, "in", 3.0, lw=0, picker=3, zorder=3, color="g")
-                self.messages.append(msg)
-                msgCircles.append(c)
-        if self.messages:
-            self.message_collection = PatchCollection(msgCircles, match_original=True)
-            self.message_collection.set_picker(3)
-            self.axes.add_collection(self.message_collection)
-
-    def draw_labels(self, net=None):
-        if not net:
-            net = self.net
-        label_pos = {}
-        for n in net.nodes():
-            label_pos[n] = net.pos[n].copy() + 10
-        self.label_collection = nx.draw_networkx_labels(net, label_pos, labels=net.labels, ax=self.axes)
 
     def refresh_visibility(self):
         try:
@@ -307,48 +162,8 @@ class SimulationGui(QMainWindow):
             # sould be last, sometimes there are no messages
             self.message_collection.set_visible(self.ui.showMessages.isChecked())
         except AttributeError:
-            print("Refresh visibility warning")
+            logger.warning("Refresh visibility warning.")
         self.canvas.draw()
-
-    def draw_tree(self, treeKey, net=None):
-        """
-        Show tree representation of network.
-
-        Attributes:
-            treeKey (str):
-                key in nodes memory (dictionary) where tree data is stored
-                storage format can be a list off tree neighbors or a dict:
-                    {'parent': parent_node,
-                     'children': [child_node1, child_node2 ...]}
-        """
-        if not net:
-            net = self.net
-        treeNet = net.get_tree_net(treeKey)
-        if treeNet:
-            self.tree_collection = draw_networkx_edges(
-                treeNet,
-                treeNet.pos,
-                treeNet.edges(),
-                width=1.8,
-                alpha=0.6,
-                ax=self.axes,
-            )
-
-    def draw_propagation_errors(self, locKey, net):
-        SCALE_FACTOR = 0.6
-        if not net:
-            net = self.net
-        if any([locKey not in node.memory for node in net.nodes()]):
-            self.propagation_error_collection = []
-            self.ini_error_collection = []
-            return
-
-        rms = {"iniRms": {}, "stitchRms": {}}
-        for node in net.nodes():
-            rms["iniRms"][node] = get_rms(self.net.pos, (node.memory["iniLocs"]), True) * SCALE_FACTOR
-            rms["stitchRms"][node] = get_rms(self.net.pos, node.memory[locKey], True) * SCALE_FACTOR
-        self.propagation_error_collection = self.draw_nodes(net=net, node_colors="g", node_radius=rms["stitchRms"])
-        self.ini_error_collection = self.draw_nodes(net=net, node_colors="b", node_radius=rms["iniRms"])
 
     def reset_zoom(self):
         self.axes.set_xlim((0, self.net.environment.image.shape[1]))
@@ -369,16 +184,16 @@ class SimulationGui(QMainWindow):
 
     def on_actionRun_triggered(self):
         self.ui.logListWidget.clear()
-        print("running ...", end=" ")
+        logger.debug("running on_actionRun_triggered")
         self.sim.stepping = True
         self.sim.run()
 
     def on_actionStep_triggered(self):
-        print("next step ...", end=" ")
+        logger.debug("running on_actionStep_triggered")
         self.sim.run(self.ui.stepSize.value())
 
     def on_actionReset_triggered(self):
-        print("reset ...", end=" ")
+        logger.debug("running on_actionReset_triggered")
         self.sim.reset()
         self.redraw()
 
@@ -457,11 +272,11 @@ class SimulationGui(QMainWindow):
         fname = QFileDialog.getOpenFileName(self, "Choose a file to open", start, filters, selectedFilter)[0]
         if fname:
             try:
-                print("open" + fname)
+                logger.debug("opening " + fname)
                 net = read_pickle(fname)
                 self.init_sim(net)
             except Exception as e:
-                print("Error opening file %s" % str(e), end=" ")
+                logger.exception("Error opening file %s" % str(e))
                 QMessageBox.critical(
                     self,
                     "Error opening file",
@@ -493,42 +308,6 @@ class SimulationGui(QMainWindow):
 
     def on_pick_message(self, message):
         self.ui.logListWidget.insertItem(0, "Pick message %s " % repr(message))
-
-
-class NodeCircle(Circle):
-    """Circle with node data."""
-
-    def __init__(self, xy, *args, **kwargs):
-        super().__init__(xy, *args, **kwargs)
-
-
-class MessageCircle(Circle):
-    """Circle with message data."""
-
-    def __init__(self, message, net, direction, *args, **kwargs):
-        super().__init__(self._get_pos(message, net, direction), *args, **kwargs)
-
-    def _get_pos(self, message, net, direction):
-        xd, yd = net.pos[message.destination]
-        try:
-            xs, ys = net.pos[message.source]
-        except KeyError:
-            return (xd, yd)
-        x = (xs + xd) / 2.0  # middle point
-        y = (ys + yd) / 2.0
-        if direction == "out":
-            x = (xs + x) / 2.0  # one quarter from source
-            y = (ys + y) / 2.0
-            x = (xs + x) / 2.0  # one eighth from source
-            y = (ys + y) / 2.0
-        elif direction == "in":
-            x = (xd + x) / 2.0  # one quarter from destination
-            y = (yd + y) / 2.0
-            x = (xd + x) / 2.0  # one eighth from destination
-            y = (yd + y) / 2.0
-            x = (xd + x) / 2.0  # one sixteenth from destination
-            y = (yd + y) / 2.0
-        return (x, y)
 
 
 from IPython.lib.guisupport import get_app_qt4, start_event_loop_qt4

@@ -251,6 +251,11 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         for node in self.nodes():
             node.reset()
 
+            for other_node in self.out_neighbors(node):
+                if node != other_node:
+                    self.get_transit_messages(node, other_node).clear()
+                    self.get_lost_messages(node, other_node).clear()
+
     #### Network methods ####
 
     def is_connected(self):
@@ -373,7 +378,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
     #### Node communication methods ####
 
-    def transit_messages(self, u: "Node", v: "Node") -> dict["Message", int]:
+    def get_transit_messages(self, u: "Node", v: "Node") -> dict["Message", int]:
         """
         Get messages in transit from node u to node v.
 
@@ -403,7 +408,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         :type delay: int
         """
 
-        in_transit_messages = self.transit_messages(u, v)
+        in_transit_messages = self.get_transit_messages(u, v)
         in_transit_messages[message] = delay
 
     def get_lost_messages(self, u: "Node", v: "Node") -> list["Message"]:
@@ -473,7 +478,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         # Process messages in transit
         for u, v in self.edges():
-            messages_delay = self.transit_messages(u, v)
+            messages_delay = self.get_transit_messages(u, v)
             if not messages_delay:
                 continue
 
