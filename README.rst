@@ -33,10 +33,7 @@ analysis of distributed algorithms.
 Currently, PyDistSim supports IPython console or Jupyter notebooks. The gui is still in development and is not recommended
 for any type of use.
 
-.. image:: ../docs/install/_images/pydistsim_console_gui.png
-   :align: center
-   :alt: PyDistSim console and gui
-.. image:: docs/install/_images/pydistsim_console_gui.png
+.. image:: https://raw.githubusercontent.com/agustin-recoba/PyDistSim/main/docs/install/_images/pydistsim_console_gui.png
    :align: center
    :alt: PyDistSim console and gui
 
