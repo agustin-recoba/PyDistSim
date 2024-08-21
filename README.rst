@@ -52,8 +52,8 @@ For installation instructions please visit `the documentation <https://pydistsim
 Literature
 ----------
 
-Santoro, N.: *Design and Analysis of Distributed Algorithms*, 2006 `link <http://eu.wiley.com/WileyCDA/WileyTitle/productCd-0471719978,descCd-description.html>`_
+Santoro, N.: *Design and Analysis of Distributed Algorithms*, `2006 <http://eu.wiley.com/WileyCDA/WileyTitle/productCd-0471719978,descCd-description.html>`_
 
-Arbula, D. and Lenac, K.: *Pymote: High Level Python Library for Event-Based Simulation and Evaluation of Distributed Algorithms*, International Journal of Distributed Sensor Networks, Volume 2013 `link <https://journals.sagepub.com/doi/10.1155/2013/797354>`_
+Arbula, D. and Lenac, K.: *Pymote: High Level Python Library for Event-Based Simulation and Evaluation of Distributed Algorithms*, International Journal of Distributed Sensor Networks, Volume `2013 <https://journals.sagepub.com/doi/10.1155/2013/797354>`_
 
-Recoba, A: *PyDistSim: Framework de simulación de algoritmos distribuidos en redes en Python*, 2024 `link <TODO AGREGAR LINK>`_
+Recoba, A: *PyDistSim: Framework de simulación de algoritmos distribuidos en redes en Python*, 2024
