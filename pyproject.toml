@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "PyDistSim"
-version = "1.0.1.dev" # Should match version at pydistsim/docs/conf.py
+version = "1.0.2.dev" # Should match version at pydistsim/docs/conf.py
 authors = [
   { name="Agustin Recoba", email="agustin.recoba@outlook.com" }, # Fork author
   { name="Damir Arbula", email="damir.arbula@gmail.com" }, # Original author
@@ -17,10 +17,8 @@ readme = "README.rst"
 requires-python = ">=3.11"
 keywords = ["Networks", "Distributed algorithms"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3.11",
     "Topic :: Software Development :: Libraries :: Python Modules",
@@ -36,7 +34,7 @@ Issues = "https://github.com/agustin-recoba/pydistsim/issues"
 Documentation = "https://pydistsim.readthedocs.io/"
 Repository = "https://github.com/agustin-recoba/pydistsim.git"
 "CI-CD" = "https://app.travis-ci.com/github/agustin-recoba/pydistsim/"
-"Test Coverage" = "https://coveralls.io/github/agustin-recoba/pydistsim"
+"Test Coverage" = "https://coveralls.io/github/agustin-recoba/PyDistSim"
 
 [project.scripts]
 ipydistsim = "pydistsim.scripts.ipydistsim:start_ipydistsim"
