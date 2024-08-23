@@ -1,6 +1,6 @@
 import unittest
 
-from pydistsim.logger import LogLevels, disable_logger, enable_logger, set_log_level
+from pydistsim.logging import LogLevels, disable_logger, enable_logger, set_log_level
 
 
 class PyDistSimTestCase(unittest.TestCase):

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Union
 
 from pydistsim.algorithm.base_algorithm import AlgorithmException, BaseAlgorithm
 from pydistsim.algorithm.node_wrapper import NodeAccess
-from pydistsim.logger import logger
+from pydistsim.logging import logger
 from pydistsim.message import Message
 from pydistsim.message import MetaHeader as MessageMetaHeader
 from pydistsim.observers import ObservableEvents

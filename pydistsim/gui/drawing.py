@@ -1,3 +1,5 @@
+"""Drawing functions for visualizing the simulation."""
+
 from enum import StrEnum
 from functools import reduce
 from typing import TYPE_CHECKING

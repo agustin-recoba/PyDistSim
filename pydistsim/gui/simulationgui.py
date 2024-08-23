@@ -23,8 +23,8 @@ try:
     from .dictionarytreemodel import DictionaryTreeModel
     from .simulationui import Ui_SimulationWindow
 except ImportError:
-    from simulationui import Ui_SimulationWindow
-    from dictionarytreemodel import DictionaryTreeModel
+    from pydistsim.gui.dictionarytreemodel import DictionaryTreeModel
+    from pydistsim.gui.simulationui import Ui_SimulationWindow
 
 from copy import deepcopy
 

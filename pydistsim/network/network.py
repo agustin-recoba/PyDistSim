@@ -18,7 +18,7 @@ from numpy.random import rand
 
 from pydistsim._exceptions import MessageUndeliverableException, NetworkException
 from pydistsim.conf import settings
-from pydistsim.logger import logger
+from pydistsim.logging import logger
 from pydistsim.network.behavior import ExampleProperties, NetworkBehaviorModel
 from pydistsim.network.environment import Environment
 from pydistsim.network.node import Node

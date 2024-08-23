@@ -11,7 +11,7 @@ from pandas import DataFrame
 
 from pydistsim.algorithm.node_algorithm import AlgorithmException, NodeAlgorithm
 from pydistsim.conf import settings
-from pydistsim.logger import logger
+from pydistsim.logging import logger
 from pydistsim.metrics import MetricCollector
 from pydistsim.network.behavior import ExampleProperties, NetworkBehaviorModel
 from pydistsim.network.generator import NetworkGenerator

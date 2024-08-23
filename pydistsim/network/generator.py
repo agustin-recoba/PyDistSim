@@ -6,7 +6,7 @@ from numpy import array, cos, log2, pi, sign, sin, sqrt
 from numpy.random import rand
 
 from pydistsim.conf import settings
-from pydistsim.logger import logger
+from pydistsim.logging import logger
 from pydistsim.network.network import BidirectionalNetwork
 from pydistsim.network.node import Node
 from pydistsim.network.rangenetwork import BidirectionalRangeNetwork, RangeNetwork

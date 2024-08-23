@@ -2,7 +2,7 @@ from copy import copy, deepcopy
 from typing import TYPE_CHECKING, Optional
 
 from pydistsim.conf import settings
-from pydistsim.logger import LogLevels, logger
+from pydistsim.logging import LogLevels, logger
 from pydistsim.network.sensor import CompositeSensor
 from pydistsim.observers import ObservableEvents, ObserverManagerMixin
 

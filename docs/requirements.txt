@@ -1,8 +1,11 @@
-numpy==2.0.0
+Sphinx==7.4.7
 sphinx_rtd_theme==2.0.0
-pydata-sphinx-theme==0.15.3
-nbsphinx==0.9.4
-ipython==8.25.0
-jupytext==1.16.2
+pydata-sphinx-theme==0.15.4
+seed_intersphinx_mapping==1.2.2
+nbsphinx==0.9.5
+ipython==8.26.0
+jupytext==1.16.4
 jupyter==1.0.0
-matplotlib==3.9.0
+matplotlib==3.9.2
+networkx==3.3
+numpy==2.1.0

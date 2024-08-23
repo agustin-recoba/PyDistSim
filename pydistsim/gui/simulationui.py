@@ -370,4 +370,4 @@ class Ui_SimulationWindow:
 try:
     from . import icons_rc
 except ImportError:
-    import icons_rc
+    from pydistsim.gui import icons_rc

@@ -40,7 +40,7 @@ Testing memory usage
 --------------------
 
 For this task, we use the `memray <https://bloomberg.github.io/memray/>`_ tool.
-It should be installed in your environment if you followed the guide at ":ref:`installation`".
+You may need to install it, since it's not covered in the guide at ":ref:`installation`".
 
 To test memory usage, run::
 

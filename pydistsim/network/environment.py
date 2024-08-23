@@ -6,7 +6,7 @@ from numpy import ones, sign, sqrt, uint8, vstack
 from numpy.random import rand
 
 from pydistsim.conf import settings
-from pydistsim.logger import logger
+from pydistsim.logging import logger
 
 
 class Environment:
