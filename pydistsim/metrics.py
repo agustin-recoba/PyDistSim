@@ -33,21 +33,22 @@ class MetricCollector(NodeNetworkObserver, AlgorithmObserver, SimulationObserver
 
     Example of implementing a custom metric collector:
 
-    ```
-    class ExampleCustomMetricCollector(MetricCollector):
-        events = ["example_custom_event"]
+    .. code-block:: python
 
-        class CustomMetricEventType(StrEnum):
-            "Definition if this enum is optional. It helps to avoid typos in the event names."
-            EXAMPLE_CUSTOM_EVENT_ZERO = "EXAMPLE_CUSTOM_EVENT_ZERO"
-            ...
+        class ExampleCustomMetricCollector(MetricCollector):
+            events = ["example_custom_event"]
 
-        def on_example_custom_event(self, a, b, c):
-            self._add_metric(
-                self.CustomMetricEventType.EXAMPLE_CUSTOM_EVENT_ZERO,
-                {"a": a, "b": b, "c": c}
-            )
-    ```
+            class CustomMetricEventType(StrEnum):
+                "Definition if this enum is optional. It helps to avoid typos in the event names."
+                EXAMPLE_CUSTOM_EVENT_ZERO = "EXAMPLE_CUSTOM_EVENT_ZERO"
+                ...
+
+            def on_example_custom_event(self, a, b, c):
+                self._add_metric(
+                    self.CustomMetricEventType.EXAMPLE_CUSTOM_EVENT_ZERO,
+                    {"a": a, "b": b, "c": c}
+                )
+
     """
 
     def __init__(self):

@@ -70,22 +70,22 @@ class AlgorithmBenchmark:
 
     ### Usage
 
-    ```python
-    from pydistsim.benchmark import AlgorithmBenchmark
-    from pydistsim.network.behavior import ExampleProperties
+    .. code-block:: python
 
-    benchmark = AlgorithmBenchmark(
-        ((Flood, {"initial_information": "Hello Wold!"}), ),
-        network_sizes=range(1, 40),
-        network_behavior=ExampleProperties.UnorderedRandomDelayCommunication,
-    )
+        from pydistsim.benchmark import AlgorithmBenchmark
+        from pydistsim.network.behavior import ExampleProperties
 
-    benchmark.run()
+        benchmark = AlgorithmBenchmark(
+            ((Flood, {"initial_information": "Hello Wold!"}), ),
+            network_sizes=range(1, 40),
+            network_behavior=ExampleProperties.UnorderedRandomDelayCommunication,
+        )
 
-    benchmark.plot_analysis() # In IPython, this will plot the results
+        benchmark.run()
 
-    df = benchmark.get_results_dataframe() # Get the results as a pandas DataFrame
-    ```
+        benchmark.plot_analysis() # In IPython, this will plot the results
+
+        df = benchmark.get_results_dataframe() # Get the results as a pandas DataFrame
 
     ### Params
 
@@ -245,13 +245,14 @@ class AlgorithmBenchmark:
         Plot the results of the benchmark using seaborn pairplot.
 
         ### Example call:
-        ```python
-        benchmark.plot_analysis(
-            x_vars=["Net. node count"],
-            y_vars=["Qty. of messages sent", "Qty. of steps"],
-            result_filter=lambda df: df["Network type"] in ('complete', 'ring'),
-        )
-        ```
+
+        .. code-block:: python
+
+            benchmark.plot_analysis(
+                x_vars=["Net. node count"],
+                y_vars=["Qty. of messages sent", "Qty. of steps"],
+                result_filter=lambda df: df["Network type"] in ('complete', 'ring'),
+            )
 
         ### Params
 
