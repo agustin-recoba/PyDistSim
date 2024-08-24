@@ -13,11 +13,10 @@
 import os
 import sys
 
-if os.environ.get("READTHEDOCS", None) == "True":
-    sys.path.insert(0, ".")
-    from readthedocs import *
+sys.path.insert(0, ".")
+from readthedocs import *
 
-    sys.path.pop(0)
+sys.path.pop(0)
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -41,6 +40,8 @@ extensions = [
     "sphinx.ext.ifconfig",
     "sphinx.ext.viewcode",
     "sphinx.ext.graphviz",
+    "seed_intersphinx_mapping",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.inheritance_diagram",
     "nbsphinx",  # Integrate Jupyter Notebooks and Sphinx
     "IPython.sphinxext.ipython_console_highlighting",
@@ -279,3 +280,9 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 # texinfo_show_urls = 'footnote'
+
+# Intershpinx configuration
+
+intersphinx_mapping = {
+    # autopolulated by seed_intersphinx_mapping
+}

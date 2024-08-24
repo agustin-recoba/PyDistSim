@@ -1,3 +1,5 @@
+"""Drawing functions for visualizing the simulation."""
+
 from enum import StrEnum
 from functools import reduce
 from typing import TYPE_CHECKING
@@ -376,25 +378,27 @@ def create_animation(
     """
     Create an animation of the simulation.
 
-    ### Example for visualizing in Jupyter Notebook:
-    ```python
-    anim = create_animation(sim)
+    Example for visualizing in Jupyter Notebook:
 
-    video = anim.to_html5_video()
+    .. code-block:: python
 
-    from IPython.display import HTML
-    HTML(video)
-    ```
+        anim = create_animation(sim)
 
-    ### Example for saving as a video file:
-    ```python
-    from matplotlib.animation import FFMpegFileWriter
+        video = anim.to_html5_video()
 
-    moviewriter = FFMpegFileWriter()
-    anim = draw.create_animation(sim)
+        from IPython.display import HTML
+        HTML(video)
 
-    anim.save("flood.mp4", writer=moviewriter)
-    ```
+    Example for saving as a video file:
+
+    .. code-block:: python
+
+        from matplotlib.animation import FFMpegFileWriter
+
+        moviewriter = FFMpegFileWriter()
+        anim = draw.create_animation(sim)
+
+        anim.save("flood.mp4", writer=moviewriter)
 
     :param sim: Simulation object
     :param treeKey: key in nodes memory (dictionary) where tree data is stored

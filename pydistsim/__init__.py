@@ -30,7 +30,7 @@ from pkgutil import extend_path  # @Reimport
 
 from pydistsim.algorithm import NodeAlgorithm, StatusValues
 from pydistsim.benchmark import AlgorithmBenchmark
-from pydistsim.logger import disable_logger, enable_logger, logger
+from pydistsim.logging import disable_logger, enable_logger, logger
 from pydistsim.network import BidirectionalNetwork, Network, NetworkGenerator, Node
 from pydistsim.simulation import Simulation
 

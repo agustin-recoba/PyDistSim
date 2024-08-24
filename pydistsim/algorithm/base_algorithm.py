@@ -2,7 +2,7 @@ from copy import copy, deepcopy
 from inspect import getmembers
 from typing import TYPE_CHECKING
 
-from pydistsim.logger import logger
+from pydistsim.logging import logger
 from pydistsim.observers import ObserverManagerMixin
 from pydistsim.restrictions import CheckableRestriction
 from pydistsim.restrictions.base_restriction import ApplicableRestriction

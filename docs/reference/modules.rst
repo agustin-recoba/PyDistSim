@@ -15,3 +15,4 @@ Modules overview
    pydistsim.demo_algorithms
    pydistsim.network
    pydistsim.simulation
+   pydistsim.gui

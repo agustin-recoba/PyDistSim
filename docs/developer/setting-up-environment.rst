@@ -10,6 +10,7 @@ Setting up the development environment
     * In Windows: ``venv\Scripts\activate``
     * In Linux: ``source venv/bin/activate``
     * Remember to point your IDE to the python interpreter in the virtual environment.
+
 3. Install the required packages by running:
 
     * ``pip install -r requirements.txt``

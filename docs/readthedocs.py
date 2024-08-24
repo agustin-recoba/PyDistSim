@@ -6,39 +6,49 @@ html_style = None
 import sys
 
 
-class Mock:
-    def __init__(self, *args, **kwargs):
-        pass
+def get_mock(mod_name):
 
-    def __call__(self, *args, **kwargs):
-        return Mock()
+    class Mock:
+        def __init__(self, *args, **kwargs):
+            pass
 
-    @classmethod
-    def __getattr__(cls, name):
-        if name in ("__file__", "__path__"):
-            return "/dev/null"
-        elif name[0] == name[0].upper():
-            mockType = type(name, (), {})
-            mockType.__module__ = __name__
-            return mockType
-        else:
+        def __call__(self, *args, **kwargs):
             return Mock()
 
-    def __or__(self, other):
-        return Mock()
+        @classmethod
+        def __getattr__(cls, name: str):
+            mock_type_name = name[0].upper() + name[1:]
+            mockType = type(mock_type_name, (Mock,), {})
+            mockType.__module__ = cls.__module__
+
+            if name in ("__file__", "__path__"):
+                return "/dev/null"
+            elif name[0] == name[0].upper():
+                return mockType
+            else:
+                return mockType()
+
+        def __or__(self, other):
+            return self.__class__()
+
+    Mock.__name__ = mod_name
+    Mock.__module__ = mod_name
+
+    return Mock()
 
 
 MOCK_MODULES = [
-    "networkx",
     "png",
     "PySide6",
     "PySide6.QtCore",
     "PySide6.QtGui",
     "scipy",
     "scipy.stats",
+    "scipy.constants",
     "loguru",
     "pandas",
     "seaborn",
+    "pytest",
 ]
 for mod_name in MOCK_MODULES:
-    sys.modules[mod_name] = Mock()
+    sys.modules[mod_name] = get_mock(mod_name)

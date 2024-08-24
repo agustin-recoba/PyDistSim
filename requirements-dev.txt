@@ -1,9 +1,6 @@
 pytest==8.2.0
 pytest-cov==5.0.0
 pytest-sugar==1.0.0
-memray==1.13.4
-Sphinx==7.3.7
-sphinx-rtd-theme==2.0.0
 virtualenv==20.26.3
 coverage==7.6.1
 pre-commit==3.8.0

@@ -6,7 +6,7 @@ import pickle as pickle
 from types import MethodType
 from typing import Any
 
-from pydistsim.logger import logger
+from pydistsim.logging import logger
 
 
 def _get_fh(path: str, mode="r"):

@@ -17,6 +17,7 @@ Only refer to this section once you are familiar with the basic concepts of PyDi
    observers
    sensors
    conf
+   logging
    modules
 
 

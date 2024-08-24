@@ -16,7 +16,7 @@ import os
 import sys
 
 from pydistsim.conf import global_settings
-from pydistsim.logger import logger
+from pydistsim.logging import logger
 
 ENVIRONMENT_VARIABLE = "PYDISTSIM_SETTINGS_MODULE"
 

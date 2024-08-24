@@ -6,7 +6,7 @@ from numpy import allclose, sign, sqrt
 from numpy.random import random
 
 from pydistsim.conf import settings
-from pydistsim.logger import logger
+from pydistsim.logging import logger
 from pydistsim.network.environment import Environment
 from pydistsim.network.network import BidirectionalNetwork, Network
 from pydistsim.utils.helpers import with_typehint

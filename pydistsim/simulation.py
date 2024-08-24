@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Optional
 from pydistsim._exceptions import SimulationException
 from pydistsim.algorithm import BaseAlgorithm
 from pydistsim.conf import settings
-from pydistsim.logger import logger
+from pydistsim.logging import logger
 from pydistsim.observers import (
     NetworkObserver,
     ObservableEvents,

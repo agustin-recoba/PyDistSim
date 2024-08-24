@@ -1,9 +1,9 @@
 ipython==8.26.0
 matplotlib==3.9.2
 networkx==3.3
-numpy==2.0.1
+numpy==2.1.0
 pandas==2.2.2
 seaborn==0.13.2
-scipy==1.14.0
+scipy==1.14.1
 loguru==0.7.2
 pypng==0.20220715.0

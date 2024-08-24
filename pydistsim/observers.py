@@ -4,7 +4,7 @@ This module contains the classes for observers and the mixin class for objects t
 
 from typing import TYPE_CHECKING
 
-from pydistsim.logger import logger
+from pydistsim.logging import logger
 
 if TYPE_CHECKING:
     from pydistsim.algorithm import BaseAlgorithm
