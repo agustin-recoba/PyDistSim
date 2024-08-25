@@ -58,7 +58,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         self.labels = {}
         self.simulation = None
         self.behavioral_properties = behavioral_properties or ExampleProperties.UnorderedCommunication
-        logger.debug("Instance of Network has been initialized.")
+        logger.trace("Instance of Network has been initialized.")
 
     #### Overriding methods from Graph and DiGraph ####
 
@@ -465,7 +465,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
                 node.outbox.remove(message)
 
                 if self.behavioral_properties.should_lose(self, message):
-                    logger.debug("Message lost: {}", message)
+                    logger.trace("Message lost: {}", message)
                     self.add_lost_message(node, next_dest, message)
                     continue
 
@@ -544,6 +544,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
     def show(self, *args, **kwargs):
         fig = self.get_fig(*args, **kwargs)
         fig.show()
+        return fig
 
     def savefig(self, fname="network.png", figkwargs={}, *args, **kwargs):
         self.get_fig(*args, **kwargs).savefig(fname, **figkwargs)
@@ -651,7 +652,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         :raises AssertionError: If any of the network parameters do not match the real parameters.
         """
-        logger.debug("Validating params")
+        logger.info("Validating params...")
         count = params.get("count", None)  #  for unit tests
         if count:
             if isinstance(count, list):

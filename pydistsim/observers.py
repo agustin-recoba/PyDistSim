@@ -79,7 +79,7 @@ class Observer:
     def notify(self, event: ObservableEvents, *args, **kwargs):
         allowed_events = self.__get_allowed_events__()
         if event not in allowed_events:
-            logger.debug(
+            logger.trace(
                 "Invalid event name '{}' for observer type {}. Valid events are: {}.",
                 event,
                 self.__class__.__name__,

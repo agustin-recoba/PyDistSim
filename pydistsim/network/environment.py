@@ -226,5 +226,5 @@ class Environment2D(Environment):
             if self.is_space(pos):
                 break
             n -= 1
-        logger.debug("Random position found in {} iterations.", (n_init - n))
+        logger.trace("Random position found in {} iterations.", (n_init - n))
         return pos

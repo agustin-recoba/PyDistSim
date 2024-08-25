@@ -70,6 +70,17 @@ class NeighborLabel(_NodeWrapper):
 
     accessible_get = ("id",)
 
+    def __repr__(self):
+        return f"Neighbor(label={self.id})"
+
+    @property
+    def id(self):
+        logger.warning(
+            "Neighbor's id do not correspond to the real id of the node. It can be used to distinguish "
+            "neighbors from each other."
+        )
+        return super().id
+
 
 class NodeAccess(_NodeWrapper):
     """
@@ -117,7 +128,7 @@ class NodeAccess(_NodeWrapper):
     out_neighbors = neighbors
     "Alias for out_neighbors."
 
-    @cached_property
+    @property
     def id(self):
         """
         Get the id of the node. If the node does not have an id in memory, a random id will be generated.
@@ -125,13 +136,20 @@ class NodeAccess(_NodeWrapper):
 
         Since the id is a read-only attribute, it is cached to avoid generating a new id every time it is accessed.
         """
-        return self.node.memory.get("id", self._rand_id)
+        if "id" not in self.node.memory:
+            logger.warning(
+                "Node's id do not correspond to the real id of the node. It can't be used to distinguish nodes from "
+                "each other as it is not unique unless restriction InitialDistinctValues is applied (or each node has a "
+                "unique id set in memory)."
+            )
+            return self._rand_id
+
+        return self.node.memory["id"]
 
     ###### Private methods ######
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.clock_view = 0
 
     @cached_property
     def __out_neighbors_dict(self) -> dict["Node", "NeighborLabel"]:
@@ -163,13 +181,13 @@ class NodeAccess(_NodeWrapper):
     __wrapped_nodes__ = {}
     "Memoization of the wrapped nodes. Used to avoid creating multiple wrappers for the same node."
 
-    def __new__(cls, node: "Node", **configs):
+    def __new__(cls, node: "Node", *args, **configs):
         "A NodeProxy wrapper is created only once for each node."
 
         if node in cls.__wrapped_nodes__:
             wrapped_node: cls = cls.__wrapped_nodes__[node]
             if cls != wrapped_node.__class__:
-                logger.debug(
+                logger.trace(
                     f"Node {node} was wrapped with a different class. "
                     f"Changing from {wrapped_node.__class__.__name__} to {cls.__name__}."
                 )
@@ -177,7 +195,7 @@ class NodeAccess(_NodeWrapper):
 
             return wrapped_node
 
-        cls.__wrapped_nodes__[node] = super().__new__(cls)
+        cls.__wrapped_nodes__[node] = super().__new__(cls, *args, **configs)
         return cls.__wrapped_nodes__[node]
 
 

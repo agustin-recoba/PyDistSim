@@ -1,5 +1,6 @@
 """
-This module contains the :class:`AlgorithmBenchmark` class, which is used to benchmark the performance of a given algorithm.
+This module contains the :class:`AlgorithmBenchmark` class, which is used to benchmark the performance of a given
+algorithm.
 """
 
 from collections.abc import Callable, Iterable
@@ -83,7 +84,7 @@ class AlgorithmBenchmark:
 
         benchmark.run()
 
-        benchmark.plot_analysis() # In IPython, this will plot the results
+        plot = benchmark.plot_analysis() # In IPython, this will create a plot with the results
 
         df = benchmark.get_results_dataframe() # Get the results as a pandas DataFrame
 
@@ -121,7 +122,7 @@ class AlgorithmBenchmark:
         network_generators: dict[
             Literal["DETERMINISTIC", "RANDOM"], dict[str, Callable[[int], "NetworkType"]]
         ] = GENERATORS,
-        network_repeat_count: dict[Literal["DETERMINISTIC", "RANDOM"], int] = {"DETERMINISTIC": 1, "RANDOM": 20},
+        network_repeat_count: dict[Literal["DETERMINISTIC", "RANDOM"], int] = {"DETERMINISTIC": 1, "RANDOM": 5},
     ):
         self.results = []
         self.errors = []
@@ -152,13 +153,13 @@ class AlgorithmBenchmark:
                 return
 
             try:
-                logger.debug(f"Generating network '{gen_name}' of size {network_size}")
+                logger.trace(f"Generating network '{gen_name}' of size {network_size}")
                 network: "NetworkType" = gen(network_size, self.directed_network)
             except ValueError as e:
                 logger.debug(f"Failed to generate '{gen_name}' network of size {network_size}. Reason: {e}")
                 continue
 
-            logger.debug(f"Running simulation on '{gen_name}' network of size {len(network)}")
+            logger.trace(f"Running simulation on '{gen_name}' network of size {len(network)}")
             network.behavioral_properties = self.network_behavior
 
             metrics = self.metric_collector_factory()

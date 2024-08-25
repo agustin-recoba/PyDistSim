@@ -236,6 +236,7 @@ class RangeNetworkMixin(with_typehint(Network)):
         :param v_of_edge: The target node of the edge.
         :param attr: Additional attributes to be assigned to the edge.
         """
+        raise NotImplementedError("Manual edge addition is not recommended for RangeNetwork.")
         logger.warning("Edges are auto-calculated from rangeType and commRange")
         super().add_edge(u_of_edge, v_of_edge, **attr)
 
@@ -303,7 +304,7 @@ class RangeNetworkMixin(with_typehint(Network)):
             # variable step_factor for step size for over/undershoot cases
             if len(steps) > 2 and sign(steps[-2]) != sign(steps[-1]):
                 step_factor /= 2
-        logger.debug("Modified degree to {}", self.avg_degree())
+        logger.trace("Modified degree to {}", self.avg_degree())
 
 
 class RangeNetwork(RangeNetworkMixin, Network):

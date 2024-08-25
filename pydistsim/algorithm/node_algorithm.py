@@ -168,7 +168,7 @@ class NodeAlgorithm(BaseAlgorithm):
 
         Base implementation sends an INI message to the node with the lowest id and applies all restrictions.
         """
-        logger.debug("Initializing algorithm {}.", self.name)
+        logger.trace("Initializing algorithm {}.", self.name)
         self.apply_restrictions()
 
         node: "Node" = self.network.nodes_sorted()[0]
@@ -291,7 +291,7 @@ class NodeAlgorithm(BaseAlgorithm):
             alarm.triggered = False
             self.alarms.append(alarm)
         else:
-            raise ValueError("Alarm not found.")
+            raise ValueError("Alarm not found. Cannot update time. Please check if it has been triggered.")
 
     ### Methods for algorithm evaluation ###
 
