@@ -270,6 +270,9 @@ def __draw_messages(net: "NetworkType", axes: Axes, message_radius: float):
 
         for msg_type in msg_dict:
             for (src, dst), count in msg_dict[msg_type].items():
+                if not src or not dst:
+                    continue  # Defensive check
+
                 x, y, rads_orientation = __get_message_positions_and_orientation(src, dst, net, msg_type)
                 c = RegularPolygon(
                     (x, y),
