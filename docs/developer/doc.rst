@@ -21,7 +21,7 @@ mapping and the value being the URL of the mapping. Automatic population of the 
 
 
 readthedocs.org
-==============
+===============
 
 To add the documentation to readthedocs.org, create an account and add the repository. The documentation will be built automatically
 since the configuration file ``.readthedocs.yml`` is present in the repository.

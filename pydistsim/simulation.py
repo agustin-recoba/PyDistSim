@@ -49,12 +49,13 @@ class Simulation(ObserverManagerMixin):
 
         self._network = network
         self._network.simulation = self
+        self._algorithms = ()
         self.algorithms = algorithms or settings.ALGORITHMS
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self.stepsLeft = 0
         self.check_restrictions = check_restrictions
 
-        logger.debug("Simulation {} created successfully.", hex(id(self)))
+        logger.info("Simulation {} created successfully.", hex(id(self)))
 
     def __deepcopy__(self, memo):
         if id(self) in memo:
@@ -143,7 +144,7 @@ class Simulation(ObserverManagerMixin):
                 return  # stepped execution finished
 
         self.notify_observers(ObservableEvents.algorithm_finished, algorithm)
-        logger.debug("[{}] Algorithm finished", algorithm.name)
+        logger.info("[{}] Algorithm finished", algorithm.name)
         self.algorithmState["finished"] = True
 
     def reset(self):
@@ -153,6 +154,9 @@ class Simulation(ObserverManagerMixin):
         logger.debug("Resetting simulation.")
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self._network.reset()
+        if self._algorithms:
+            for algorithm in self._algorithms:
+                algorithm.reset()
 
     def is_halted(self):
         """

@@ -70,10 +70,10 @@ class NetworkGenerator:
         self.n_min = self.n_count if n_min is None else n_min
         self.n_max = self.n_count if n_max is None else n_max
         if self.n_count < self.n_min or self.n_count > self.n_max:
-            raise NetworkGeneratorException("Number of nodes must be between n_min and n_max.")
+            raise NetworkGeneratorException("Number of nodes (n_count parameter) must be between n_min and n_max.")
         if degree and degree >= self.n_max:
             raise NetworkGeneratorException(
-                "Degree % d must be smaller than maximum number of nodes %d." % (degree, self.n_max)
+                "Degree %d must be smaller than maximum number of nodes %d." % (degree, self.n_max)
             )
         # TODO: optimize recalculation of edges on bigger commRanges
         if degree:
@@ -110,22 +110,22 @@ class NetworkGenerator:
                 if len(net) < self.n_max:
                     node = Node(**self.kwargs)
                     net.add_node(node)
-                    logger.debug("Added node, number of nodes: {}", len(net))
+                    logger.trace("Added node, number of nodes: {}", len(net))
                 elif not self.comm_range:
                     for node in net.nodes():
                         node.commRange += step
-                    logger.debug("Increased commRange to {}", node.commRange)
+                    logger.trace("Increased commRange to {}", node.commRange)
                 else:
                     return None
             else:
                 min_node = net.nodes_sorted()[0]
                 if len(net) > self.n_min and len(net) > 1:
                     net.remove_node(min_node)
-                    logger.debug("Removed node, nodes left: {}", len(net))
+                    logger.trace("Removed node, nodes left: {}", len(net))
                 elif not self.comm_range:
                     for node in net:
                         node.commRange += step
-                    logger.debug("Decreased commRange to {}", node.commRange)
+                    logger.trace("Decreased commRange to {}", node.commRange)
                 else:
                     return None
         return net

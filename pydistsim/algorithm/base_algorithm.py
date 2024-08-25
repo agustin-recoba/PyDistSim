@@ -113,11 +113,11 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
         super().__init__()
         self.simulation: "Simulation" = simulation
         self.name = self.__class__.__name__
-        logger.debug("Instance of {} class has been initialized.", self.name)
+        logger.trace("Instance of {} class has been initialized.", self.name)
 
         for required_param in self.required_params:
             if required_param not in list(kwargs.keys()):
-                raise AlgorithmException("Missing required param.")
+                raise AlgorithmException(f"Missing required param {required_param} for algorithm {self.name}.")
 
         # set default params
         for dp, val in list(self.default_params.items()):
@@ -171,7 +171,7 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
             if issubclass(restriction, CheckableRestriction):
                 logger.debug("Checking restriction {}.", restriction.__name__)
                 if not restriction.check(self.network):
-                    raise AlgorithmException(f"Restriction {restriction.__name__} not satisfied.")
+                    raise AlgorithmException(f"Restriction {restriction.__name__} not satisfied for this network.")
 
     def apply_restrictions(self):
         """
@@ -180,6 +180,12 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
         for restriction in self.algorithm_restrictions:
             if issubclass(restriction, ApplicableRestriction):
                 restriction.apply(self.network)
+
+    def reset(self):
+        """
+        Reset the algorithm to its initial state.
+        """
+        ...
 
 
 class AlgorithmException(Exception):

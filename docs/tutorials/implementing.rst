@@ -16,8 +16,32 @@ In order to implement a distributed algorithm, the class must fulfill these requ
 .. code-block:: python
 
     @Status.IDLE
-    def receive(self, node, message):
-        ...
+    def receive(self, node: NodeAccess, message: Message):
+        if is_my_favorite_neighbor(message.source):
+            # Send message
+            self.send(
+                node,
+                data='Hi! Wanna play?',
+                destination=message.source,
+                header="PLAY INVITATION",
+            )
+            # Remind myself to send the message again in 10 simulation seconds
+            self.set_alarm(
+                node,
+                time=10,
+            )
+            # Change my status to WAITING
+            self.status = self.Status.WAITING
+        else:
+            # Ignore the message, I don't like this guy
+            node.memory['SPAM_COUNT'] += 1
+
+
+Here, ``self`` is the instance of the algorithm class, ``node`` is the node that is executing the action and ``message`` is the
+message that triggered the action. You would use the node to access the node's :attr:`status` and :attr:`memory`, the
+message to access the message's ``data``, ``header`` and ``source``; and ``self`` to access the algorithm's interfaces for
+sending messages and setting alarms.
+
 
 .. note::
     To help the programmer, there is a special action :attr:`Actions.default` which will be called if the action was

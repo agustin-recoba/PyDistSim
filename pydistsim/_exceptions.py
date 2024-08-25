@@ -47,6 +47,6 @@ class SimulationException(PyDistSimException):
         ALGORITHM = (
             "Algorithms must be in tuple (AlgorithmClass,)"
             " or in form: ((AlgorithmClass, params_dict),)."
-            "AlgorithmClass should be subclass of Algorithm"
+            "AlgorithmClass should be subclass of BaseAlgorithm"
         )
-        ALGORITHM_NOT_FOUND = "Algorithm not found in network."
+        ALGORITHM_NOT_FOUND = "Algorithm not found in simulation. Please make sure it is added to the simulation."

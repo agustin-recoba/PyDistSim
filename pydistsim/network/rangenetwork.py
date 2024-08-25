@@ -245,7 +245,7 @@ class RangeNetworkMixin(with_typehint(Network)):
         for node in self.nodes_sorted():
             self.remove_node(node, skip_check=True)
             self.add_node(node)
-        logger.warning("All nodes are moved into new environment.")
+        logger.debug("All nodes are moved into new environment.")
 
     def validate_params(self, params: dict):
         super().validate_params(params)
@@ -303,7 +303,7 @@ class RangeNetworkMixin(with_typehint(Network)):
             # variable step_factor for step size for over/undershoot cases
             if len(steps) > 2 and sign(steps[-2]) != sign(steps[-1]):
                 step_factor /= 2
-        logger.debug("Modified degree to {}", self.avg_degree())
+        logger.trace("Modified degree to {}", self.avg_degree())
 
 
 class RangeNetwork(RangeNetworkMixin, Network):
