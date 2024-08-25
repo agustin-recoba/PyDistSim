@@ -154,6 +154,9 @@ class Simulation(ObserverManagerMixin):
         logger.debug("Resetting simulation.")
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self._network.reset()
+        if self._algorithms:
+            for algorithm in self._algorithms:
+                algorithm.reset()
 
     def is_halted(self):
         """

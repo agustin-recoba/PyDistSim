@@ -181,6 +181,12 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
             if issubclass(restriction, ApplicableRestriction):
                 restriction.apply(self.network)
 
+    def reset(self):
+        """
+        Reset the algorithm to its initial state.
+        """
+        ...
+
 
 class AlgorithmException(Exception):
     pass

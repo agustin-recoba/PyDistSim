@@ -366,6 +366,11 @@ class NodeAlgorithm(BaseAlgorithm):
 
         logger.error(f"Method {self.name}.{action} not implemented for status {node.status}.")
 
+    def reset(self):
+        super().reset()
+        for node in self.network.nodes():
+            self.NODE_ACCESS_TYPE.clear_from_memoization(node)
+
     ### Metaclass methods ###
 
     def __configure_class__(clsname: str, bases: tuple[type], dct: dict):

@@ -198,6 +198,10 @@ class NodeAccess(_NodeWrapper):
         cls.__wrapped_nodes__[node] = super().__new__(cls, *args, **configs)
         return cls.__wrapped_nodes__[node]
 
+    @classmethod
+    def clear_from_memoization(cls, node: "Node"):
+        cls.__wrapped_nodes__.pop(node, None)
+
 
 class SensorNodeAccess(NodeAccess):
     accessible_get = (
