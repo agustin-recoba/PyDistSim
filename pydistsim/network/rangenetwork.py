@@ -236,7 +236,6 @@ class RangeNetworkMixin(with_typehint(Network)):
         :param v_of_edge: The target node of the edge.
         :param attr: Additional attributes to be assigned to the edge.
         """
-        raise NotImplementedError("Manual edge addition is not recommended for RangeNetwork.")
         logger.warning("Edges are auto-calculated from rangeType and commRange")
         super().add_edge(u_of_edge, v_of_edge, **attr)
 
@@ -246,7 +245,7 @@ class RangeNetworkMixin(with_typehint(Network)):
         for node in self.nodes_sorted():
             self.remove_node(node, skip_check=True)
             self.add_node(node)
-        logger.warning("All nodes are moved into new environment.")
+        logger.debug("All nodes are moved into new environment.")
 
     def validate_params(self, params: dict):
         super().validate_params(params)
