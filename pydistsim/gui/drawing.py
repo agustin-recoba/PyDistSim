@@ -1,5 +1,6 @@
 """Drawing functions for visualizing the simulation."""
 
+import math
 from enum import StrEnum
 from functools import reduce
 from typing import TYPE_CHECKING
@@ -52,27 +53,21 @@ MESSAGE_SHAPE_ZORDER = 3
 MESSAGE_ANNOTATION_ZORDER = 4
 
 
-def __get_message_positions(source, destination, net: "NetworkType", direction: MessageType) -> tuple[float, float]:
+def __get_message_positions_and_orientation(
+    source, destination, net: "NetworkType", direction: MessageType
+) -> tuple[float, float, float]:
     xd, yd = net.pos[destination]
-    try:
-        xs, ys = net.pos[source]
-    except KeyError:
-        return (xd, yd)
-    x = (xs + xd) / 2.0  # middle point
-    y = (ys + yd) / 2.0
+    xs, ys = net.pos[source]
+
+    angle_in_rads = -math.pi / 2 + math.atan2(yd - ys, xd - xs)
+
+    x = y = None
     if direction == MessageType.OUT:
-        x = (xs + x) / 2.0  # one quarter from source
-        y = (ys + y) / 2.0
-        x = (xs + x) / 2.0  # one eighth from source
-        y = (ys + y) / 2.0
+        offset = 1 / 6
     elif direction == MessageType.IN:
-        x = (xd + x) / 2.0  # one quarter from destination
-        y = (yd + y) / 2.0
-        x = (xd + x) / 2.0  # one eighth from destination
-        y = (yd + y) / 2.0
+        offset = 7 / 8
     elif direction == MessageType.TRANSIT:
-        x = (xd + x) / 2.0  # one quarter from destination
-        y = (yd + y) / 2.0
+        offset = 1 / 3
     elif direction == MessageType.LOST:
         offset_distance = 10
 
@@ -90,7 +85,12 @@ def __get_message_positions(source, destination, net: "NetworkType", direction: 
             slope_perpendicular = -1 / slope
             x = xm + offset_distance / (slope_perpendicular**2 + 1) ** 0.5
             y = ym + offset_distance / (slope_perpendicular**2 + 1) ** 0.5 * slope_perpendicular
-    return (x, y)
+
+    if x is None:
+        x = xs + (xd - xs) * offset
+        y = ys + (yd - ys) * offset
+
+    return x, y, angle_in_rads
 
 
 def __draw_tree(treeKey: str, net: "NetworkType", axes: Axes):
@@ -217,8 +217,8 @@ def __draw_edges(net, axes):
 
 def __draw_messages(net: "NetworkType", axes: Axes, message_radius: float):
     MESSAGE_LINE_WIDTH = 1.0
-    kwargs = {
-        "numVertices": 4,
+    patch_kwargs = {
+        "numVertices": 3,
         "radius": message_radius,
         "lw": MESSAGE_LINE_WIDTH,
         "ls": "solid",
@@ -270,10 +270,11 @@ def __draw_messages(net: "NetworkType", axes: Axes, message_radius: float):
 
         for msg_type in msg_dict:
             for (src, dst), count in msg_dict[msg_type].items():
-                x, y = __get_message_positions(src, dst, net, msg_type)
+                x, y, rads_orientation = __get_message_positions_and_orientation(src, dst, net, msg_type)
                 c = RegularPolygon(
                     (x, y),
-                    **kwargs,
+                    orientation=rads_orientation,
+                    **patch_kwargs,
                     fc=MESSAGE_COLOR[msg_type],
                     label=msg_type,
                 )
@@ -345,7 +346,8 @@ def draw_current_state(
 
     axes.imshow(net.environment.image, vmin=0, cmap="binary_r", origin="lower")
 
-    __draw_tree(treeKey, net, axes)
+    if treeKey:
+        __draw_tree(treeKey, net, axes)
     __draw_edges(net, axes)
     node_colors = __create_and_get_color_labels(
         net, algorithm=currentAlgorithm, figure=axes.figure, show_messages=show_messages
@@ -353,7 +355,7 @@ def draw_current_state(
 
     __draw_nodes(net, axes, node_colors, radius_default=node_radius)
     if show_messages:
-        __draw_messages(net, axes, message_radius=node_radius / 2)
+        __draw_messages(net, axes, message_radius=3 * node_radius / 4)
     __draw_labels(net, node_radius, dpi)
 
     step_text = " (step %d)" % sim.algorithmState["step"] if isinstance(currentAlgorithm, NodeAlgorithm) else ""
@@ -374,6 +376,7 @@ def create_animation(
     dpi: int = 100,
     node_radius: int = 10,
     milliseconds_per_frame: int = 200,
+    frame_limit: int = 2000,
 ) -> animation.FuncAnimation:
     """
     Create an animation of the simulation.
@@ -405,6 +408,7 @@ def create_animation(
     :param dpi: dots per inch
     :param node_radius: radius of nodes
     :param milliseconds_per_frame: milliseconds per frame
+    :param frame_limit: limit of frames, default is 2000
     :return: animation object
     """
 
@@ -428,7 +432,9 @@ def create_animation(
         def frame_count():
             count = 0
             while True:
-                if not sim.is_halted() or count == 0:
+                if frame_limit and count >= frame_limit:
+                    break
+                elif not sim.is_halted() or count == 0:
                     yield count
                     count += 1
                 else:
