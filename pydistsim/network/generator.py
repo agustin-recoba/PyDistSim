@@ -351,6 +351,7 @@ class NetworkGenerator:
     def generate_hypercube_network(
         n: int | None = None,
         dimension: int | None = None,
+        use_binary_labels: bool = True,
         network_type: type[T] = BidirectionalNetwork,
     ) -> T:
         """
@@ -455,7 +456,8 @@ class NetworkGenerator:
 
             # Add the node
             net.add_node(node, pos=final_pos)
-            net.labels[node] = node.memory[LABEL_KEY]
+            if use_binary_labels:
+                net.labels[node] = node.memory[LABEL_KEY]
 
             # Remove the label from the memory as it represents some knowledge of the network
             del node.memory[LABEL_KEY]

@@ -327,3 +327,6 @@ class Node(ObserverManagerMixin):
                 }
             )
         return dic
+
+    def unbox(self):
+        return self

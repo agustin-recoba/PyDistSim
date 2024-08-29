@@ -46,6 +46,15 @@ Look at `the animation notebook`_.
 
 .. _the animation notebook: ../notebooks/animation.ipynb
 
+Visualize the construction of a tree
+------------------------------------
+
+This tutorial demonstrates how to visualize the construction of a tree in a distributed algorithm. Check out
+`the tree construction notebook`_.
+
+.. _the tree construction notebook: ../notebooks/tree_construction_viz.ipynb
+
+
 Algorithm benchmarking
 ======================
 

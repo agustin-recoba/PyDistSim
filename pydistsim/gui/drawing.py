@@ -3,7 +3,7 @@
 import math
 from enum import StrEnum
 from functools import reduce
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 import matplotlib.pyplot as plt
 from matplotlib import animation
@@ -13,6 +13,7 @@ from matplotlib.figure import Figure
 from matplotlib.patches import Circle, RegularPolygon
 from networkx import draw_networkx_edges, draw_networkx_labels
 
+from pydistsim._exceptions import SimulationException
 from pydistsim.algorithm.node_algorithm import NodeAlgorithm
 from pydistsim.simulation import Simulation
 
@@ -93,25 +94,26 @@ def __get_message_positions_and_orientation(
     return x, y, angle_in_rads
 
 
-def __draw_tree(treeKey: str, net: "NetworkType", axes: Axes):
+def __draw_tree(tree_key: str, net: "NetworkType", axes: Axes):
     """
     Show tree representation of network.
 
     Attributes:
-        treeKey (str):
+        tree_key (str):
             key in nodes memory (dictionary) where tree data is stored
             storage format can be a list off tree neighbors or a dict:
                 {'parent': parent_node,
                     'children': [child_node1, child_node2 ...]}
     """
-    treeNet = net.get_tree_net(treeKey)
-    if treeNet:
+    (nodes, edges) = net.get_tree_net(tree_key, return_subnetwork=False)
+    if nodes:
         draw_networkx_edges(
-            treeNet,
-            treeNet.pos,
-            treeNet.edges(),
-            width=1.8,
-            alpha=EDGES_ALPHA,
+            net,
+            net.pos,
+            edges,
+            edge_color="tab:brown",
+            width=2.5,
+            alpha=EDGES_ALPHA + 0.2,
             ax=axes,
         )
 
@@ -191,14 +193,14 @@ def __create_and_get_color_labels(net, algorithm=None, subclusters=None, figure:
                         ["Inbox", "Outbox", "Transit", "Lost"],
                         loc="center right",
                         ncol=1,
-                        bbox_to_anchor=(1, 0.2),
+                        bbox_to_anchor=(1, 0.1),
                         title="Messages:",
                     )
                 plt.subplots_adjust(left=0.1, bottom=0.1, right=0.99)
 
         for n in net.nodes():
             if n.status == "" or n.status not in list(color_map.keys()):
-                node_colors[n] = "r"
+                node_colors[n] = "k"
             else:
                 node_colors[n] = color_map[n.status]
     elif subclusters:
@@ -211,8 +213,8 @@ def __create_and_get_color_labels(net, algorithm=None, subclusters=None, figure:
     return node_colors
 
 
-def __draw_edges(net, axes):
-    draw_networkx_edges(net, net.pos, alpha=EDGES_ALPHA, edgelist=None, ax=axes)
+def __draw_edges(net, edges, axes):
+    draw_networkx_edges(net, net.pos, alpha=EDGES_ALPHA, edgelist=edges, ax=axes)
 
 
 def __draw_messages(net: "NetworkType", axes: Axes, message_radius: float):
@@ -313,31 +315,58 @@ def __draw_labels(net: "NetworkType", node_size, dpi):
 
 
 def draw_current_state(
-    sim: "Simulation",
+    sim: Union["Simulation", "NetworkType"],
     axes: Axes = None,
     clear: bool = True,
-    treeKey: str = None,
+    tree_key: str = None,
     dpi: int = 100,
     node_radius: int = 10,
-    show_messages=True,
+    node_positions: dict = None,
+    node_colors: dict = None,
+    edge_filter: list = None,
+    show_messages: bool = True,
+    show_labels: bool = True,
+    node_labels: dict = None,
 ):
     """
-    Function to draw the current state of the simulation.
+    Function to draw the current state of the simulation or network. This function is used to visualize the network
+    and the messages in the network.
     Automatically determines the current algorithm and draws the network accordingly. This includes a mapping of
     node colors to the status of the nodes, as well as the messages in the network.
 
-    :param sim: Simulation object
+    :param sim: Simulation or Network object
     :param axes: matplotlib axes object
     :param clear: boolean to clear the axes before drawing
-    :param treeKey: key in nodes memory (dictionary) where tree data is stored
+    :param tree_key: key in nodes memory (dictionary) where tree data is stored
     :param dpi: dots per inch
     :param node_radius: radius of nodes
+    :param node_positions: dictionary of node positions
+    :param node_colors: dictionary of node colors
+    :param edge_filter: list of edges to draw
     :param show_messages: boolean to show messages in the network
+    :param show_labels: boolean to show labels of nodes
+    :param node_labels: dictionary of node labels
     :return: matplotlib figure object
     """
 
-    net = sim.network
-    currentAlgorithm = sim.get_current_algorithm()
+    if isinstance(sim, Simulation):
+        net = sim.network
+
+        try:
+            currentAlgorithm = sim.get_current_algorithm()
+        except SimulationException:
+            currentAlgorithm = None
+    else:
+        net = sim
+        currentAlgorithm = None
+
+    if node_positions:
+        pos_aux = net.pos
+        net.pos = node_positions
+
+    if node_labels:
+        aux_labels = net.labels
+        net.labels = node_labels
 
     if axes is None:
         with plt.ioff():
@@ -349,17 +378,22 @@ def draw_current_state(
 
     axes.imshow(net.environment.image, vmin=0, cmap="binary_r", origin="lower")
 
-    if treeKey:
-        __draw_tree(treeKey, net, axes)
-    __draw_edges(net, axes)
-    node_colors = __create_and_get_color_labels(
-        net, algorithm=currentAlgorithm, figure=axes.figure, show_messages=show_messages
-    )
+    if tree_key:
+        __draw_tree(tree_key, net, axes)
+
+    __draw_edges(net, edge_filter, axes)
+
+    if not node_colors:
+        node_colors = __create_and_get_color_labels(
+            net, algorithm=currentAlgorithm, figure=axes.figure, show_messages=show_messages
+        )
 
     __draw_nodes(net, axes, node_colors, radius_default=node_radius)
     if show_messages:
         __draw_messages(net, axes, message_radius=3 * node_radius / 4)
-    __draw_labels(net, node_radius, dpi)
+
+    if show_labels:
+        __draw_labels(net, node_radius, dpi)
 
     step_text = " (step %d)" % sim.algorithmState["step"] if isinstance(currentAlgorithm, NodeAlgorithm) else ""
     axes.set_title((currentAlgorithm.name if currentAlgorithm else "") + step_text)
@@ -369,12 +403,18 @@ def draw_current_state(
     axes.figure.tight_layout()
     axes.figure.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=None)
 
+    if node_positions:
+        net.pos = pos_aux
+
+    if node_labels:
+        net.labels = aux_labels
+
     return axes.figure
 
 
 def create_animation(
     sim: "Simulation",
-    treeKey: str = None,
+    tree_key: str = None,
     figsize=None,
     dpi: int = 100,
     node_radius: int = 10,
@@ -407,7 +447,7 @@ def create_animation(
         anim.save("flood.mp4", writer=moviewriter)
 
     :param sim: Simulation object
-    :param treeKey: key in nodes memory (dictionary) where tree data is stored
+    :param tree_key: key in nodes memory (dictionary) where tree data is stored
     :param dpi: dots per inch
     :param node_radius: radius of nodes
     :param milliseconds_per_frame: milliseconds per frame
@@ -424,7 +464,7 @@ def create_animation(
                 sim.reset()
 
             ax.clear()
-            draw_current_state(sim, ax, treeKey=treeKey, dpi=dpi, node_radius=node_radius)
+            draw_current_state(sim, ax, tree_key=tree_key, dpi=dpi, node_radius=node_radius)
             sim.run(1)
 
             if sim.is_halted():

@@ -1,105 +1,60 @@
 """
 Set of utils that operate on network nodes when they have defined tree
-in their memory under treeKey key.
-treeKey -- key in node memory (dictionary) where parent and
+in their memory under tree_key key.
+tree_key -- key in node memory (dictionary) where parent and
            children data is stored in format:
            {'parent': parent_node,
             'children': [child_node1, child_node2 ...]}
 """
 
+from typing import TYPE_CHECKING, Union
 
-def get_root_node(net, treeKey="mst"):
+from pydistsim.algorithm.node_wrapper import NeighborLabel, NodeAccess
+
+if TYPE_CHECKING:
+    from pydistsim.network.network import NetworkType
+    from pydistsim.network.node import Node
+
+NodeType = Union["Node", "NodeAccess", "NeighborLabel"]
+
+
+def get_root_node(net: "NetworkType", tree_key: str = "mst") -> NodeType:
     """
     Return root node in network tree.
     """
-    check_tree_key(net, treeKey)
+    check_tree_key(net, tree_key)
 
     node = net.nodes_sorted()[0]
-    while node.memory[treeKey]["parent"] and node.memory[treeKey]["parent"] in net.nodes():
-        node = node.memory[treeKey]["parent"]
+    while node.memory[tree_key]["parent"] and node.memory[tree_key]["parent"].unbox() in net.nodes():
+        node = node.memory[tree_key]["parent"].unbox()
     return node
 
 
-def change_root_node(net, root, treeKey="mst"):
-    """
-    Change root node by altering nodes' memory.
-    """
-    check_tree_key(net, treeKey)
-    curr_root = get_root_node(net, treeKey)
-    # flip all edges on a path from current root to new root
-    p = get_path(curr_root, root, treeKey)
-    for i in range(len(p) - 1):
-        _flip_root_edge(p[i], p[i + 1], treeKey)
-
-
-def _flip_root_edge(root, child, treeKey):
-    """
-    Flips the edge orientation between root and child.
-    """
-    if root.memory[treeKey]["parent"]:
-        raise NodeNotRoot(treeKey, root)
-    root.memory[treeKey]["parent"] = child
-    root.memory[treeKey]["children"].remove(child)
-    child.memory[treeKey]["parent"] = None
-    child.memory[treeKey]["children"].append(root)
-
-
-def get_path(n1, n2, treeKey):
-    """
-    Return path between nodes n1 and n2.
-    """
-    nodesToCheck = [n1]
-    checkedNodes = []
-    tree = {}
-    path = []
-    while nodesToCheck:
-        node = nodesToCheck.pop()
-        checkedNodes.append(node)
-        if node == n2:
-            path.insert(0, n2)
-            break
-        parent = node.memory[treeKey]["parent"]
-        children = node.memory[treeKey]["children"]
-        if parent and parent not in checkedNodes:
-            nodesToCheck.append(parent)
-            tree[parent] = node
-        for child in children:
-            if child not in checkedNodes:
-                nodesToCheck.append(child)
-                tree[child] = node
-    if path:
-        next = n2  # @ReservedAssignment
-        while next != n1:
-            next = tree[next]  # @ReservedAssignment
-            path.insert(0, next)
-    return path
-
-
-def check_tree_key(net, treeKey):
+def check_tree_key(net: "NetworkType", tree_key: str):
     if len(net.nodes()) == 0:
         raise TreeNetworkException("Network has no nodes.")
 
     for node in net.nodes():
-        if treeKey not in node.memory:
-            raise MissingTreeKey(treeKey)
+        if tree_key not in node.memory:
+            raise Missingtree_key(tree_key)
 
 
 class TreeNetworkException(Exception):
     pass
 
 
-class MissingTreeKey(TreeNetworkException):
-    def __init__(self, treeKey):
-        self.treeKey = treeKey
+class Missingtree_key(TreeNetworkException):
+    def __init__(self, tree_key):
+        self.tree_key = tree_key
 
     def __str__(self):
-        return "At least one node is missing '%s' key in memory." % self.treeKey
+        return "At least one node is missing '%s' key in memory." % self.tree_key
 
 
 class NodeNotRoot(TreeNetworkException):
-    def __init__(self, treeKey, node):
-        self.treeKey = treeKey
+    def __init__(self, tree_key, node):
+        self.tree_key = tree_key
         self.node = node
 
     def __str__(self):
-        return "Node with id=%d is is not root in tree defined by '%s' key in memory." % (self.node.id, self.treeKey)
+        return "Node with id=%d is is not root in tree defined by '%s' key in memory." % (self.node.id, self.tree_key)

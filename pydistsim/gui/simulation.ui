@@ -202,7 +202,7 @@
             <property name="checked">
              <bool>true</bool>
             </property>
-            <widget class="QLineEdit" name="treeKey">
+            <widget class="QLineEdit" name="tree_key">
              <property name="geometry">
               <rect>
                <x>42</x>
@@ -662,7 +662,7 @@
  </widget>
  <tabstops>
   <tabstop>stepSize</tabstop>
-  <tabstop>treeKey</tabstop>
+  <tabstop>tree_key</tabstop>
  </tabstops>
  <resources>
   <include location="icons.qrc"/>
