@@ -414,12 +414,11 @@ def draw_current_state(
 
 def create_animation(
     sim: "Simulation",
-    tree_key: str = None,
     figsize=None,
     dpi: int = 100,
-    node_radius: int = 10,
     milliseconds_per_frame: int = 200,
     frame_limit: int = 2000,
+    **kwargs,
 ) -> animation.FuncAnimation:
     """
     Create an animation of the simulation.
@@ -447,11 +446,11 @@ def create_animation(
         anim.save("flood.mp4", writer=moviewriter)
 
     :param sim: Simulation object
-    :param tree_key: key in nodes memory (dictionary) where tree data is stored
+    :param figsize: figure size
     :param dpi: dots per inch
-    :param node_radius: radius of nodes
     :param milliseconds_per_frame: milliseconds per frame
     :param frame_limit: limit of frames, default is 2000
+    :param kwargs: additional keyword arguments to pass to the draw_current_state function
     :return: animation object
     """
 
@@ -464,7 +463,7 @@ def create_animation(
                 sim.reset()
 
             ax.clear()
-            draw_current_state(sim, ax, tree_key=tree_key, dpi=dpi, node_radius=node_radius)
+            draw_current_state(sim, ax, dpi=dpi, **kwargs)
             sim.run(1)
 
             if sim.is_halted():
