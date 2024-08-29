@@ -369,7 +369,7 @@ class NodeAlgorithm(BaseAlgorithm):
     def reset(self):
         super().reset()
         for node in self.network.nodes():
-            self.NODE_ACCESS_TYPE.clear_from_memoization(node)
+            self.NODE_ACCESS_TYPE._clear_from_memoization(node)
 
     ### Metaclass methods ###
 

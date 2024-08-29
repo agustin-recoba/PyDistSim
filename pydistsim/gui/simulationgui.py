@@ -108,7 +108,7 @@ class SimulationGui(QMainWindow):
         self.connect(self.ui.showLabels, SIGNAL("stateChanged(int)"), self.refresh_visibility)
         self.connect(self.ui.redrawNetworkButton, SIGNAL("clicked(bool)"), self.redraw)
         self.connect(self.ui.treeGroupBox, SIGNAL("toggled(bool)"), self.refresh_visibility)
-        self.connect(self.ui.treeKey, SIGNAL("textEdited(QString)"), self.redraw)
+        self.connect(self.ui.tree_key, SIGNAL("textEdited(QString)"), self.redraw)
         self.connect(self.ui.propagationError, SIGNAL("toggled(bool)"), self.refresh_visibility)
         self.connect(self.ui.locKey, SIGNAL("textEdited(QString)"), self.redraw)
         # callbacks
@@ -147,7 +147,7 @@ class SimulationGui(QMainWindow):
 
     def draw_network(self):
         draw_current_state(
-            self.sim, self.axes, clear=True, treeKey=self.ui.treeKey.text(), locKey=self.ui.locKey.text()
+            self.sim, self.axes, clear=True, tree_key=self.ui.tree_key.text(), locKey=self.ui.locKey.text()
         )
 
     def refresh_visibility(self):

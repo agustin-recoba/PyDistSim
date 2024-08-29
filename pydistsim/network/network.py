@@ -18,6 +18,7 @@ from numpy.random import rand
 
 from pydistsim._exceptions import MessageUndeliverableException, NetworkException
 from pydistsim.conf import settings
+from pydistsim.gui import drawing as draw
 from pydistsim.logging import logger
 from pydistsim.network.behavior import ExampleProperties, NetworkBehaviorModel
 from pydistsim.network.environment import Environment
@@ -281,38 +282,44 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
         return self.__deepcopy__({}, nodes, edges)
 
-    def get_tree_net(self, treeKey):
+    def get_tree_net(self, tree_key, return_subnetwork=True):
         """
         Returns a new network with edges that are not in a tree removed.
 
-        The tree is defined in the nodes' memory under the specified treeKey. The method iterates over all nodes in the network and checks if the treeKey is present in their memory. If it is, it retrieves the tree neighbors or children and adds the corresponding edges to the tree_edges_ids list. It also adds the tree nodes to the tree_nodes list.
+        The tree is defined in the nodes' memory under the specified tree_key. The method iterates over all nodes in the network and checks if the tree_key is present in their memory. If it is, it retrieves the tree neighbors or children and adds the corresponding edges to the tree_edges_ids list. It also adds the tree nodes to the tree_nodes list.
 
         After iterating over all nodes, a subnetwork is created using the tree_nodes. Then, the method removes any edges from the subnetwork that are not present in the tree_edges_ids list.
 
         Finally, the resulting subnetwork, representing the tree, is returned.
 
-        :param treeKey: The key in the nodes' memory that defines the tree. It can be a list of tree neighbors or a dictionary with 'parent' (node) and 'children' (list) keys.
-        :type treeKey: str
+        :param tree_key: The key in the nodes' memory that defines the tree. It can be a list of tree neighbors or a dictionary with 'parent' (node) and 'children' (list) keys.
+        :type tree_key: str
         :return: A new network object with only the edges that are part of the tree.
+        :param return_subnetwork: Whether to return a new network or the sets of nodes and edges. Defaults to True.
+        :type return_subnetwork: bool, optional
         :rtype: NetworkMixin
         """
         tree_edges = []
         tree_nodes = []
         for node in self.nodes():
             neighbors_in_tree = []
-            if treeKey not in node.memory:
+            if tree_key not in node.memory:
                 continue
-            if isinstance(node.memory[treeKey], list):
-                neighbors_in_tree = node.memory[treeKey]
-            elif isinstance(node.memory[treeKey], dict) and "children" in node.memory[treeKey]:
-                neighbors_in_tree += node.memory[treeKey]["children"]
-                if "parent" in node.memory[treeKey] and node.memory[treeKey]["parent"] is not None:
-                    neighbors_in_tree.append(node.memory[treeKey]["parent"])
+            if isinstance(node.memory[tree_key], list):
+                neighbors_in_tree = node.memory[tree_key]
+            elif isinstance(node.memory[tree_key], dict):
+                if "children" in node.memory[tree_key]:
+                    neighbors_in_tree += [n.unbox() for n in node.memory[tree_key]["children"]]
+                if "parent" in node.memory[tree_key] and node.memory[tree_key]["parent"] is not None:
+                    neighbors_in_tree.append(node.memory[tree_key]["parent"].unbox())
 
             tree_edges.extend([(node, neighbor) for neighbor in neighbors_in_tree if neighbor in self.neighbors(node)])
             tree_nodes.extend(neighbor for neighbor in neighbors_in_tree if neighbor in self.neighbors(node))
             if neighbors_in_tree:
                 tree_nodes.append(node)
+
+        if not return_subnetwork:
+            return tree_nodes, tree_edges
 
         treeNet = self.subnetwork(tree_nodes, tree_edges)
 
@@ -542,6 +549,14 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
     #### Visualization methods ####
 
     def show(self, *args, **kwargs):
+        """
+        Get and show the figure object representing the network visualization.
+
+        :param args: Additional positional arguments to pass to the draw function.
+        :param kwargs: Additional keyword arguments to pass to the draw function.
+        :return: The figure object representing the network visualization.
+        :rtype: matplotlib.figure.Figure
+        """
         fig = self.get_fig(*args, **kwargs)
         fig.show()
         return fig
@@ -549,76 +564,20 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
     def savefig(self, fname="network.png", figkwargs={}, *args, **kwargs):
         self.get_fig(*args, **kwargs).savefig(fname, **figkwargs)
 
-    def get_fig(
-        self,
-        positions=None,
-        edgelist=None,
-        nodeColor="r",
-        show_labels=True,
-        labels=None,
-        dpi=100,
-        node_size=30,
-    ):
+    def get_fig(self, *args, **kwargs):
         """
         Get the figure object representing the network visualization.
 
-        :param positions: A dictionary mapping node IDs to their positions in the network.
-        :type positions: dict, optional
-        :param edgelist: A list of edges to be drawn in the network.
-        :type edgelist: list, optional
-        :param nodeColor: The color of the nodes in the network.
-        :type nodeColor: str, optional
-        :param show_labels: Whether to show labels for the nodes.
-        :type show_labels: bool, optional
-        :param labels: A dictionary mapping node IDs to their labels.
-        :type labels: dict, optional
-        :param dpi: The resolution of the figure in dots per inch.
-        :type dpi: int, optional
-        :param node_size: The size of the nodes in the network.
-        :type node_size: int, optional
+        :param args: Additional positional arguments to pass to the draw function.
+        :param kwargs: Additional keyword arguments to pass to the draw function.
         :return: The figure object representing the network visualization.
         :rtype: matplotlib.figure.Figure
         """
-        try:
-            from matplotlib import pyplot as plt
-        except ImportError as e:
-            raise ImportError("Matplotlib required for show()") from e
-
-        # TODO: environment when positions defined
-        fig_size = tuple(array(self._environment.image.shape) / dpi)
-
-        # figsize in inches
-        # default matplotlibrc is dpi=80 for plt and dpi=100 for savefig
-        fig = plt.figure(figsize=fig_size, dpi=dpi, frameon=False)
-        plt.imshow(self._environment.image, cmap="binary_r", vmin=0, origin="lower")
-        if positions:
-            # truncate positions to [x, y], i.e. lose theta
-            for k, v in list(positions.items()):
-                positions[k] = v[:2]
-            pos = positions
-            net = self.subnetwork(list(pos.keys()))
-        else:
-            pos = self.pos
-            net = self
-        labels = labels or net.labels
-        draw_networkx_edges(net, pos, alpha=0.6, edgelist=edgelist)
-        draw_networkx_nodes(net, pos, node_size=node_size, node_color=nodeColor, cmap="YlOrRd")
-        if show_labels:
-            label_pos = {}
-            from math import sqrt
-
-            label_delta = sqrt(node_size * 0.6) * dpi / 100
-            for n in net.nodes():
-                label_pos[n] = pos[n].copy() + label_delta
-            draw_networkx_labels(
-                net,
-                label_pos,
-                labels=labels,
-                horizontalalignment="left",
-                verticalalignment="bottom",
-            )
-        # plt.axis('off')
-        return fig
+        return draw.draw_current_state(
+            self,
+            *args,
+            **kwargs,
+        )
 
     def get_size(self):
         """Returns network width and height based on nodes positions."""

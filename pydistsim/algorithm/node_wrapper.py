@@ -199,7 +199,7 @@ class NodeAccess(_NodeWrapper):
         return cls.__wrapped_nodes__[node]
 
     @classmethod
-    def clear_from_memoization(cls, node: "Node"):
+    def _clear_from_memoization(cls, node: "Node"):
         cls.__wrapped_nodes__.pop(node, None)
 
 

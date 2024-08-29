@@ -117,10 +117,10 @@ class Ui_SimulationWindow:
         self.treeGroupBox.setCheckable(True)
         self.treeGroupBox.setChecked(True)
         self.treeGroupBox.setObjectName("treeGroupBox")
-        self.treeKey = QLineEdit(self.treeGroupBox)
-        self.treeKey.setGeometry(QRect(42, 20, 71, 20))
-        self.treeKey.setFrame(True)
-        self.treeKey.setObjectName("treeKey")
+        self.tree_key = QLineEdit(self.treeGroupBox)
+        self.tree_key.setGeometry(QRect(42, 20, 71, 20))
+        self.tree_key.setFrame(True)
+        self.tree_key.setObjectName("tree_key")
         self.label = QLabel(self.treeGroupBox)
         self.label.setGeometry(QRect(10, 22, 31, 16))
         self.label.setObjectName("label")
@@ -295,7 +295,7 @@ class Ui_SimulationWindow:
 
         self.retranslateUi(SimulationWindow)
         QMetaObject.connectSlotsByName(SimulationWindow)
-        SimulationWindow.setTabOrder(self.stepSize, self.treeKey)
+        SimulationWindow.setTabOrder(self.stepSize, self.tree_key)
 
     def retranslateUi(self, SimulationWindow):
         SimulationWindow.setWindowTitle(QApplication.translate("SimulationWindow", "PyDistSim Simulation", None))
@@ -317,7 +317,7 @@ class Ui_SimulationWindow:
             )
         )
         self.treeGroupBox.setTitle(QApplication.translate("SimulationWindow", "Tree", None))
-        self.treeKey.setText(QApplication.translate("SimulationWindow", "treeNeighbors", None))
+        self.tree_key.setText(QApplication.translate("SimulationWindow", "treeNeighbors", None))
         self.label.setText(QApplication.translate("SimulationWindow", "Key:", None))
         self.propagationError.setToolTip(
             QApplication.translate(

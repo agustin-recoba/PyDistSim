@@ -113,19 +113,19 @@ class TestDirectedNetwork(PyDistSimTestCase):
 
     def test_get_tree_net(self):
         """Test getting tree representation of the network."""
-        treeKey = "T_KEY"
+        tree_key = "T_KEY"
         keepMemKey = "TEST_KEEP_MEM"
 
-        self.node1.memory[treeKey] = {
+        self.node1.memory[tree_key] = {
             "parent": None,
             "children": [self.node2, self.node3],
         }
-        self.node2.memory[treeKey] = {"parent": self.node1, "children": []}
+        self.node2.memory[tree_key] = {"parent": self.node1, "children": []}
         self.node2.memory[keepMemKey] = {"test": 1}
-        self.node3.memory[treeKey] = {"parent": self.node1, "children": []}
-        self.node4.memory[treeKey] = {"parent": None, "children": []}
+        self.node3.memory[tree_key] = {"parent": self.node1, "children": []}
+        self.node4.memory[tree_key] = {"parent": None, "children": []}
 
-        tree = self.net.get_tree_net(treeKey)
+        tree = self.net.get_tree_net(tree_key)
 
         assert isinstance(tree, self.nw_class)
         assert len(tree.nodes()) == 3
@@ -134,7 +134,7 @@ class TestDirectedNetwork(PyDistSimTestCase):
         assert (node.network == tree for node in tree.nodes())
 
         assert keepMemKey in self.node2.memory, "Memory should be kept"
-        check_tree_key(self.net, treeKey)
+        check_tree_key(self.net, tree_key)
 
     @pytest.mark.filterwarnings("ignore:No data for colormapping.*")
     def test_get_fig_runs(self):
