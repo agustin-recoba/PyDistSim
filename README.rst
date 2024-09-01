@@ -44,7 +44,7 @@ PyDistSim is being developed on top of `NetworkX <https://github.com/networkx/ne
 Installation
 ------------
 
-For installation instructions please visit `the documentation <https://pydistsim.readthedocs.io/en/main/install/installation.html>`_.
+For installation instructions please visit `the documentation <https://pydistsim.readthedocs.io/install/installation.html>`_.
 
 Literature
 ----------
