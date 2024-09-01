@@ -11,18 +11,30 @@ if TYPE_CHECKING:
 
 @dataclass(slots=True, frozen=True)
 class NetworkBehaviorModel:
-    "Behavioral properties for a network."
+    """
+    Behavioral properties for a network.
 
-    message_ordering: bool
+    :param message_ordering: Boolean indicating if messages should be ordered. Default is False.
+    :param message_loss_indicator: Function that returns a boolean indicating if a given message should be lost.
+    Default (None) means no message loss.
+    :param clock_increment: Function that returns the increment for the clock of a given node. Default (None) means
+    unitary clock increment (sync).
+    :param message_delay_indicator: Function that returns the amount of steps to delay a given message. Default (None)
+    means no message delay.
+    :param bounded_communication_delays: Boolean indicating if there is a predefined constant T such that the
+    communication delay of any message on any link is at most T. Default is False.
+    """
+
+    message_ordering: bool = False
     "Boolean indicating if messages should be ordered."
 
-    message_loss_indicator: Callable[["NetworkType", "Message"], bool] | None
+    message_loss_indicator: Callable[["NetworkType", "Message"], bool] | None = None
     "Function that returns a boolean indicating if a given message should be lost. None means no message loss."
 
-    clock_increment: Callable[["Node"], int] | None
+    clock_increment: Callable[["Node"], int] | None = None
     "Function that returns the increment for the clock of a given node. None means unitary clock increment (sync)."
 
-    message_delay_indicator: Callable[["NetworkType", "Message"], int] | None
+    message_delay_indicator: Callable[["NetworkType", "Message"], int] | None = None
     "Function that returns the amount of steps to delay a given message. None means no message delay."
 
     bounded_communication_delays: bool = False

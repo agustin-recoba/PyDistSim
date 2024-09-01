@@ -1,6 +1,7 @@
 """Drawing functions for visualizing the simulation."""
 
 import math
+from collections.abc import Callable
 from enum import StrEnum
 from functools import reduce
 from typing import TYPE_CHECKING, Union
@@ -11,10 +12,12 @@ from matplotlib.axes import Axes
 from matplotlib.collections import PatchCollection
 from matplotlib.figure import Figure
 from matplotlib.patches import Circle, RegularPolygon
-from networkx import draw_networkx_edges, draw_networkx_labels
+from networkx import draw_networkx_edges as __d_netx_edges
+from networkx import draw_networkx_labels as __d_netx_labels
 
 from pydistsim._exceptions import SimulationException
 from pydistsim.algorithm.node_algorithm import NodeAlgorithm
+from pydistsim.logging import logger
 from pydistsim.simulation import Simulation
 
 if TYPE_CHECKING:
@@ -70,7 +73,7 @@ def __get_message_positions_and_orientation(
     elif direction == MessageType.TRANSIT:
         offset = 1 / 3
     elif direction == MessageType.LOST:
-        offset_distance = 10
+        offset_distance = 10 * (-1 if angle_in_rads < 0 else 1)
 
         xm = (xs + xd) / 2.0
         ym = (ys + yd) / 2.0
@@ -107,7 +110,7 @@ def __draw_tree(tree_key: str, net: "NetworkType", axes: Axes):
     """
     (nodes, edges) = net.get_tree_net(tree_key, return_subnetwork=False)
     if nodes:
-        draw_networkx_edges(
+        __d_netx_edges(
             net,
             net.pos,
             edges,
@@ -214,7 +217,7 @@ def __create_and_get_color_labels(net, algorithm=None, subclusters=None, figure:
 
 
 def __draw_edges(net, edges, axes):
-    draw_networkx_edges(net, net.pos, alpha=EDGES_ALPHA, edgelist=edges, ax=axes)
+    __d_netx_edges(net, net.pos, alpha=EDGES_ALPHA, edgelist=edges, ax=axes)
 
 
 def __draw_messages(net: "NetworkType", axes: Axes, message_radius: float):
@@ -229,7 +232,7 @@ def __draw_messages(net: "NetworkType", axes: Axes, message_radius: float):
         "ec": "k",
     }
 
-    msgCircles = []
+    msg_artists = []
 
     message_collection = {
         node: {
@@ -239,12 +242,12 @@ def __draw_messages(net: "NetworkType", axes: Axes, message_radius: float):
             ],
             MessageType.IN: [[msg.source] for msg in node.inbox],
             MessageType.TRANSIT: [
-                [other_node for msg in net.get_transit_messages(node, other_node)]
+                [other_node for msg in net.get_transit_messages(node, other_node) if msg.source == node]
                 for other_node in net.out_neighbors(node)
                 if net.get_transit_messages(node, other_node)
             ],
             MessageType.LOST: [
-                [other_node for msg in net.get_lost_messages(node, other_node)]
+                [other_node for msg in net.get_lost_messages(node, other_node) if msg.source == node]
                 for other_node in net.out_neighbors(node)
                 if net.get_lost_messages(node, other_node)
             ],
@@ -276,24 +279,24 @@ def __draw_messages(net: "NetworkType", axes: Axes, message_radius: float):
                     continue  # Defensive check
 
                 x, y, rads_orientation = __get_message_positions_and_orientation(src, dst, net, msg_type)
-                c = RegularPolygon(
+                triangle_artist = RegularPolygon(
                     (x, y),
                     orientation=rads_orientation,
                     **patch_kwargs,
                     fc=MESSAGE_COLOR[msg_type],
                     label=msg_type,
                 )
-                l = axes.annotate(
+                axes.annotate(
                     f"{count}",
                     (x + 5, y + 5),
                     color="k",
                     fontsize=8,
                     zorder=MESSAGE_ANNOTATION_ZORDER,
                 )
-                msgCircles.append(c)
+                msg_artists.append(triangle_artist)
 
-    if msgCircles:
-        message_collection = PatchCollection(msgCircles, match_original=True)
+    if msg_artists:
+        message_collection = PatchCollection(msg_artists, match_original=True)
         message_collection.set_picker(3)
         axes.add_collection(message_collection)
 
@@ -305,7 +308,7 @@ def __draw_labels(net: "NetworkType", node_size, dpi):
     label_delta = 1.5 * sqrt(node_size) * dpi / 100
     for n in net.nodes():
         label_pos[n] = net.pos[n].copy() + label_delta
-    draw_networkx_labels(
+    __d_netx_labels(
         net,
         label_pos,
         labels=net.labels,
@@ -321,12 +324,12 @@ def draw_current_state(
     tree_key: str = None,
     dpi: int = 100,
     node_radius: int = 10,
-    node_positions: dict = None,
-    node_colors: dict = None,
+    node_positions: dict | Callable = None,
+    node_colors: dict | Callable = None,
     edge_filter: list = None,
     show_messages: bool = True,
     show_labels: bool = True,
-    node_labels: dict = None,
+    node_labels: dict | Callable = None,
 ):
     """
     Function to draw the current state of the simulation or network. This function is used to visualize the network
@@ -340,12 +343,12 @@ def draw_current_state(
     :param tree_key: key in nodes memory (dictionary) where tree data is stored
     :param dpi: dots per inch
     :param node_radius: radius of nodes
-    :param node_positions: dictionary of node positions
-    :param node_colors: dictionary of node colors
+    :param node_positions: dictionary of node positions or function to get node positions
+    :param node_colors: dictionary of node colors or function to get node colors
     :param edge_filter: list of edges to draw
     :param show_messages: boolean to show messages in the network
     :param show_labels: boolean to show labels of nodes
-    :param node_labels: dictionary of node labels
+    :param node_labels: dictionary of node labels or function to get node labels
     :return: matplotlib figure object
     """
 
@@ -362,11 +365,11 @@ def draw_current_state(
 
     if node_positions:
         pos_aux = net.pos
-        net.pos = node_positions
+        net.pos = node_positions() if callable(node_positions) else node_positions
 
     if node_labels:
         aux_labels = net.labels
-        net.labels = node_labels
+        net.labels = node_labels() if callable(node_labels) else node_labels
 
     if axes is None:
         with plt.ioff():
@@ -387,6 +390,8 @@ def draw_current_state(
         node_colors = __create_and_get_color_labels(
             net, algorithm=currentAlgorithm, figure=axes.figure, show_messages=show_messages
         )
+    elif callable(node_colors):
+        node_colors = node_colors()
 
     __draw_nodes(net, axes, node_colors, radius_default=node_radius)
     if show_messages:
@@ -414,12 +419,11 @@ def draw_current_state(
 
 def create_animation(
     sim: "Simulation",
-    tree_key: str = None,
     figsize=None,
     dpi: int = 100,
-    node_radius: int = 10,
-    milliseconds_per_frame: int = 200,
+    milliseconds_per_frame: int = 300,
     frame_limit: int = 2000,
+    **kwargs,
 ) -> animation.FuncAnimation:
     """
     Create an animation of the simulation.
@@ -447,11 +451,11 @@ def create_animation(
         anim.save("flood.mp4", writer=moviewriter)
 
     :param sim: Simulation object
-    :param tree_key: key in nodes memory (dictionary) where tree data is stored
+    :param figsize: figure size
     :param dpi: dots per inch
-    :param node_radius: radius of nodes
     :param milliseconds_per_frame: milliseconds per frame
     :param frame_limit: limit of frames, default is 2000
+    :param kwargs: additional keyword arguments to pass to the :func:`draw_current_state` function
     :return: animation object
     """
 
@@ -459,27 +463,38 @@ def create_animation(
         fig = plt.figure(figsize=figsize, dpi=dpi)
         ax = fig.add_subplot(111)
 
-        def draw_frame(i):
-            if i == 0:
+        def draw_frame(frame_index):
+            if frame_index == 0:
                 sim.reset()
 
-            ax.clear()
-            draw_current_state(sim, ax, tree_key=tree_key, dpi=dpi, node_radius=node_radius)
+            if not sim.is_halted() or frame_index == 0:
+                draw_current_state(sim, ax, dpi=dpi, **kwargs)
+
             sim.run(1)
 
-            if sim.is_halted():
-                return
-
-            return
-
         def frame_count():
-            count = 0
+            frame_index = 0
+
+            def should_continue():
+
+                if frame_limit and frame_index >= frame_limit:
+                    logger.warning("Frame limit reached.")
+                    return False
+
+                if not sim.is_halted():
+                    logger.debug(f"Frame {frame_index}, simulation still running.")
+                    return True
+
+                if frame_index == 0:
+                    logger.debug(f"Frame {frame_index}, simulation not started.")
+                    return True
+
+                return False
+
             while True:
-                if frame_limit and count >= frame_limit:
-                    break
-                elif not sim.is_halted() or count == 0:
-                    yield count
-                    count += 1
+                if should_continue():
+                    yield frame_index
+                    frame_index += 1
                 else:
                     break
 

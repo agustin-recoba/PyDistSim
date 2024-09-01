@@ -55,6 +55,15 @@ This tutorial demonstrates how to visualize the construction of a tree in a dist
 .. _the tree construction notebook: ../notebooks/tree_construction_viz.ipynb
 
 
+Visualize the effect of network behavioral properties
+-----------------------------------------------------
+
+This tutorial exemplifies how to visualize the effect of network behavioral properties on a distributed algorithm.
+Access `the network properties notebook`_.
+
+.. _the network properties notebook: ../notebooks/behavior_viz.ipynb
+
+
 Algorithm benchmarking
 ======================
 
