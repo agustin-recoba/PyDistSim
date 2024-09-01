@@ -536,6 +536,8 @@ class NetworkGenerator:
 
         return net
 
+    generate_grid_network = generate_mesh_network
+
 
 def generate_mesh_positions(env, n):
     """
