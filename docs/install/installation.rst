@@ -72,4 +72,4 @@ PyDistSim
 
 Finally, in order to download and install PyDistSim and all other required packages, run::
 
-    (pydistsim_env)> pip install -e git+https://github.com/agustin-recoba/PyDistSim#egg=PyDistSim
+    (pydistsim_env) $ pip install PyDistSim
