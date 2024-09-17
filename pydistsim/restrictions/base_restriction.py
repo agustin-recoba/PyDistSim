@@ -32,6 +32,10 @@ class CheckableRestriction(Restriction, ABC):
     @abstractclassmethod
     def check(cls, network: "NetworkType") -> bool: ...
 
+    @classmethod
+    def get_help_message(cls, network: "NetworkType") -> str:
+        return cls.help_message
+
 
 class ApplicableRestriction(Restriction, ABC):
     """
@@ -39,6 +43,11 @@ class ApplicableRestriction(Restriction, ABC):
 
     This is a separate class from :class:`Restriction` to allow for restrictions that are not checkable.
     """
+
+    help_message: str = (
+        "The easiest fix would be adding the line `self.apply_restrictions()` to the initializer method of the "
+        "algorithm."
+    )
 
     @abstractclassmethod
     def apply(self, network: "NetworkType") -> None: ...

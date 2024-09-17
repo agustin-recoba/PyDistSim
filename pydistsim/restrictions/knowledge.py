@@ -29,12 +29,22 @@ class InitialDistinctValues(KnowledgeRestriction, ApplicableRestriction):
 
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
-        return {node.memory.get(cls.KEY, None) for node in network} == {node.id for node in network}
+        return len({node.memory.get(cls.KEY, None) for node in network}) == len(network)
 
     @classmethod
     def apply(cls, network: "NetworkType") -> None:
         for node in network.nodes():
             node.memory[cls.KEY] = node.id
+
+    @classmethod
+    def get_help_message(cls, network: "NetworkType") -> str:
+        if all(cls.KEY in node.memory for node in network):
+            return (
+                f"The initial values at `node.memory['{cls.KEY}']` are not distinct for every node.\n"
+                + cls.help_message
+            )
+        else:
+            return f"The key '{cls.KEY}' is not present in the memory of every node.\n" + cls.help_message
 
 
 class NetworkSize(KnowledgeRestriction, ApplicableRestriction):
@@ -53,3 +63,13 @@ class NetworkSize(KnowledgeRestriction, ApplicableRestriction):
     def apply(cls, network: "NetworkType") -> None:
         for node in network.nodes():
             node.memory[cls.KEY] = len(network)
+
+    @classmethod
+    def get_help_message(cls, network: "NetworkType") -> str:
+        if all(cls.KEY in node.memory for node in network):
+            return (
+                f"The initial values at `node.memory['{cls.KEY}']` are not equal to {len(network)} for every node.\n"
+                + cls.help_message
+            )
+        else:
+            return f"The key '{cls.KEY}' is not present in the memory of every node.\n" + cls.help_message

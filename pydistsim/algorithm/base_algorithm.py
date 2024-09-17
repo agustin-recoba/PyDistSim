@@ -171,7 +171,10 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
             if issubclass(restriction, CheckableRestriction):
                 logger.debug("Checking restriction {}.", restriction.__name__)
                 if not restriction.check(self.network):
-                    raise AlgorithmException(f"Restriction {restriction.__name__} not satisfied for this network.")
+                    raise AlgorithmException(
+                        f"Restriction {restriction.__name__} not satisfied for this network.\n"
+                        + restriction.get_explanation(self.network)
+                    )
 
     def apply_restrictions(self):
         """
