@@ -71,7 +71,7 @@ class TestDirectedNetwork(PyDistSimTestCase):
             sn_node = [n for n in subnetwork if n.memory["test"] == og_node.memory["test"]][0]
             assert sn_node.network == subnetwork
             assert isinstance(sn_node, type(og_node))
-            assert subnetwork.labels[sn_node] == str(sn_node.id)
+            assert subnetwork.labels[sn_node] == str(sn_node._internal_id)
             assert subnetwork.ori[sn_node] == self.net.ori[og_node]
             assert all(subnetwork.pos[sn_node] == self.net.pos[og_node])
 
@@ -89,9 +89,9 @@ class TestDirectedNetwork(PyDistSimTestCase):
         pos = self.net.pos[self.node1]
         original_len = len(self.net.nodes())
 
-        print(f"Nodes ids pre-remove: {[node.id for node in self.net.nodes()]}")
+        print(f"Nodes ids pre-remove: {[node._internal_id for node in self.net.nodes()]}")
         self.net.remove_node(self.node1)
-        print(f"Nodes ids post-remove: {[node.id for node in self.net.nodes()]}")
+        print(f"Nodes ids post-remove: {[node._internal_id for node in self.net.nodes()]}")
         assert len(self.net.nodes()) == original_len - 1
         assert self.node1 not in self.net.nodes()
 

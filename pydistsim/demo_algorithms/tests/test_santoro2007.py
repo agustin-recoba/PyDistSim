@@ -1,10 +1,14 @@
 import unittest
+from typing import TYPE_CHECKING
 
 from pydistsim import NetworkGenerator, Simulation
 from pydistsim.demo_algorithms.santoro2007.traversal import DFT, DFStar
 from pydistsim.demo_algorithms.santoro2007.yoyo import YoYo
 from pydistsim.network.rangenetwork import BidirectionalRangeNetwork
 from pydistsim.utils.testing import PyDistSimTestCase
+
+if TYPE_CHECKING:
+    from pydistsim.network.node import Node
 
 
 class TestYoYo(PyDistSimTestCase):
@@ -46,20 +50,20 @@ class TestYoYo(PyDistSimTestCase):
 
                 sim.algorithms[0].check_algorithm_termination()
 
-                min_id = min(sim.network.nodes(), key=lambda node: node.id).id
+                min_id = min(sim.network.nodes(), key=lambda node: node._internal_id)._internal_id
                 for node in sim.network.nodes():
-                    if node.id != min_id:
+                    if node._internal_id != min_id:
                         # Check if every other node is PRUNED
                         assert node.status == YoYo.Status.PRUNED, "%s: Node %d has status %s, not PRUNED" % (
                             name,
-                            node.id,
+                            node._internal_id,
                             node.status,
                         )
                     else:
                         # Check if the node with the smallest ID is the LEADER
                         assert node.status == YoYo.Status.LEADER, "%s: Node %d has status %s, not LEADER" % (
                             name,
-                            node.id,
+                            node._internal_id,
                             node.status,
                         )
 
@@ -88,20 +92,20 @@ class TestYoYo(PyDistSimTestCase):
 
                     sim.algorithms[0].check_algorithm_termination()
 
-                    min_id = min(sim.network.nodes(), key=lambda node: node.id).id
+                    min_id = min(sim.network.nodes(), key=lambda node: node._internal_id)._internal_id
                     for node in sim.network.nodes():
-                        if node.id == min_id:
+                        if node._internal_id == min_id:
                             # Check if the node with the smallest ID is the LEADER
                             assert node.status == YoYo.Status.LEADER, "%s: Node %d has status %s, not LEADER" % (
                                 name,
-                                node.id,
+                                node._internal_id,
                                 node.status,
                             )
                         else:
                             # Check if every other node is PRUNED
                             assert node.status == YoYo.Status.PRUNED, "%s: Node %d has status %s, not PRUNED" % (
                                 name,
-                                node.id,
+                                node._internal_id,
                                 node.status,
                             )
 
@@ -115,7 +119,11 @@ class TestTraversalDFT(unittest.TestCase):
         self.visited = []
 
         # Asigna el algoritmo
-        self.algorithms = ((DFT, {"visitedAction": lambda node: self.visited.append(node.unbox().id)}),)
+
+        def visitedAction(node: "Node"):
+            self.visited.append(node.unbox()._internal_id)
+
+        self.algorithms = ((DFT, {"visitedAction": visitedAction}),)
 
     def test_traversal(self):
         sim = Simulation(self.net)
@@ -124,9 +132,9 @@ class TestTraversalDFT(unittest.TestCase):
         sim.run(100_000)
 
         for node in self.net.nodes():
-            assert node.status == DFT.Status.DONE, "Node %d is not DONE" % node.id
+            assert node.status == DFT.Status.DONE, "Node %d is not DONE" % node._internal_id
 
-        assert sorted(node.id for node in self.net.nodes()) == sorted(self.visited)
+        assert sorted(node._internal_id for node in self.net.nodes()) == sorted(self.visited)
 
 
 class TestTraversalDFStar(PyDistSimTestCase):
@@ -138,7 +146,11 @@ class TestTraversalDFStar(PyDistSimTestCase):
         self.visited = []
 
         # Asigna el algoritmo
-        self.algorithms = ((DFStar, {"visitedAction": lambda node: self.visited.append(node.unbox().id)}),)
+
+        def visitedAction(node: "Node"):
+            self.visited.append(node.unbox()._internal_id)
+
+        self.algorithms = ((DFStar, {"visitedAction": visitedAction}),)
 
     def test_traversal(self):
         sim = Simulation(self.net)
@@ -147,6 +159,6 @@ class TestTraversalDFStar(PyDistSimTestCase):
         sim.run(100_000)
 
         for node in self.net.nodes():
-            assert node.status == DFStar.Status.DONE, "Node %d is not DONE" % node.id
+            assert node.status == DFStar.Status.DONE, "Node %d is not DONE" % node._internal_id
 
-        assert sorted(node.id for node in self.net.nodes()) == sorted(self.visited)
+        assert sorted(node._internal_id for node in self.net.nodes()) == sorted(self.visited)

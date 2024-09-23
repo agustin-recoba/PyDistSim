@@ -31,7 +31,7 @@ class TestRunBaseNodeAlgorithm(PyDistSimTestCase):
 
         for node in self.net.nodes():
             with self.subTest(node=node):
-                print(f"{node.id=}, {node.status=}, {node.outbox=}, {node.inbox=}")
+                print(f"{node._internal_id=}, {node.status=}, {node.outbox=}, {node.inbox=}")
                 assert len(node.outbox) == 0
                 assert len(node.inbox) == 0
 
@@ -48,7 +48,7 @@ class TestRunBaseNodeAlgorithm(PyDistSimTestCase):
         nodes_with_1_msg = 0
         for node in self.net.nodes():
             with self.subTest(node=node):
-                print(f"{node.id=}, {node.status=}, {node.outbox=}, {node.inbox=}")
+                print(f"{node._internal_id=}, {node.status=}, {node.outbox=}, {node.inbox=}")
                 assert len(node.outbox) == 0
                 nodes_with_1_msg += 1 if len(node.inbox) else 0
         assert nodes_with_1_msg == 1
@@ -87,14 +87,14 @@ class TestRunNetworkAlgorithm(unittest.TestCase):
 
         for node in self.net.nodes():
             with self.subTest(node=node):
-                print(f"{node.id=}, {node.status=}, {node.outbox=}, {node.inbox=}")
+                print(f"{node._internal_id=}, {node.status=}, {node.outbox=}, {node.inbox=}")
                 assert "test" not in node.memory
 
         sim.run(1)
 
         for node in self.net.nodes():
             with self.subTest(node=node):
-                print(f"{node.id=}, {node.status=}, {node.outbox=}, {node.inbox=}")
+                print(f"{node._internal_id=}, {node.status=}, {node.outbox=}, {node.inbox=}")
                 assert node.memory["test"] == "test"
 
         assert sim.is_halted()

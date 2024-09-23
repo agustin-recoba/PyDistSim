@@ -51,6 +51,7 @@ which are defined like this:
   * gradually increase number of nodes up to `n_max`
   * if comm_range is None gradually increase nodes commRange
   * if still not connected raise an exception
+
 3. if `degree` condition is defined and current network degree is
   * lower - repeat measures from the last step to increase current
     network degree

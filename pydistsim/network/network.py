@@ -128,7 +128,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         new_network.clear_observers()
         return new_network
 
-    def remove_node(self, node, skip_check=False):
+    def remove_node(self, node: "Node", skip_check=False):
         """
         Remove a node from the network.
 
@@ -143,7 +143,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         del self.pos[node]
         del self.labels[node]
         node.network = None
-        logger.debug("Node with id {} is removed.", node.id)
+        logger.debug("Node with id {} is removed.", node._internal_id)
 
     def add_node(self, node=None, pos=None, ori=None, commRange=None):
         """
@@ -187,8 +187,8 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         super().add_node(node)
         self.pos[node] = array(pos)
         self.ori[node] = ori
-        self.labels[node] = str(node.id)
-        logger.debug("Node {} is placed on position {}.", node.id, pos)
+        self.labels[node] = str(node._internal_id)
+        logger.debug("Node {} is placed on position {}.", node._internal_id, pos)
         self._copy_observers_to_nodes(node)
         return node
 
@@ -332,7 +332,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         :return: A sorted tuple of nodes.
         :rtype: list[Node]
         """
-        return sorted(self.nodes(), key=lambda k: k.id)
+        return sorted(self.nodes(), key=lambda k: k._internal_id)
 
     def node_by_id(self, id_):
         """
@@ -345,7 +345,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         :raises NetworkException: If the network does not have a node with the given id.
         """
         for n in self.nodes():
-            if n.id == id_:
+            if n._internal_id == id_:
                 return n
 
         logger.error("Network has no node with id {}.", id_)
@@ -496,10 +496,10 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
                 messages_delay[message] -= 1
 
             # Sort messages by id
-            messages = sorted(messages_delay.keys(), key=lambda x: x.id)
+            messages = sorted(messages_delay.keys(), key=lambda x: x._internal_id)
             if not message_ordering:
                 # Artificially create inversions in the message order
-                messages = sorted(messages_delay.keys(), key=lambda x: x.id)
+                messages = sorted(messages_delay.keys(), key=lambda x: x._internal_id)
                 cant_inversions = len(messages) // 4
                 artificial_inversions = choices(
                     [(i, j) for i in range(len(messages)) for j in range(len(messages)) if i < j],
@@ -594,7 +594,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
             n: f"x: {self.pos[n][0]:.2f} y: {self.pos[n][1]:.2f} theta: {self.ori[n] * 180.0 / pi:.2f} deg"
             for n in self.nodes_sorted()
         }
-        edges = [(x.id, y.id) for x, y in self.edges()]
+        edges = [(x_node._internal_id, y_node._internal_id) for x_node, y_node in self.edges()]
         return {
             "nodes": pos,  # A dictionary mapping nodes to their positions in the network.
             "edges": edges,  # A list of pairs (id1, id2) representing the edges by node id.
