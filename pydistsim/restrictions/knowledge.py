@@ -34,7 +34,7 @@ class InitialDistinctValues(KnowledgeRestriction, ApplicableRestriction):
     @classmethod
     def apply(cls, network: "NetworkType") -> None:
         for node in network.nodes():
-            node.memory[cls.KEY] = node.id
+            node.memory[cls.KEY] = node._internal_id
 
     @classmethod
     def get_help_message(cls, network: "NetworkType") -> str:

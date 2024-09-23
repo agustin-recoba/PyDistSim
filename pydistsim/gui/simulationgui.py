@@ -302,7 +302,7 @@ class SimulationGui(QMainWindow):
 
     def on_pick_node(self, node):
         niModel = DictionaryTreeModel(dic=node.get_dic())
-        # TODO: self.ui.nodeInspectorLabel.setText('Node inspector: node %d' % node.id)
+        # TODO: self.ui.nodeInspectorLabel.setText('Node inspector: node %d' % node._internal_id)
         self.ui.nodeInspector.setModel(niModel)
         self.ui.nodeInspector.expandToDepth(0)
 

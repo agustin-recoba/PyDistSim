@@ -36,7 +36,9 @@ class TestPickle(unittest.TestCase):
 
                     assert len(net.nodes()) == len(net_from_file.nodes()), "The number of nodes is not the same."
 
-                    assert net.elected.id == net_from_file.elected.id, "The elected node is not the same."
+                    assert (
+                        net.elected._internal_id == net_from_file.elected._internal_id
+                    ), "The elected node is not the same."
                     assert (
                         net.elected.memory[f"some_key_{size}"] == net_from_file.elected.memory[f"some_key_{size}"]
                     ), "The value of the elected node is not the same."

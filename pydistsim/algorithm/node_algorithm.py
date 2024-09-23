@@ -5,7 +5,7 @@ from types import NoneType
 from typing import TYPE_CHECKING, Union
 
 from pydistsim.algorithm.base_algorithm import AlgorithmException, BaseAlgorithm
-from pydistsim.algorithm.node_wrapper import NodeAccess
+from pydistsim.algorithm.node_wrapper import WrapperManager
 from pydistsim.logging import logger
 from pydistsim.message import Message
 from pydistsim.message import MetaHeader as MessageMetaHeader
@@ -13,7 +13,7 @@ from pydistsim.observers import ObservableEvents
 from pydistsim.restrictions.axioms import FiniteCommunicationDelays, LocalOrientation
 
 if TYPE_CHECKING:
-    from pydistsim.algorithm.node_wrapper import NeighborLabel
+    from pydistsim.algorithm.node_wrapper import NeighborLabel, NodeAccess
     from pydistsim.network import Node
 
 
@@ -116,13 +116,17 @@ class NodeAlgorithm(BaseAlgorithm):
     S_term = ()
     "Tuple of statuses that nodes should have at the end of the algorithm."
 
-    NODE_ACCESS_TYPE: type[NodeAccess] = NodeAccess
+    NODE_WRAPPER_MANAGER_TYPE: type[WrapperManager] = WrapperManager
     "Type of the node access proxy. Default is :class:`NodeAccess`."
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.alarms: list[Alarm] = []
+        self._alarms: list[Alarm] = []
+        "List of alarms set for the nodes."
+
+        self.nwm = self.NODE_WRAPPER_MANAGER_TYPE(self.network)
+        "Node wrapper manager."
 
     ### BaseAlgorithm interface methods ###
 
@@ -155,7 +159,7 @@ class NodeAlgorithm(BaseAlgorithm):
         """
         return (
             all((len(node.inbox) == 0 and len(node.outbox) == 0) for node in self.network.nodes())
-            and len(self.alarms) == 0
+            and len(self._alarms) == 0
             and all(len(self.network.get_transit_messages(u, v)) == 0 for u, v in self.network.edges())
         )
 
@@ -243,8 +247,11 @@ class NodeAlgorithm(BaseAlgorithm):
         message.meta_header = MessageMetaHeader.ALARM_MESSAGE
         message.destination = node_p.unbox()
 
+        # Ensure that the node is a NodeAccess instance
+        node_p = self.nwm.get_node_access(node_p)
+
         alarm = Alarm(time, message, node_p)
-        self.alarms.append(alarm)
+        self._alarms.append(alarm)
         return alarm
 
     def disable_all_node_alarms(self, node_p: "NodeAccess"):
@@ -254,8 +261,8 @@ class NodeAlgorithm(BaseAlgorithm):
         :param node: The node for which the alarms are disabled.
         :type node: NodeProxy
         """
-        to_delete_messages = [alarm.message for alarm in self.alarms if alarm.node == node_p]
-        self.alarms = [alarm for alarm in self.alarms if alarm.node != node_p]
+        to_delete_messages = [alarm.message for alarm in self._alarms if alarm.node == node_p]
+        self._alarms = [alarm for alarm in self._alarms if alarm.node != node_p]
 
         for message in node_p.unbox().inbox.copy():
             if message in to_delete_messages and message in node_p.inbox:
@@ -268,8 +275,8 @@ class NodeAlgorithm(BaseAlgorithm):
         :param alarm: The alarm to be disabled.
         :type alarm: Alarm
         """
-        if alarm in self.alarms:
-            self.alarms.remove(alarm)
+        if alarm in self._alarms:
+            self._alarms.remove(alarm)
         elif alarm.message in alarm.node.unbox().inbox:
             alarm.node.unbox().inbox.remove(alarm.message)
 
@@ -283,13 +290,13 @@ class NodeAlgorithm(BaseAlgorithm):
         :param time_diff: The time difference to be added to the alarm's time.
         :type time_diff: int
         """
-        if alarm in self.alarms:
+        if alarm in self._alarms:
             alarm.time_left += time_diff
         elif alarm.message in alarm.node.unbox().inbox:
             alarm.node.unbox().inbox.remove(alarm.message)
             alarm.time_left += time_diff
             alarm.triggered = False
-            self.alarms.append(alarm)
+            self._alarms.append(alarm)
         else:
             raise ValueError("Alarm not found. Cannot update time. Please check if it has been triggered.")
 
@@ -326,17 +333,17 @@ class NodeAlgorithm(BaseAlgorithm):
         message: Message = node.receive()
 
         if message:
-            logger.debug("Processing step at node {}.", node.id)
+            logger.debug("Processing step at node {}.", node._internal_id)
             if message.destination is None or message.destination == node:
                 # when destination is None it is broadcast message
                 self._process_message(node, message)
 
     def _process_alarms(self):
-        for alarm in self.alarms.copy():
+        for alarm in self._alarms.copy():
             # copy to avoid errors produced by modifying the list while iterating
             alarm.time_left -= 1
             if alarm.time_left <= 0:
-                self.alarms.remove(alarm)
+                self._alarms.remove(alarm)
                 alarm.triggered = True
                 alarm.node.unbox().push_to_inbox(alarm.message)
 
@@ -348,28 +355,28 @@ class NodeAlgorithm(BaseAlgorithm):
     def _process_action(self, action: Actions, node: "Node", message: Message):
         status: StatusValues = getattr(self.Status, node.status)
 
-        node_proxy = self.NODE_ACCESS_TYPE(node)  # TODO: set offuscation here
+        node_view = self.nwm.get_node_access(node)  # TODO: set offuscation here
         if message.source is not None:
-            message.source = node_proxy._get_in_neighbor_proxy(message.source)
+            message.source = node_view._get_in_neighbor_proxy(message.source)
         if message.destination is not None:
-            message.destination = node_proxy
+            message.destination = node_view
 
         method_name = f"{action}_{status}"
         default_name = f"{Actions.default}_{status}"
 
         if hasattr(self, method_name):
             method = getattr(self, method_name)
-            return method(node_proxy, message)
+            return method(node_view, message)
         elif hasattr(self, default_name):
             method = getattr(self, default_name)
-            return method(node_proxy, message)
+            return method(node_view, message)
 
         logger.error(f"Method {self.name}.{action} not implemented for status {node.status}.")
 
     def reset(self):
         super().reset()
-        for node in self.network.nodes():
-            self.NODE_ACCESS_TYPE._clear_from_memoization(node)
+        self._alarms = []
+        self.nwm = self.NODE_WRAPPER_MANAGER_TYPE(self.network)
 
     ### Metaclass methods ###
 
