@@ -27,25 +27,25 @@ class _NodeWrapper:
     "Attributes that can be 'read' or 'written' to the node base object."
 
     def __init__(self, node: "Node", manager: "WrapperManager", **configs):
-        self.node = node
-        self.manager = manager
-        self.configs = configs
+        self._node = node
+        self._manager = manager
+        self._configs = configs
 
     def __getattr__(self, item):
-        if item in self.configs:
-            return self.configs[item]
+        if item in self._configs:
+            return self._configs[item]
         elif item in self.accessible_get or item in self.accessible_set:
-            return getattr(self.node, item)
+            return getattr(self._node, item)
         raise AttributeError(f"{self.__class__.__name__} object has no attribute {item}")
 
     def __setattr__(self, name: str, value: Any) -> None:
         if name in self.accessible_set:
-            setattr(self.node, name, value)
+            setattr(self._node, name, value)
         else:
             super().__setattr__(name, value)
 
     def __repr__(self):
-        return self.node.__repr_str__(self._internal_id)
+        return self._node.__repr_str__(self._internal_id)
 
     def __deepcopy__(self, memo):
         # Do not copy the object, just return the same object
@@ -57,7 +57,7 @@ class _NodeWrapper:
         return self
 
     def unbox(self) -> "Node":
-        return self.node
+        return self._node
 
     @property
     def id(self):
@@ -139,7 +139,7 @@ class NodeAccess(_NodeWrapper):
 
         Since the id is a read-only attribute, it is cached to avoid generating a new id every time it is accessed.
         """
-        if "id" not in self.node.memory:
+        if "id" not in self._node.memory:
             logger.warning(
                 "Node's id do not correspond to the real id of the node. It can't be used to distinguish nodes from "
                 "each other as it is not unique unless restriction InitialDistinctValues is applied (or each node has a "
@@ -147,20 +147,20 @@ class NodeAccess(_NodeWrapper):
             )
             return self._rand_id
 
-        return self.node.memory["id"]
+        return self._node.memory["id"]
 
     ###### Private methods ######
 
     @cached_property
     def __out_neighbors_dict(self) -> dict["Node", "NeighborLabel"]:
-        return self.manager.node_out_neighbor_labels[self.node]
+        return self._manager.node_out_neighbor_labels[self._node]
 
     @cached_property
     def __in_neighbors_dict(self) -> dict["Node", "NeighborLabel"]:
-        if not self.node.network.is_directed():
+        if not self._node.network.is_directed():
             return self.__out_neighbors_dict  # Bidirectional links, same neighbors and same labels
         else:
-            return self.manager.node_in_neighbor_labels[self.node]
+            return self._manager.node_in_neighbor_labels[self._node]
 
     def _get_out_neighbor_proxy(self, node: "Node") -> "NeighborLabel":
         return self.__out_neighbors_dict[node]
@@ -170,7 +170,7 @@ class NodeAccess(_NodeWrapper):
 
     @cached_property
     def _rand_id(self):
-        return randint(0, len(self.node.network))
+        return randint(0, len(self._node.network))
 
 
 class SensorNodeAccess(NodeAccess):
@@ -245,7 +245,7 @@ class WrapperManager:
     def calculate_out_neighbors_dict(self, node_access: NodeAccess) -> dict["Node", "NeighborLabel"]:
         return {
             node: self.NEIGHBOR_LABEL_TYPE(node, self, id=i)
-            for i, node in enumerate(self.network.out_neighbors(node_access.node))
+            for i, node in enumerate(self.network.out_neighbors(node_access._node))
         }
 
     def calculate_in_neighbors_dict(self, node_access: NodeAccess) -> dict["Node", "NeighborLabel"]:
@@ -253,7 +253,7 @@ class WrapperManager:
 
         return {
             node: self.NEIGHBOR_LABEL_TYPE(node, id=i)
-            for i, node in enumerate(self.network.in_neighbors(node_access.node))
+            for i, node in enumerate(self.network.in_neighbors(node_access._node))
         }
 
     def edges(self):

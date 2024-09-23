@@ -63,13 +63,13 @@ nodes. For this reason, we provide two classes that act as proxies for the node 
 ------------------
 
 A :class:`NodeAccess` instance represents a node's own view, encapsulating the knowledge gathered so far (inside the
-`memory` attribute) and inherent of the node (such as who are it's neighbors).
+``memory`` attribute) and inherent of the node (such as who are it's neighbors).
 
-By default, this class allows read-only access to the node's `clock` attribute and read-and-write access to the
-'memory' and 'status' attributes.
+By default, this class allows read-only access to the node's ``clock`` attribute and read-and-write access to the
+``memory`` and ``status`` attributes.
 
-In addition to this attributes, each NodeAccess instance has an integer `id` attribute, by default it's random and won't be
-unique in the network.
+In addition to this attributes, each NodeAccess instance has an integer ``id`` attribute, by default it's random and
+won't be unique in the network.
 
 
 These are the two main ways a programmer comes across a :class:`NodeAccess` instance:
@@ -95,8 +95,8 @@ These are the two main ways a programmer comes across a :class:`NodeAccess` inst
 
 A :class:`NeighborLabel` instance represents the knowledge of the neighbor respect to current processing node.
 
-Similar to the `NodeAccess` class, the `NeighborLabel` instances have an integer `id` attribute, by default it's random
-and won't match any other `id` in the network. It's only used to identify that neighbor among the other neighbors.
+Similar to the :class:`NodeAccess` class, the :class:`NeighborLabel` instances have an integer ``id`` attribute, by default it's random
+and won't match any other ``id`` in the network. It's only used to identify that neighbor among the other neighbors.
 
 These are the two main ways a programmer comes across a :class:`NeighborLabel` instance:
 
