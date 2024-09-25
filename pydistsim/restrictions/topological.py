@@ -28,6 +28,8 @@ class Connectivity(TopologicalRestriction):
     The communication topology if strongly connected.
     """
 
+    help_message = "The network is not strongly connected. Consider adding more edges/links to the network."
+
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
         return network.is_connected()
@@ -41,6 +43,11 @@ class UniqueInitiator(TopologicalRestriction):
     """
     Only one entity will be able to initiate the algorithm through a spontaneous event.
     """
+
+    help_message = (
+        "There is more than one initiator. Consider checking the algorithm initializer method and how many "
+        "times it uses an initialization message (`Message(meta_header=NodeAlgorithm.INI)`)."
+    )
 
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
@@ -67,6 +74,11 @@ class CompleteGraph(ShapeRestriction):
     No self-loops are allowed.
     """
 
+    help_message = (
+        "The network topology is not 'complete'. Consider adding more edges/links or using "
+        "`NetworkGenerator.generate_complete_network(n)` to generate a new network."
+    )
+
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
         N = len(network) - 1
@@ -81,6 +93,11 @@ class CycleGraph(ShapeRestriction):
 
     Strong connectivity is not required as this restriction can be used with :class:`Connectivity`.
     """
+
+    help_message = (
+        "The network topology is not a 'cycle'. Consider adding/removing edges or using "
+        "`NetworkGenerator.generate_ring_network(n)` to generate a new network."
+    )
 
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
@@ -105,7 +122,7 @@ class OrientedCycleGraph(CycleGraph):
 
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
-        raise NotImplementedError
+        raise NotImplementedError("ToDo: Implement OrientedCycleGraph restriction.")
 
 
 OrientedRingGraph = OrientedCycleGraph
@@ -118,6 +135,11 @@ class TreeGraph(ShapeRestriction):
 
     Strong connectivity is not required as this restriction can be used with :class:`Connectivity`.
     """
+
+    help_message = (
+        "The network topology is not a 'tree'. Consider adding/removing edges to avoid cycles while also maintaining "
+        "connectivity."
+    )
 
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
@@ -136,6 +158,11 @@ class StarGraph(ShapeRestriction):
     Strong connectivity is not required as this restriction can be used with :class:`Connectivity`.
     """
 
+    help_message = (
+        "The network topology is not a 'star'. Consider adding/removing edges or using "
+        "`NetworkGenerator.generate_star_network(n)` to generate a new network."
+    )
+
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
         def neig(node):
@@ -147,7 +174,7 @@ class StarGraph(ShapeRestriction):
         N = len(network) - 1
         center_count = 0
         others_count = 0
-        for node in network:
+        for node in network.nodes():
             if neig(node) == N:
                 center_count += 1
                 if center_count > 1:
@@ -169,9 +196,14 @@ class HyperCubeGraph(ShapeRestriction):
     *TODO*: This check is not implemented.
     """
 
+    help_message = (
+        "This restriction is not implemented. Remove it from the list of restrictions and make sure the network is "
+        "generated with `NetworkGenerator.generate_hypercube_network(n)`."
+    )
+
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
-        raise NotImplementedError
+        raise NotImplementedError("ToDo: Implement HyperCubeGraph restriction.\n" + cls.get_help_message(network))
 
 
 class OrientedHyperCubeGraph(HyperCubeGraph):
@@ -186,4 +218,4 @@ class OrientedHyperCubeGraph(HyperCubeGraph):
 
     @classmethod
     def check(cls, network: "NetworkType") -> bool:
-        raise NotImplementedError
+        raise NotImplementedError("ToDo: Implement OrientedHyperCubeGraph restriction.")

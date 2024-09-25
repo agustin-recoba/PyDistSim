@@ -1,11 +1,12 @@
 from functools import cached_property
 from random import randint
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Union
 
 from pydistsim.logging import logger
 
 if TYPE_CHECKING:
     from pydistsim.network import Node
+    from pydistsim.network.network import NetworkType
 
 
 class _NodeWrapper:
@@ -19,31 +20,32 @@ class _NodeWrapper:
     the attributes that are allowed to be changed.
     """
 
-    accessible_get = ("id",)
+    accessible_get = ()
     "Attributes that can be 'read' from the node base object."
 
     accessible_set = ()
     "Attributes that can be 'read' or 'written' to the node base object."
 
-    def __init__(self, node: "Node", **configs):
-        self.node = node
-        self.configs = configs
+    def __init__(self, node: "Node", manager: "WrapperManager", **configs):
+        self._node = node
+        self._manager = manager
+        self._configs = configs
 
     def __getattr__(self, item):
-        if item in self.configs:
-            return self.configs[item]
+        if item in self._configs:
+            return self._configs[item]
         elif item in self.accessible_get or item in self.accessible_set:
-            return getattr(self.node, item)
+            return getattr(self._node, item)
         raise AttributeError(f"{self.__class__.__name__} object has no attribute {item}")
 
     def __setattr__(self, name: str, value: Any) -> None:
         if name in self.accessible_set:
-            setattr(self.node, name, value)
+            setattr(self._node, name, value)
         else:
             super().__setattr__(name, value)
 
     def __repr__(self):
-        return self.node.__repr_str__(self.id)
+        return self._node.__repr_str__(self.id)
 
     def __deepcopy__(self, memo):
         # Do not copy the object, just return the same object
@@ -55,7 +57,7 @@ class _NodeWrapper:
         return self
 
     def unbox(self) -> "Node":
-        return self.node
+        return self._node
 
     @property
     def id(self):
@@ -67,8 +69,6 @@ class NeighborLabel(_NodeWrapper):
     Class that represents a neighbor of a node. It is used to represent the knowledge that a node has about its
     neighbors.
     """
-
-    accessible_get = ("id",)
 
     def __repr__(self):
         return f"Neighbor(label={self.id})"
@@ -90,10 +90,7 @@ class NodeAccess(_NodeWrapper):
     of the algorithm.
     """
 
-    NEIGHBOR_LABEL_CLASS: type[NeighborLabel] = NeighborLabel
-
     accessible_get = (
-        "id",
         "status",
         "memory",
         "clock",
@@ -108,6 +105,9 @@ class NodeAccess(_NodeWrapper):
         """
         Get the out-neighbors of the node.
 
+        Keep in mind that `neighbor.id` is only a label for the neighbor, it's local to the node and it's only
+        guaranteed to be unique among the neighbors of the node.
+
         :return: The out-neighbors of the node.
         :rtype: set[NeighborAccess]
         """
@@ -118,6 +118,9 @@ class NodeAccess(_NodeWrapper):
         """
         Get the in-neighbors of the node. If the network is not directed, the in-neighbors are the same as the
         out-neighbors.
+
+        Keep in mind that `neighbor.id` is only a label for the neighbor, it's local to the node and it's only
+        guaranteed to be unique among the neighbors of the node.
 
         :return: The in-neighbors of the node.
         :rtype: set[NeighborAccess]
@@ -136,7 +139,7 @@ class NodeAccess(_NodeWrapper):
 
         Since the id is a read-only attribute, it is cached to avoid generating a new id every time it is accessed.
         """
-        if "id" not in self.node.memory:
+        if "id" not in self._node.memory:
             logger.warning(
                 "Node's id do not correspond to the real id of the node. It can't be used to distinguish nodes from "
                 "each other as it is not unique unless restriction InitialDistinctValues is applied (or each node has a "
@@ -144,29 +147,20 @@ class NodeAccess(_NodeWrapper):
             )
             return self._rand_id
 
-        return self.node.memory["id"]
+        return self._node.memory["id"]
 
     ###### Private methods ######
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     @cached_property
     def __out_neighbors_dict(self) -> dict["Node", "NeighborLabel"]:
-        return {
-            node: self.NEIGHBOR_LABEL_CLASS(node, id=i)
-            for i, node in enumerate(self.node.network.out_neighbors(self.node))
-        }
+        return self._manager.node_out_neighbor_labels[self._node]
 
     @cached_property
     def __in_neighbors_dict(self) -> dict["Node", "NeighborLabel"]:
-        if not self.node.network.is_directed():
+        if not self._node.network.is_directed():
             return self.__out_neighbors_dict  # Bidirectional links, same neighbors and same labels
         else:
-            return {
-                node: self.NEIGHBOR_LABEL_CLASS(node, id=i)
-                for i, node in enumerate(self.node.network.in_neighbors(self.node))
-            }
+            return self._manager.node_in_neighbor_labels[self._node]
 
     def _get_out_neighbor_proxy(self, node: "Node") -> "NeighborLabel":
         return self.__out_neighbors_dict[node]
@@ -176,31 +170,7 @@ class NodeAccess(_NodeWrapper):
 
     @cached_property
     def _rand_id(self):
-        return randint(0, len(self.node.network))
-
-    __wrapped_nodes__ = {}
-    "Memoization of the wrapped nodes. Used to avoid creating multiple wrappers for the same node."
-
-    def __new__(cls, node: "Node", *args, **configs):
-        "A NodeProxy wrapper is created only once for each node."
-
-        if node in cls.__wrapped_nodes__:
-            wrapped_node: cls = cls.__wrapped_nodes__[node]
-            if cls != wrapped_node.__class__:
-                logger.trace(
-                    f"Node {node} was wrapped with a different class. "
-                    f"Changing from {wrapped_node.__class__.__name__} to {cls.__name__}."
-                )
-                wrapped_node.__class__ = cls
-
-            return wrapped_node
-
-        cls.__wrapped_nodes__[node] = super().__new__(cls, *args, **configs)
-        return cls.__wrapped_nodes__[node]
-
-    @classmethod
-    def _clear_from_memoization(cls, node: "Node"):
-        cls.__wrapped_nodes__.pop(node, None)
+        return randint(0, len(self._node.network))
 
 
 class SensorNodeAccess(NodeAccess):
@@ -209,3 +179,115 @@ class SensorNodeAccess(NodeAccess):
         "sensors",
         "compositeSensor",
     )
+
+
+class WrapperManager:
+    """
+    Node Access class
+    -----------------
+
+    A node's own view is a proxy for the node that represents the knowledge of the node.
+
+    `u_own_view` and `v_own_view` are the same object passed as parameters at each algorithm's action:
+
+    .. code-block:: python
+
+        @Status.IDLE
+        def receiving(self, node: NodeAccess, message: Message):
+                                ↑
+
+
+    Neighbor Label class
+    --------------------
+
+    A label for a neighbor is a proxy for the neighbor that represents the knowledge of the neighbor respect to the
+    node.
+
+    Alternatively, `u_label_for_v` and `v_label_for_u` are the objects that are returned when a node asks for its
+    neighbors in some way:
+
+    .. code-block:: python
+
+        @Status.IDLE
+        def receiving(self, node: NodeAccess, message: Message):
+            source = message.source  # The node that sent the message
+                ↑
+
+            for neighbor in node.neighbors():
+                    ↑
+    """
+
+    NODE_ACCESS_TYPE = NodeAccess
+    "The class that will be used to wrap the nodes' own view."
+
+    NEIGHBOR_LABEL_TYPE = NeighborLabel
+    "The class that will be used to wrap the neighbors' labels."
+
+    def __init__(self, network: "NetworkType"):
+        self.network = network
+        self.node_access_instances = {}
+        self.node_out_neighbor_labels = {}
+        self.node_in_neighbor_labels = {}
+
+    def get_node_access(self, node: Union["Node", "NodeAccess"]) -> NodeAccess:
+        if isinstance(node, NodeAccess):
+            return node
+
+        if node not in self.node_access_instances:
+            node_access = self.NODE_ACCESS_TYPE(node, self)
+            self.node_access_instances[node] = node_access
+            self.node_out_neighbor_labels[node] = self.calculate_out_neighbors_dict(node_access)
+            if self.network.is_directed():
+                self.node_in_neighbor_labels[node] = self.calculate_in_neighbors_dict(node_access)
+
+        return self.node_access_instances[node]
+
+    def calculate_out_neighbors_dict(self, node_access: NodeAccess) -> dict["Node", "NeighborLabel"]:
+        return {
+            node: self.NEIGHBOR_LABEL_TYPE(node, self, id=i)
+            for i, node in enumerate(self.network.out_neighbors(node_access._node))
+        }
+
+    def calculate_in_neighbors_dict(self, node_access: NodeAccess) -> dict["Node", "NeighborLabel"]:
+        assert self.network.is_directed(), "The network must be directed to calculate in-neighbors."
+
+        return {
+            node: self.NEIGHBOR_LABEL_TYPE(node, id=i)
+            for i, node in enumerate(self.network.in_neighbors(node_access._node))
+        }
+
+    def edges(self):
+        """
+        Returns the edges of the network as a tuple of proxies for the nodes and the labels of the neighbors.
+        For each edge `(u, v)`, it returns two tuples:
+        - `(u_own_view, v_label_for_u)`
+        - `(v_own_view, u_label_for_v)`
+        """
+
+        for u, v in self.network.edges():
+            u_own_view = self.get_node_access(u)
+            v_label_for_u = u_own_view._get_out_neighbor_proxy(v)
+
+            v_own_view = self.get_node_access(v)
+            u_label_for_v = v_own_view._get_in_neighbor_proxy(u)
+
+            yield (u_own_view, v_label_for_u), (v_own_view, u_label_for_v)
+
+    def nodes(self):
+        """
+        Returns the proxies for the nodes in the network.
+        """
+
+        for node in self.network.nodes():
+            yield self.get_node_access(node)
+
+    def nodes_neighbors(self):
+        """
+        Returns the proxies for the nodes and the labels of it's neighbors.
+        """
+
+        for u in self.network.nodes():
+            u_node_access = self.get_node_access(u)
+            neighbor_labels = u_node_access.out_neighbors()
+
+            yield u_node_access, neighbor_labels

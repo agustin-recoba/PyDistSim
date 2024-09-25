@@ -9,7 +9,6 @@ from pydistsim.algorithm import (
     NodeAlgorithm,
     StatusValues,
 )
-from pydistsim.algorithm.node_wrapper import NodeAccess
 from pydistsim.message import Message
 from pydistsim.network import NetworkException, NetworkGenerator
 from pydistsim.simulation import Simulation
@@ -218,9 +217,9 @@ class TimerAlgorithm(NodeAlgorithm):
     def initializer(self):
         for node in self.network.nodes():
             node.status = self.Status.IDLE
-            self.set_alarm(NodeAccess(node), 3, Message(data=f"ALARM{node.id}"))
-            self.set_alarm(NodeAccess(node), 6, Message(data=f"ALARM{node.id}"))
-            node.memory["LAST_ALARM"] = self.set_alarm(NodeAccess(node), 9, Message(data=f"ALARM{node.id}"))
+            self.set_alarm(node, 3, Message(data=f"ALARM{node._internal_id}"))
+            self.set_alarm(node, 6, Message(data=f"ALARM{node._internal_id}"))
+            node.memory["LAST_ALARM"] = self.set_alarm(node, 9, Message(data=f"ALARM{node._internal_id}"))
 
     @Status.IDLE
     def alarm(self, node, message):
@@ -235,9 +234,9 @@ class TimerDefaultMessage(TimerAlgorithm):
     def initializer(self):
         for node in self.network.nodes():
             node.status = self.Status.IDLE
-            self.set_alarm(NodeAccess(node), 3)
-            self.set_alarm(NodeAccess(node), 6)
-            node.memory["LAST_ALARM"] = self.set_alarm(NodeAccess(node), 9)
+            self.set_alarm(node, 3)
+            self.set_alarm(node, 6)
+            node.memory["LAST_ALARM"] = self.set_alarm(node, 9)
 
 
 class TimerDefaultMessageDecreasedTime(TimerAlgorithm):
@@ -258,19 +257,19 @@ class TimerDefaultMessageDecreasedTime(TimerAlgorithm):
     def initializer(self):
         for node in self.network.nodes():
             node.status = self.Status.IDLE
-            node.memory["FIRST_ALARM"] = self.set_alarm(NodeAccess(node), 4)
-            node.memory["SECOND_ALARM"] = self.set_alarm(NodeAccess(node), 6)
-            node.memory["LAST_ALARM"] = self.set_alarm(NodeAccess(node), 9)
+            node.memory["FIRST_ALARM"] = self.set_alarm(node, 4)
+            node.memory["SECOND_ALARM"] = self.set_alarm(node, 6)
+            node.memory["LAST_ALARM"] = self.set_alarm(node, 9)
             node.push_to_inbox(Message(meta_header=NodeAlgorithm.INI))
 
 
 class TestAlarms(unittest.TestCase):
 
     def test_run_base_algorithm(self):
-        self.aux_test(
-            TimerAlgorithm,
-            lambda node: node.status == TimerAlgorithm.Status.DONE and node.memory["alarm"] == f"ALARM{node.id}",
-        )
+        def node_data_test(node: "Node"):
+            return (node.status == TimerAlgorithm.Status.DONE and node.memory["alarm"] == f"ALARM{node._internal_id}",)
+
+        self.aux_test(TimerAlgorithm, node_data_test)
 
     def test_run_base_algorithm_default_message(self):
         self.aux_test(
@@ -283,7 +282,7 @@ class TestAlarms(unittest.TestCase):
         sim = Simulation(self.net)
         sim.algorithms = (algo_class,)
 
-        algorithm = sim.get_current_algorithm()
+        algorithm: NodeAlgorithm = sim.get_current_algorithm()
         some_n = first(self.net.nodes())
 
         assert sim.is_halted()
@@ -291,28 +290,28 @@ class TestAlarms(unittest.TestCase):
         # 1 step for initialization, 3 steps for alarms, 1 step for processing alarm messages
         sim.run(1)
 
-        assert len(algorithm.alarms) == 3 * len(self.net.nodes())
+        assert len(algorithm._alarms) == 3 * len(self.net.nodes())
         assert len(some_n.inbox) == 0
 
         sim.run(1)  # alarm tic
 
-        assert len(algorithm.alarms) == 3 * len(self.net.nodes())
+        assert len(algorithm._alarms) == 3 * len(self.net.nodes())
         assert len(some_n.inbox) == 0
 
         sim.run(1)  # alarm tic
 
-        assert len(algorithm.alarms) == 3 * len(self.net.nodes())
+        assert len(algorithm._alarms) == 3 * len(self.net.nodes())
         assert len(some_n.inbox) == 0
 
         sim.run(1)  # alarm tic
 
-        assert len(algorithm.alarms) == 2 * len(self.net.nodes())
+        assert len(algorithm._alarms) == 2 * len(self.net.nodes())
         assert all(len(node.inbox) == 1 for node in self.net.nodes())
 
         sim.run(1)  # 1 step for processing alarm messages
 
         assert all([data_test(node) for node in self.net.nodes()])
-        assert len(algorithm.alarms) == 0
+        assert len(algorithm._alarms) == 0
         assert sim.is_halted()
 
     def test_update_alarm(self):
@@ -320,7 +319,7 @@ class TestAlarms(unittest.TestCase):
         sim = Simulation(self.net)
         sim.algorithms = (TimerDefaultMessageDecreasedTime,)
 
-        algorithm = sim.get_current_algorithm()
+        algorithm: NodeAlgorithm = sim.get_current_algorithm()
         some_n = first(self.net.nodes())
 
         assert sim.is_halted()
@@ -328,28 +327,28 @@ class TestAlarms(unittest.TestCase):
         # 1 step for initialization, 3 steps for alarms, 1 step for processing alarm messages
         sim.run(1)
 
-        assert len(algorithm.alarms) == 3 * len(self.net.nodes())
+        assert len(algorithm._alarms) == 3 * len(self.net.nodes())
         assert len(some_n.inbox) == 1  # INI message
         assert some_n.memory["FIRST_ALARM"].time_left == 4
 
         sim.run(1)  # alarm tic
 
-        assert len(algorithm.alarms) == 3 * len(self.net.nodes())
+        assert len(algorithm._alarms) == 3 * len(self.net.nodes())
         assert len(some_n.inbox) == 1  # INI message
         assert some_n.memory["FIRST_ALARM"].time_left == 3
 
         sim.run(1)  # alarm tic -> processes INI and disables LAST_ALARM
 
-        assert len(algorithm.alarms) == 2 * len(self.net.nodes())
+        assert len(algorithm._alarms) == 2 * len(self.net.nodes())
         assert len(some_n.inbox) == 0
         assert some_n.memory["FIRST_ALARM"].time_left == -98  # -100 + 2
 
         sim.run(1)  # alarm tic -> FIRST_ALARM triggered
 
-        assert len(algorithm.alarms) == len(self.net.nodes())  # Only SECOND_ALARM left
+        assert len(algorithm._alarms) == len(self.net.nodes())  # Only SECOND_ALARM left
         assert all(len(node.inbox) == 1 for node in self.net.nodes())  # 1 alarm message (generated by FIRST_ALARM)
 
         sim.run(1)  # 1 step for processing alarm messages, disables SECOND_ALARM
 
-        assert len(algorithm.alarms) == 0
+        assert len(algorithm._alarms) == 0
         assert sim.is_halted()

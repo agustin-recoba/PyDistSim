@@ -36,12 +36,17 @@ class Node(ObserverManagerMixin):
     ):
         super().__init__()
         self._compositeSensor = CompositeSensor(self, sensors or settings.SENSORS)
-        self.network = network
-        self._commRange = commRange or settings.COMM_RANGE
-        self.id = self.__class__.next_node_id
-        self.__class__.next_node_id += 1
-        self._inboxDelay = True
+        "Object that collects the data from all available sensors."
 
+        self.network = network
+        "The network to which the node belongs."
+
+        self._internal_id = self.__class__.next_node_id
+        "Internal ID of the node. Only used for internal simulation purposes."
+        self.__class__.next_node_id += 1
+
+        self._commRange = commRange or settings.COMM_RANGE
+        self._inboxDelay = True
         self._status = None
         self.outbox: list["Message"] = []
         self._inbox: list["Message"] = []
@@ -49,7 +54,7 @@ class Node(ObserverManagerMixin):
         self.clock = 0
 
     def __repr__(self):
-        return self.__repr_str__(self.id)
+        return self.__repr_str__(self._internal_id)
 
     @staticmethod
     def __repr_str__(id):
@@ -63,7 +68,7 @@ class Node(ObserverManagerMixin):
         copy_n = copy(self)
         memo[id(self)] = copy_n
 
-        copy_n.id = self.__class__.next_node_id
+        copy_n._internal_id = self.__class__.next_node_id
         self.__class__.next_node_id += 1
 
         # Deep copy of the mutable attributes
@@ -133,7 +138,7 @@ class Node(ObserverManagerMixin):
         if self._inbox and not self._inboxDelay:
             # TODO: implement precedence in message type: Spontaneously > Alarm > Receiving
             message = self._inbox.pop()
-            logger.debug("Node {} received message {}", self.id, message.__repr__())
+            logger.debug("Node {} received message {}", self._internal_id, message.__repr__())
         else:
             message = None
         self._inboxDelay = False
@@ -172,7 +177,7 @@ class Node(ObserverManagerMixin):
         """
         message.destination = destination
         self.outbox.insert(0, message)
-        logger.debug("Node {} sent message {}.", self.id, message.__repr__())
+        logger.debug("Node {} sent message {}.", self._internal_id, message.__repr__())
         self.notify_observers(ObservableEvents.message_sent, message)
 
     @property
@@ -277,7 +282,7 @@ class Node(ObserverManagerMixin):
         """
         return {
             "1. info": {
-                "id": self.id,
+                "id": self._internal_id,
                 "status": self.status or "",
                 "position": self.network.pos[self],
                 "orientation": self.network.ori[self],

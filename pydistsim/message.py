@@ -37,7 +37,7 @@ class Message:
         "source",
         "meta_header",
         "meta_data",
-        "id",
+        "_internal_id",
     ]
 
     META_HEADERS = MetaHeader
@@ -58,7 +58,7 @@ class Message:
         self.meta_header = kwargs.get("meta_header", MetaHeader.NORMAL_MESSAGE)
         self.meta_data = kwargs.get("meta_data", {})
 
-        self.id = self.__class__.next_message_id
+        self._internal_id = self.__class__.next_message_id
         self.__class__.next_message_id += 1
 
     def __repr__(self):
@@ -80,7 +80,7 @@ class Message:
         copy_m = copy(self)
         memo[id(self)] = copy_m
 
-        copy_m.id = self.__class__.next_message_id
+        copy_m._internal_id = self.__class__.next_message_id
         self.__class__.next_message_id += 1
 
         # Deep copy of the mutable attributes
@@ -99,7 +99,7 @@ class Message:
         copy_data = deepcopy(self.data)
         new_message = copy(self)
         new_message.data = copy_data
-        new_message.id = self.__class__.next_message_id
+        new_message._internal_id = self.__class__.next_message_id
         self.__class__.next_message_id += 1
 
         return new_message

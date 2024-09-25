@@ -49,12 +49,3 @@ class Missingtree_key(TreeNetworkException):
 
     def __str__(self):
         return "At least one node is missing '%s' key in memory." % self.tree_key
-
-
-class NodeNotRoot(TreeNetworkException):
-    def __init__(self, tree_key, node):
-        self.tree_key = tree_key
-        self.node = node
-
-    def __str__(self):
-        return "Node with id=%d is is not root in tree defined by '%s' key in memory." % (self.node.id, self.tree_key)
