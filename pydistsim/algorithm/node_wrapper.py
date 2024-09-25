@@ -45,7 +45,7 @@ class _NodeWrapper:
             super().__setattr__(name, value)
 
     def __repr__(self):
-        return self._node.__repr_str__(self._internal_id)
+        return self._node.__repr_str__(self.id)
 
     def __deepcopy__(self, memo):
         # Do not copy the object, just return the same object
@@ -265,10 +265,10 @@ class WrapperManager:
         """
 
         for u, v in self.network.edges():
-            u_own_view = self.NODE_ACCESS_TYPE(u)
+            u_own_view = self.get_node_access(u)
             v_label_for_u = u_own_view._get_out_neighbor_proxy(v)
 
-            v_own_view = self.NODE_ACCESS_TYPE(v)
+            v_own_view = self.get_node_access(v)
             u_label_for_v = v_own_view._get_in_neighbor_proxy(u)
 
             yield (u_own_view, v_label_for_u), (v_own_view, u_label_for_v)
@@ -279,7 +279,7 @@ class WrapperManager:
         """
 
         for node in self.network.nodes():
-            yield self.NODE_ACCESS_TYPE(node)
+            yield self.get_node_access(node)
 
     def nodes_neighbors(self):
         """
@@ -287,7 +287,7 @@ class WrapperManager:
         """
 
         for u in self.network.nodes():
-            u_node_access = self.NODE_ACCESS_TYPE(u)
+            u_node_access = self.get_node_access(u)
             neighbor_labels = u_node_access.out_neighbors()
 
             yield u_node_access, neighbor_labels
