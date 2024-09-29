@@ -1,7 +1,7 @@
 from pydistsim.benchmark import AlgorithmBenchmark, MetricCollector
 from pydistsim.demo_algorithms.broadcast import Flood
 from pydistsim.demo_algorithms.santoro2007.yoyo import YoYo
-from pydistsim.network.behavior import ExampleProperties
+from pydistsim.network.behavior import NetworkBehaviorModel
 from pydistsim.utils.testing import PyDistSimTestCase
 
 
@@ -21,7 +21,7 @@ class TestBenchmark(PyDistSimTestCase):
         benchmark = AlgorithmBenchmark(
             ((Flood, {"initial_information": "Hello Wold Test!"}),),
             network_sizes=range(1, 15),
-            network_behavior=ExampleProperties.UnorderedRandomDelayCommunication,
+            network_behavior=NetworkBehaviorModel.UnorderedRandomDelayCommunication,
             metric_collector_factory=MyCustomMetricCollector,
             max_time=60,
         )

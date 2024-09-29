@@ -33,7 +33,7 @@ class BoundedCommunicationDelays(TimeRestriction):
     help_message = (
         "Delays are not upper bounded. Choose a value for `network.behavioral_properties` such that "
         "`bounded_communication_delays` is True.\n"
-        "The property ExampleProperties.RandomDelayCommunication should be a good example."
+        "The property NetworkBehaviorModel.RandomDelayCommunication should be a good example."
     )
 
     @classmethod
@@ -49,7 +49,7 @@ class UnitaryCommunicationDelays(TimeRestriction):
     help_message = (
         "Delays are not unitary. Choose a value for `network.behavioral_properties` such that "
         "`message_delay_indicator` is `None`.\n"
-        "The property ExampleProperties.UnorderedCommunication should be a good example."
+        "The property NetworkBehaviorModel.UnorderedCommunication should be a good example."
     )
 
     @classmethod
@@ -66,7 +66,7 @@ class SynchronizedClocks(TimeRestriction):
     help_message = (
         "Clocks are not synchronized. Choose a value for `network.behavioral_properties` such that "
         "`clock_increment` is `None`.\n"
-        "The property ExampleProperties.IdealCommunication should be a good example."
+        "The property NetworkBehaviorModel.IdealCommunication should be a good example."
     )
 
     @classmethod

@@ -150,7 +150,7 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
     def network(self) -> "NetworkType":
         return self.simulation.network
 
-    def step(self, check_restrictions: bool):
+    def step(self, check_restrictions: bool, step: int):
         raise NotImplementedError
 
     def is_initialized(self):

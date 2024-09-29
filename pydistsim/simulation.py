@@ -128,7 +128,7 @@ class Simulation(ObserverManagerMixin):
                 algorithm.name,
                 self.algorithmState["step"],
             )
-            algorithm.step(self.check_restrictions)
+            algorithm.step(self.check_restrictions, self.algorithmState["step"])
             self.stepsLeft -= 1
             self.algorithmState["step"] += 1
             self.network.increment_node_clocks()

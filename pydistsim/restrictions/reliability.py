@@ -33,7 +33,7 @@ class ReliabilityRestriction(CheckableRestriction, ABC):
 
     help_message = (
         "Message loss is enabled. Choose a value for `network.behavioral_properties` such that `message_loss_indicator`"
-        " is `None`.\nThe property ExampleProperties.RandomDelayCommunication should be a good example."
+        " is `None`.\nThe property NetworkBehaviorModel.RandomDelayCommunication should be a good example."
     )
 
 

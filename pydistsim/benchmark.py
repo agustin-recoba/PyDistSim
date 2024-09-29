@@ -14,7 +14,7 @@ from pydistsim.algorithm.node_algorithm import AlgorithmException, NodeAlgorithm
 from pydistsim.conf import settings
 from pydistsim.logging import logger
 from pydistsim.metrics import MetricCollector
-from pydistsim.network.behavior import ExampleProperties, NetworkBehaviorModel
+from pydistsim.network.behavior import NetworkBehaviorModel
 from pydistsim.network.generator import NetworkGenerator
 from pydistsim.network.network import BidirectionalNetwork, Network, NetworkType
 from pydistsim.simulation import AlgorithmsParam, Simulation
@@ -74,12 +74,12 @@ class AlgorithmBenchmark:
     .. code-block:: python
 
         from pydistsim.benchmark import AlgorithmBenchmark
-        from pydistsim.network.behavior import ExampleProperties
+        from pydistsim.network.behavior import NetworkBehaviorModel
 
         benchmark = AlgorithmBenchmark(
             ((Flood, {"initial_information": "Hello Wold!"}), ),
             network_sizes=range(1, 40),
-            network_behavior=ExampleProperties.UnorderedRandomDelayCommunication,
+            network_behavior=NetworkBehaviorModel.UnorderedRandomDelayCommunication,
         )
 
         benchmark.run()
@@ -117,7 +117,7 @@ class AlgorithmBenchmark:
         network_sizes: Iterable[int] = range(1, 20),
         directed_network: bool = settings.DIRECTED,
         check_algorithm_termination: bool = True,
-        network_behavior: "NetworkBehaviorModel" = ExampleProperties.IdealCommunication,
+        network_behavior: "NetworkBehaviorModel" = NetworkBehaviorModel.IdealCommunication,
         metric_collector_factory: Callable[[], MetricCollector] = MetricCollector,
         network_generators: dict[
             Literal["DETERMINISTIC", "RANDOM"], dict[str, Callable[[int], "NetworkType"]]

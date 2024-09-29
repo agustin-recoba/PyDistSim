@@ -20,7 +20,7 @@ from pydistsim._exceptions import MessageUndeliverableException, NetworkExceptio
 from pydistsim.conf import settings
 from pydistsim.gui import drawing as draw
 from pydistsim.logging import logger
-from pydistsim.network.behavior import ExampleProperties, NetworkBehaviorModel
+from pydistsim.network.behavior import NetworkBehaviorModel
 from pydistsim.network.environment import Environment
 from pydistsim.network.node import Node
 from pydistsim.network.sensor import CompositeSensor
@@ -58,7 +58,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         self.ori = {}
         self.labels = {}
         self.simulation = None
-        self.behavioral_properties = behavioral_properties or ExampleProperties.UnorderedCommunication
+        self.behavioral_properties = behavioral_properties or NetworkBehaviorModel.UnorderedCommunication
         logger.trace("Instance of Network has been initialized.")
 
     #### Overriding methods from Graph and DiGraph ####
@@ -381,7 +381,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         :return: None
         """
         for node in self.nodes():
-            node.clock += self.behavioral_properties.get_clock_increment(node)
+            node.clock += self.behavioral_properties._get_clock_increment(node)
 
     #### Node communication methods ####
 
@@ -471,7 +471,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
                 next_dest: "Node" = message.destination
                 node.outbox.remove(message)
 
-                if self.behavioral_properties.should_lose(self, message):
+                if self.behavioral_properties._should_lose(self, message):
                     logger.trace("Message lost: {}", message)
                     self.add_lost_message(node, next_dest, message)
                     continue
@@ -480,7 +480,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
                     node,
                     next_dest,
                     message,
-                    self.behavioral_properties.get_delay(self, message),
+                    self.behavioral_properties._get_delay(self, message),
                 )
 
         # Process messages in transit
