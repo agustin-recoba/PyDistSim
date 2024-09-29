@@ -16,7 +16,7 @@ class defines the three parameters that are used to model the communication prop
    #. How fast a node can process a message. This is used to model the case where a node can only process a certain
       number of messages per time unit.
 
-To apply these properties to a network, simply set :attr:`NetworkMixin.behavioral_properties` to an instance of
+To apply these properties to a network, simply set :attr:`Network.behavioral_properties` to an instance of
 :class:`NetworkBehaviorModel`.
 
 

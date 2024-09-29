@@ -1,4 +1,4 @@
-.. _networkmixin:
+.. _rangenetwork:
 .. currentmodule:: pydistsim.network.rangenetwork
 
 ##############
