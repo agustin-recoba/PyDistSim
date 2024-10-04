@@ -27,7 +27,7 @@ class MessageOrdering(CommunicationRestriction):
 
     help_message = (
         "Message ordering is disabled. Choose a value for `network.behavioral_properties` such that `message_ordering` "
-        "is True.\nThe property ExampleProperties.RandomDelayCommunication should be a good example."
+        "is True.\nThe property NetworkBehaviorModel.RandomDelayCommunication should be a good example."
     )
 
     @classmethod

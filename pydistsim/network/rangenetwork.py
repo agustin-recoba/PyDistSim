@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Optional
 from numpy import allclose, sign, sqrt
 from numpy.random import random
 
-from pydistsim.conf import settings
 from pydistsim.logging import logger
 from pydistsim.network.environment import Environment
 from pydistsim.network.network import BidirectionalNetwork, Network
@@ -25,16 +24,6 @@ class RangeType(ABC):
     :param environment: The environment in which the channel operates.
     :type environment: Environment
     """
-
-    def __new__(cls, environment: "Environment| None" = None, **kwargs):
-        """Return instance of default RangeType."""
-        for cls in cls.__subclasses__():
-            if cls.__name__ == settings.CHANNEL_TYPE:
-                return super().__new__(cls)
-
-        # if self is not RangeType class (as in pickle.load_newobj) return
-        # instance of self
-        return object.__new__(cls)
 
     def __init__(self, environment: "Environment"):
         self.environment = environment
@@ -182,7 +171,7 @@ class RangeNetworkMixin(with_typehint(Network)):
         **kwargs,
     ):
         super().__init__(incoming_graph_data, environment, behavioral_properties, **kwargs)
-        self.rangeType = rangeType or RangeType(self._environment)
+        self.rangeType = rangeType or UdgRangeType(self._environment)
         self.rangeType.environment = self._environment
 
     @staticmethod
@@ -292,11 +281,11 @@ class RangeNetworkMixin(with_typehint(Network)):
         # assert all nodes have the same commRange
         assert allclose([n.commRange for n in self], self.nodes_sorted()[0].commRange)
         # TODO: implement decreasing of degree, preserve connected network
-        assert value + settings.DEG_ATOL > self.avg_degree()  # only increment
+        assert value + 1 > self.avg_degree()  # only increment
         step_factor = 7.0
         steps = [0]
         # TODO: while condition should call validate
-        while not allclose(self.avg_degree(), value, atol=settings.DEG_ATOL):
+        while not allclose(self.avg_degree(), value, atol=1):
             steps.append((value - self.avg_degree()) * step_factor)
             for node in self:
                 node.commRange += steps[-1]

@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Optional
 
 from pydistsim._exceptions import SimulationException
 from pydistsim.algorithm import BaseAlgorithm
-from pydistsim.conf import settings
 from pydistsim.logging import logger
 from pydistsim.observers import (
     NetworkObserver,
@@ -31,7 +30,7 @@ class Simulation(ObserverManagerMixin):
 
     :param network: The network object representing the simulation network.
     :type network: NetworkType
-    :param algorithms: The algorithms to be executed on the network. If not provided, the default algorithms defined in settings.ALGORITHMS will be used.
+    :param algorithms: The algorithms to be executed on the network.
     :type algorithms: AlgorithmsParam, optional
     :param check_restrictions: Whether to check restrictions during the simulation.
     :type check_restrictions: bool, optional
@@ -50,7 +49,9 @@ class Simulation(ObserverManagerMixin):
         self._network = network
         self._network.simulation = self
         self._algorithms = ()
-        self.algorithms = algorithms or settings.ALGORITHMS
+        if algorithms is not None:
+            self.algorithms = algorithms
+
         self.algorithmState = {"index": 0, "step": 1, "finished": False}
         self.stepsLeft = 0
         self.check_restrictions = check_restrictions
@@ -128,7 +129,7 @@ class Simulation(ObserverManagerMixin):
                 algorithm.name,
                 self.algorithmState["step"],
             )
-            algorithm.step(self.check_restrictions)
+            algorithm.step(self.check_restrictions, self.algorithmState["step"])
             self.stepsLeft -= 1
             self.algorithmState["step"] += 1
             self.network.increment_node_clocks()

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from pydistsim.message import Message
 from pydistsim.network import NetworkGenerator
-from pydistsim.network.behavior import ExampleProperties, NetworkBehaviorModel
+from pydistsim.network.behavior import NetworkBehaviorModel
 
 if TYPE_CHECKING:
     from pydistsim.network.network import NetworkType
@@ -73,25 +73,25 @@ DelayOnlyFirstMessage = NetworkBehaviorModel(
 )
 
 
-class TestbehaviorModel(unittest.TestCase):
+class TestBehaviorModel(unittest.TestCase):
     TESTS = {
-        ExampleProperties.LikelyRandomLossCommunication: (
+        NetworkBehaviorModel.LikelyRandomLossCommunication: (
             "LikelyRandomLossCommunication",
             [all_sent, only_some_received, assert_order, none_in_transit],
         ),
-        ExampleProperties.IdealCommunication: (
+        NetworkBehaviorModel.IdealCommunication: (
             "IdealCommunication",
             [all_sent, all_received, assert_order, none_in_transit],
         ),
-        ExampleProperties.UnorderedCommunication: (
+        NetworkBehaviorModel.UnorderedCommunication: (
             "UnorderedCommunication",
             [all_sent, all_received, assert_unordered, none_in_transit],
         ),
-        ExampleProperties.RandomDelayCommunication: (
+        NetworkBehaviorModel.RandomDelayCommunication: (
             "RandomDelayCommunication",
             [all_sent, assert_order, some_in_transit],
         ),
-        ExampleProperties.UnorderedRandomDelayCommunication: (
+        NetworkBehaviorModel.UnorderedRandomDelayCommunication: (
             "UnorderedRandomDelayCommunication",
             [all_sent, only_some_received, assert_unordered, some_in_transit],
         ),

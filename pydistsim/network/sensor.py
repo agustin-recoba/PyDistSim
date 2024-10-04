@@ -31,8 +31,6 @@ from typing import TYPE_CHECKING
 from numpy import arctan2, pi, sqrt
 from scipy.stats import rv_continuous, rv_discrete
 
-import pydistsim.conf as s
-
 if TYPE_CHECKING:
     from pydistsim.network import Node
 
@@ -45,32 +43,33 @@ class Sensor(ABC):
     the outside world. It could be a capability to detect neighbors, measure
     distance to them, or retrieve the environment temperature.
 
-    :param pf_params: Additional parameters for the probability function.
-    :type pf_params: dict
-
-    :cvar pf_settings_key: The key used to retrieve the probability function
-                           settings from the settings module.
-    :vartype pf_settings_key: str
+    :param dict_args: A dictionary containing the scale and probability function.
+    :type dict_args: dict
+    :param scale: The scale parameter for the probability function.
+    :type scale: float
+    :param pf: The probability function (e.g. :py:data:`scipy.stats.norm`).
+    :type pf: rv_continuous or rv_discrete
     """
 
-    pf_settings_key = ""
+    def __init__(self, dict_args=None, /, scale=None, pf: rv_continuous | rv_discrete = None):
+        if dict_args:
+            scale = dict_args.get("scale")
+            pf = dict_args.get("pf")
 
-    def __init__(self, pf_params={}):
-        pf_params_final = getattr(s.settings, self.pf_settings_key, {})
-        pf_params_final.update(pf_params)
-        if pf_params_final:
-            self.probabilityFunction = ProbabilityFunction(**pf_params_final)
+        if pf and scale:
+            self.probabilityFunction = ProbabilityFunction(scale, pf)
         else:
             self.probabilityFunction = None
 
-    def name(self):
+    @classmethod
+    def name(cls):
         """
         Get the name of the Sensor class.
 
         :return: The name of the Sensor class.
         :rtype: str
         """
-        return self.__class__.__name__
+        return cls.__name__
 
     @abstractmethod
     def read(self) -> dict:
@@ -111,8 +110,6 @@ class AoASensor(Sensor):
     It uses the position and orientation information of the nodes to calculate the azimuth angle.
     """
 
-    pf_settings_key = "AOA_PF_PARAMS"
-
     @node_in_network
     def read(self, node: "Node"):
         """
@@ -137,8 +134,6 @@ class AoASensor(Sensor):
 
 class DistSensor(Sensor):
     """Provides distance between node and its neighbors."""
-
-    pf_settings_key = "DIST_PF_PARAMS"
 
     @node_in_network
     def read(self, node: "Node"):

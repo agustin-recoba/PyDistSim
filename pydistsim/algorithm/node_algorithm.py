@@ -130,7 +130,7 @@ class NodeAlgorithm(BaseAlgorithm):
 
     ### BaseAlgorithm interface methods ###
 
-    def step(self, check_restrictions: bool):
+    def step(self, check_restrictions: bool, step: int):
         if not self.is_initialized():
             self.notify_observers(ObservableEvents.algorithm_started, self)
             self.initializer()
@@ -143,7 +143,11 @@ class NodeAlgorithm(BaseAlgorithm):
             self.network.communicate()
             self._process_alarms()
             for node in self.network.nodes_sorted():
-                self._node_step(node)
+                delay = self.network.behavioral_properties._get_node_processing_frequency(node)
+                if step % delay == 0:
+                    self._node_step(node)
+                else:
+                    logger.debug(f"Node {node._internal_id} skipped. Delay: {delay}. Current step: {step}.")
 
         self.notify_observers(ObservableEvents.step_done, self)
 

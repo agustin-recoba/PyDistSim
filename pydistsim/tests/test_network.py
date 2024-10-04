@@ -4,7 +4,6 @@ import pytest
 from networkx import is_directed_acyclic_graph, is_weakly_connected
 
 from pydistsim.algorithm import NodeAlgorithm
-from pydistsim.conf import settings
 from pydistsim.network import (
     BidirectionalNetwork,
     BidirectionalRangeNetwork,
@@ -45,7 +44,7 @@ class TestDirectedNetwork(PyDistSimTestCase):
         assert isinstance(self.node1, Node)
         assert len(self.net.nodes()) == 4
         if isinstance(self.net.environment, Environment2D):
-            assert self.net.environment._image.shape == settings.ENVIRONMENT2D_SHAPE, "incorrect default size"
+            assert self.net.environment._image.shape == (600, 600), "incorrect default size"
 
         assert isinstance(self.net.rangeType, RangeType)
 
