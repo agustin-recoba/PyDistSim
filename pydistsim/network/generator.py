@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Optional, TypeVar
 from numpy import array, cos, log2, pi, sign, sin, sqrt
 from numpy.random import rand
 
-from pydistsim.conf import settings
 from pydistsim.logging import logger
 from pydistsim.network.network import BidirectionalNetwork
 from pydistsim.network.node import Node
@@ -24,12 +23,12 @@ class NetworkGenerator:
     Class for generating networks with specified properties.
 
 
-    :param n_count: int, number of nodes, if None settings.N_COUNT is used
+    :param n_count: int, number of nodes, if None, 100 is used
     :param n_min: int, minimum number of nodes, if not set it is equal to n_count
     :param n_max: int, maximum number of nodes, if not set it is equal to n_count
     :param enforce_connected: bool, if True network must be fully connected
     :param degree: int, average number of neighbors per node
-    :param comm_range: int, nodes communication range, if None settings.COMM_RANGE is used
+    :param comm_range: int, nodes communication range, if None, 100 is used
         and it is a signal that this value can be changed if needed to
         satisfy other wanted properties (connected and degree)
     :param method: str, sufix of the name of the method used to generate network
@@ -37,7 +36,7 @@ class NetworkGenerator:
     :param directed: bool, if True generated network is directed
     :param kwargs: network and node __init__ kwargs i.e.:
         - environment: Environment, environment in which the network should be created, if None
-        settings.ENVIRONMENT is used
+        Environment2D is used
         - rangeType: RangeType
         - algorithms: tuple
         - commRange: int, overrides `comm_range`
@@ -63,10 +62,10 @@ class NetworkGenerator:
         comm_range=None,
         method="random_network",
         degree_tolerance=0.5,
-        directed=settings.DIRECTED,
+        directed=False,
         **kwargs,
     ):
-        self.n_count = n_count or settings.N_COUNT
+        self.n_count = n_count or 100
         self.n_min = self.n_count if n_min is None else n_min
         self.n_max = self.n_count if n_max is None else n_max
         if self.n_count < self.n_min or self.n_count > self.n_max:

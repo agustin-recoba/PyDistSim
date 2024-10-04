@@ -1,36 +1,21 @@
-from copy import deepcopy
+from abc import ABC, abstractmethod
 from math import inf as Inf
 
 import png
 from numpy import ones, sign, sqrt, uint8, vstack
 from numpy.random import rand
 
-from pydistsim.conf import settings
 from pydistsim.logging import logger
 
 
-class Environment:
+class Environment(ABC):
     """
     Environment abstract base class.
 
     This class represents an abstract base class for environments in the PyDistSim framework.
     """
 
-    def __new__(cls, **kwargs):
-        """Return an instance of the default Environment.
-
-        This method returns an instance of the default Environment subclass specified in the settings.
-
-        :param kwargs: Additional keyword arguments to be passed to the subclass constructor.
-        :return: An instance of the default Environment subclass.
-        """
-        for cls in cls.__subclasses__():
-            if cls.__name__ == settings.ENVIRONMENT:
-                return super().__new__(cls, **kwargs)
-        # if self is not Environment class (as in pickle.load_newobj) return
-        # instance of self
-        return super().__new__(cls)
-
+    @abstractmethod
     def is_space(self, xy):
         """Check if the given coordinates represent a valid space in the environment.
 
@@ -43,6 +28,7 @@ class Environment:
         """
         raise NotImplementedError
 
+    @abstractmethod
     def are_visible(self, xy1, xy2):
         """Check if two coordinates are visible to each other in the environment.
 
@@ -56,6 +42,7 @@ class Environment:
         """
         raise NotImplementedError
 
+    @abstractmethod
     def find_random_pos(self, n=100):
         """
         Returns a random position in the environment.
@@ -79,7 +66,7 @@ class Environment2D(Environment):
     """
 
     def __init__(self, path="", scale=None, shape=None):
-        shape = shape if shape else settings.ENVIRONMENT2D_SHAPE
+        shape = shape if shape else (600, 600)
         if path:
             try:
                 r = png.Reader(path)

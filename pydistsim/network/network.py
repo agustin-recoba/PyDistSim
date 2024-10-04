@@ -17,11 +17,10 @@ from numpy import allclose, array, average, max, min, pi
 from numpy.random import rand
 
 from pydistsim._exceptions import MessageUndeliverableException, NetworkException
-from pydistsim.conf import settings
 from pydistsim.gui import drawing as draw
 from pydistsim.logging import logger
 from pydistsim.network.behavior import NetworkBehaviorModel
-from pydistsim.network.environment import Environment
+from pydistsim.network.environment import Environment, Environment2D
 from pydistsim.network.node import Node
 from pydistsim.network.sensor import CompositeSensor
 from pydistsim.observers import NodeObserver, ObserverManagerMixin
@@ -53,7 +52,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         **kwargs,
     ):
         super().__init__(incoming_graph_data)
-        self._environment = environment or Environment()
+        self._environment = environment or Environment2D()
         self.pos = {}
         self.ori = {}
         self.labels = {}
@@ -625,7 +624,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
             if param == "connected":
                 assert not value or self.is_connected(), f"{value=}, {self.is_connected()=}"
             elif param == "degree":
-                assert allclose(self.avg_degree(), value, atol=settings.DEG_ATOL)
+                assert allclose(self.avg_degree(), value, atol=1)
             elif param == "environment":
                 assert self.environment.__class__ == value.__class__
             elif param == "sensors":

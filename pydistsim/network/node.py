@@ -1,7 +1,6 @@
 from copy import copy, deepcopy
 from typing import TYPE_CHECKING, Optional
 
-from pydistsim.conf import settings
 from pydistsim.logging import LogLevels, logger
 from pydistsim.network.sensor import CompositeSensor
 from pydistsim.observers import ObservableEvents, ObserverManagerMixin
@@ -35,7 +34,7 @@ class Node(ObserverManagerMixin):
         **kwargs,
     ):
         super().__init__()
-        self._compositeSensor = CompositeSensor(self, sensors or settings.SENSORS)
+        self._compositeSensor = CompositeSensor(self, sensors or ())
         "Object that collects the data from all available sensors."
 
         self.network = network
@@ -45,7 +44,7 @@ class Node(ObserverManagerMixin):
         "Internal ID of the node. Only used for internal simulation purposes."
         self.__class__.next_node_id += 1
 
-        self._commRange = commRange or settings.COMM_RANGE
+        self._commRange = commRange or 100
         self._inboxDelay = True
         self._status = None
         self.outbox: list["Message"] = []
