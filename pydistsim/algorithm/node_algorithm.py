@@ -305,6 +305,75 @@ class NodeAlgorithm(BaseAlgorithm):
         else:
             raise ValueError("Alarm not found. Cannot update time. Please check if it has been triggered.")
 
+    ### Methods for inbox blocking ###
+
+    def block_inbox(self, node: "NodeAccess", filter: Callable[[Message["_NodeWrapper"]], bool]) -> object:
+        """
+        Block the inbox of a node, so that only messages that satisfy the filter can be processed.
+
+        :param node: The node for which the inbox is blocked.
+        :type node: NodeAccess
+        :param filter: The filter that the messages must satisfy.
+        :type filter: Callable[[Message], bool]
+        """
+
+        def adapted_filter(message: Message["Node"]):
+            message = message.copy()
+
+            if message.destination is not None:
+                message.destination = node
+            if message.source is not None:
+                message.source = node._get_in_neighbor_proxy(message.source)
+
+            return filter(message)
+
+        return node.unbox().block_inbox(adapted_filter)
+
+    def unblock_inbox(self, node: "NodeAccess", filter: object):
+        """
+        Unblock the inbox of a node, so that all messages can be processed.
+
+        :param node: The node for which the inbox is unblocked.
+        :type node: NodeAccess
+        :param filter: The filter that was used to block the inbox.
+        :type filter: object
+        """
+        node.unbox().unblock_inbox(filter)
+
+    def close(self, node: "NodeAccess", neighbor: "NeighborLabel"):
+        """
+        Close the inbox of the node for a specific neighbor.
+
+        :param node: The node for which the inbox is closed.
+        :type node: NodeAccess
+        :param neighbor: The neighbor for which the inbox is closed.
+        :type neighbor: NeighborLabel
+        """
+
+        def filter_fn(message: Message["Node"]):
+            return message.source != neighbor.unbox()
+
+        if "__closed_edges_filters__" not in node.memory:
+            node.memory["__closed_edges_filters__"] = defaultdict(list)
+
+        node.memory["__closed_edges_filters__"][neighbor].append(filter_fn)
+        node.unbox().block_inbox(filter_fn)
+
+    def open(self, node: "NodeAccess", neighbor: "NeighborLabel"):
+        """
+        Open the inbox of the node for a specific neighbor.
+
+        :param node: The node for which the inbox is opened.
+        :type node: NodeAccess
+        :param neighbor: The neighbor for which the inbox is opened.
+        :type neighbor: NeighborLabel
+        """
+        if "__closed_edges_filters__" in node.memory:
+            if neighbor in node.memory["__closed_edges_filters__"]:
+                filters = node.memory["__closed_edges_filters__"][neighbor]
+                for filter_fn in filters:
+                    node.unbox().unblock_inbox(filter_fn)
+
     ### Methods for algorithm evaluation ###
 
     def check_algorithm_initialization(self):
