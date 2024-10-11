@@ -153,7 +153,7 @@ class Node(ObserverManagerMixin):
         """
         return self._inbox
 
-    def push_to_inbox(self, message: "Message"):
+    def push_to_inbox(self, message: "Message[Node]"):
         """
         Push a message to the inbox of the node.
 
@@ -165,7 +165,7 @@ class Node(ObserverManagerMixin):
         logger.debug("Message delivered to {}", self)
         self.notify_observers(ObservableEvents.message_delivered, message)
 
-    def push_to_outbox(self, message: "Message", destination: "Node"):
+    def push_to_outbox(self, message: "Message[Node]", destination: "Node"):
         """
         Push a message to the outbox of the node.
 

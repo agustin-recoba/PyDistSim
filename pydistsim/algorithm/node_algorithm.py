@@ -1,3 +1,4 @@
+from collections import defaultdict
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
@@ -13,7 +14,7 @@ from pydistsim.observers import ObservableEvents
 from pydistsim.restrictions.axioms import FiniteCommunicationDelays, LocalOrientation
 
 if TYPE_CHECKING:
-    from pydistsim.algorithm.node_wrapper import NeighborLabel, NodeAccess
+    from pydistsim.algorithm.node_wrapper import NeighborLabel, NodeAccess, _NodeWrapper
     from pydistsim.network import Node
 
 
@@ -24,7 +25,7 @@ class Alarm:
     """
 
     time_left: int
-    message: Message
+    message: Message["_NodeWrapper"]
     node: "NodeAccess"
     triggered: bool = False
 
@@ -184,7 +185,7 @@ class NodeAlgorithm(BaseAlgorithm):
         for node in self.network.nodes_sorted():
             node.status = self.Status.IDLE
 
-    def send_msg(self, node_source: "NodeAccess", message: Message):
+    def send_msg(self, node_source: "NodeAccess", message: Message["_NodeWrapper"]):
         """
         Send a message to nodes listed in message's destination field.
 
@@ -226,7 +227,7 @@ class NodeAlgorithm(BaseAlgorithm):
 
     ### Alarm methods ###
 
-    def set_alarm(self, node_p: "NodeAccess", time: int, message: Message | None = None):
+    def set_alarm(self, node_p: "NodeAccess", time: int, message: Message["_NodeWrapper"] | None = None):
         """
         Set an alarm for the node.
         One unit of time is one step of the algorithm.
@@ -351,12 +352,12 @@ class NodeAlgorithm(BaseAlgorithm):
                 alarm.triggered = True
                 alarm.node.unbox().push_to_inbox(alarm.message)
 
-    def _process_message(self, node: "Node", message: Message):
+    def _process_message(self, node: "Node", message: Message["Node"]):
         logger.debug("Processing message: 0x%x" % id(message))
         method_name = MSG_META_HEADER_MAP[message.meta_header]
         return self._process_action(method_name, node, message)
 
-    def _process_action(self, action: Actions, node: "Node", message: Message):
+    def _process_action(self, action: Actions, node: "Node", message: Message["Node"]):
         status: StatusValues = getattr(self.Status, node.status)
 
         node_view = self.nwm.get_node_access(node)  # TODO: set offuscation here
@@ -364,6 +365,8 @@ class NodeAlgorithm(BaseAlgorithm):
             message.source = node_view._get_in_neighbor_proxy(message.source)
         if message.destination is not None:
             message.destination = node_view
+
+        message: Message["_NodeWrapper"]
 
         method_name = f"{action}_{status}"
         default_name = f"{Actions.default}_{status}"
@@ -411,7 +414,9 @@ class NodeAlgorithm(BaseAlgorithm):
         for action in Actions:
             # Create a method for invocations like `self.default(node, message)`
             # CAUTION: the resolution of the method is deferred to the instance, super() will not work
-            def __unresolved_action_method__(alg_instance: "NodeAlgorithm", node: "NodeAccess", message: Message):
+            def __unresolved_action_method__(
+                alg_instance: "NodeAlgorithm", node: "NodeAccess", message: Message["_NodeWrapper"]
+            ):
                 alg_instance._process_action(action, node, message)
 
             dct[action] = __unresolved_action_method__
