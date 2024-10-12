@@ -1,3 +1,4 @@
+from collections import defaultdict
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from enum import StrEnum
@@ -13,7 +14,7 @@ from pydistsim.observers import ObservableEvents
 from pydistsim.restrictions.axioms import FiniteCommunicationDelays, LocalOrientation
 
 if TYPE_CHECKING:
-    from pydistsim.algorithm.node_wrapper import NeighborLabel, NodeAccess
+    from pydistsim.algorithm.node_wrapper import NeighborLabel, NodeAccess, _NodeWrapper
     from pydistsim.network import Node
 
 
@@ -24,7 +25,7 @@ class Alarm:
     """
 
     time_left: int
-    message: Message
+    message: Message["_NodeWrapper"]
     node: "NodeAccess"
     triggered: bool = False
 
@@ -117,7 +118,7 @@ class NodeAlgorithm(BaseAlgorithm):
     "Tuple of statuses that nodes should have at the end of the algorithm."
 
     NODE_WRAPPER_MANAGER_TYPE: type[WrapperManager] = WrapperManager
-    "Type of the node access proxy. Default is :class:`NodeAccess`."
+    "Type of the node wrapper manager. Default is :class:`WrapperManager`."
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -184,7 +185,7 @@ class NodeAlgorithm(BaseAlgorithm):
         for node in self.network.nodes_sorted():
             node.status = self.Status.IDLE
 
-    def send_msg(self, node_source: "NodeAccess", message: Message):
+    def send_msg(self, node_source: "NodeAccess", message: Message["_NodeWrapper"]):
         """
         Send a message to nodes listed in message's destination field.
 
@@ -226,7 +227,7 @@ class NodeAlgorithm(BaseAlgorithm):
 
     ### Alarm methods ###
 
-    def set_alarm(self, node_p: "NodeAccess", time: int, message: Message | None = None):
+    def set_alarm(self, node_p: "NodeAccess", time: int, message: Message["_NodeWrapper"] | None = None):
         """
         Set an alarm for the node.
         One unit of time is one step of the algorithm.
@@ -304,6 +305,85 @@ class NodeAlgorithm(BaseAlgorithm):
         else:
             raise ValueError("Alarm not found. Cannot update time. Please check if it has been triggered.")
 
+    ### Methods for inbox blocking ###
+
+    def block_inbox(self, node: "NodeAccess", filter: Callable[[Message["_NodeWrapper"]], bool]) -> object:
+        """
+        Block the inbox of a node, so that only messages that satisfy the filter can be processed.
+
+        :param node: The node for which the inbox is blocked.
+        :type node: NodeAccess
+        :param filter: The filter that the messages must satisfy.
+        :type filter: Callable[[Message], bool]
+        """
+
+        def adapted_filter(message: Message["Node"]):
+            message = message.copy()
+
+            if message.destination is not None:
+                message.destination = node
+            if message.source is not None:
+                message.source = node._get_in_neighbor_proxy(message.source)
+
+            return filter(message)
+
+        return node.unbox().block_inbox(adapted_filter)
+
+    def unblock_inbox(self, node: "NodeAccess", filter: object):
+        """
+        Unblock the inbox of a node, so that all messages can be processed.
+
+        :param node: The node for which the inbox is unblocked.
+        :type node: NodeAccess
+        :param filter: The filter that was used to block the inbox.
+        :type filter: object
+        """
+        node.unbox().unblock_inbox(filter)
+
+    def close(self, node: "NodeAccess", neighbor: "NeighborLabel"):
+        """
+        Close the inbox of the node for a specific neighbor.
+
+        Implementation detail
+        ---------------------
+
+        The inbox is closed by blocking all messages that have the neighbor as the source.
+        This is done by adding a filter to the inbox that blocks all messages that have the neighbor as the source.
+        To be able to unblock the inbox later, the filter is stored in the node's memory, under the key
+        `__closed_edges_filters__`.
+
+        :param node: The node for which the inbox is closed.
+        :type node: NodeAccess
+        :param neighbor: The neighbor for which the inbox is closed.
+        :type neighbor: NeighborLabel
+        """
+
+        def filter_fn(message: Message["Node"]):
+            return message.source != neighbor.unbox()
+
+        if "__closed_edges_filters__" not in node.memory:
+            node.memory["__closed_edges_filters__"] = defaultdict(list)
+
+        node.memory["__closed_edges_filters__"][neighbor].append(filter_fn)
+        node.unbox().block_inbox(filter_fn)
+
+    def open(self, node: "NodeAccess", neighbor: "NeighborLabel"):
+        """
+        Open the inbox of the node for a specific neighbor.
+
+        :param node: The node for which the inbox is opened.
+        :type node: NodeAccess
+        :param neighbor: The neighbor for which the inbox is opened.
+        :type neighbor: NeighborLabel
+        """
+        if "__closed_edges_filters__" in node.memory:
+            if neighbor in node.memory["__closed_edges_filters__"]:
+                filters = node.memory["__closed_edges_filters__"][neighbor]
+                for filter_fn in filters:
+                    node.unbox().unblock_inbox(filter_fn)
+
+                node.memory["__closed_edges_filters__"][neighbor] = []
+
     ### Methods for algorithm evaluation ###
 
     def check_algorithm_initialization(self):
@@ -351,12 +431,12 @@ class NodeAlgorithm(BaseAlgorithm):
                 alarm.triggered = True
                 alarm.node.unbox().push_to_inbox(alarm.message)
 
-    def _process_message(self, node: "Node", message: Message):
+    def _process_message(self, node: "Node", message: Message["Node"]):
         logger.debug("Processing message: 0x%x" % id(message))
         method_name = MSG_META_HEADER_MAP[message.meta_header]
         return self._process_action(method_name, node, message)
 
-    def _process_action(self, action: Actions, node: "Node", message: Message):
+    def _process_action(self, action: Actions, node: "Node", message: Message["Node"]):
         status: StatusValues = getattr(self.Status, node.status)
 
         node_view = self.nwm.get_node_access(node)  # TODO: set offuscation here
@@ -364,6 +444,8 @@ class NodeAlgorithm(BaseAlgorithm):
             message.source = node_view._get_in_neighbor_proxy(message.source)
         if message.destination is not None:
             message.destination = node_view
+
+        message: Message["_NodeWrapper"]
 
         method_name = f"{action}_{status}"
         default_name = f"{Actions.default}_{status}"
@@ -411,7 +493,9 @@ class NodeAlgorithm(BaseAlgorithm):
         for action in Actions:
             # Create a method for invocations like `self.default(node, message)`
             # CAUTION: the resolution of the method is deferred to the instance, super() will not work
-            def __unresolved_action_method__(alg_instance: "NodeAlgorithm", node: "NodeAccess", message: Message):
+            def __unresolved_action_method__(
+                alg_instance: "NodeAlgorithm", node: "NodeAccess", message: Message["_NodeWrapper"]
+            ):
                 alg_instance._process_action(action, node, message)
 
             dct[action] = __unresolved_action_method__

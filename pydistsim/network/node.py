@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from copy import copy, deepcopy
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, TypeVar
 
 from pydistsim.logging import LogLevels, logger
 from pydistsim.network.sensor import CompositeSensor
@@ -9,6 +10,38 @@ if TYPE_CHECKING:
     from pydistsim.message import Message
     from pydistsim.network.network import NetworkType
     from pydistsim.network.sensor import Sensor
+
+
+T = TypeVar("T")
+
+
+class BlockableQueue(list[T]):
+
+    def __init__(self):
+        super().__init__()
+        self._filters: list[Callable[[T], bool]] = []
+
+    def add_block(self, filter_func: Callable[[T], bool]) -> Callable[[T], bool]:
+        self._filters.append(filter_func)
+        return filter_func
+
+    def remove_filter(self, filter_func: Callable[[T], bool]):
+        self._filters.remove(filter_func)
+
+    def pop(self):
+        for i in reversed(range(super().__len__())):
+            if all(f(self[i]) for f in self._filters):
+                return super().pop(i)
+        raise IndexError("pop from empty or blocked list")
+
+    def __iter__(self):
+        return filter(lambda x: all(f(x) for f in self._filters), super().__iter__())
+
+    def __bool__(self):
+        return self.__len__() > 0
+
+    def __len__(self):
+        return len(tuple(iter(self)))
 
 
 class Node(ObserverManagerMixin):
@@ -47,8 +80,8 @@ class Node(ObserverManagerMixin):
         self._commRange = commRange or 100
         self._inboxDelay = True
         self._status = None
-        self.outbox: list["Message"] = []
-        self._inbox: list["Message"] = []
+        self.outbox: BlockableQueue["Message"] = BlockableQueue()
+        self._inbox: BlockableQueue["Message"] = BlockableQueue()
         self.memory = {}
         self.clock = 0
 
@@ -113,11 +146,30 @@ class Node(ObserverManagerMixin):
 
         Clears the outbox, inbox, status, and memory of the node.
         """
-        self.outbox: list["Message"] = []
-        self._inbox: list["Message"] = []
+        self.outbox: BlockableQueue["Message"] = BlockableQueue()
+        self._inbox: BlockableQueue["Message"] = BlockableQueue()
         self._status = None
         self.memory = {}
         self.clock = 0
+
+    def block_inbox(self, filter_func: Callable[["Message"], bool]) -> Callable[["Message"], bool]:
+        """
+        Block messages from being received by the node.
+
+        :param filter_func: The filter function to be used.
+        :type filter_func: function
+        :return: The filter function.
+        """
+        return self._inbox.add_block(filter_func)
+
+    def unblock_inbox(self, filter_func: Callable[["Message"], bool]):
+        """
+        Unblock messages from being received by the node.
+
+        :param filter_func: The filter function to be removed.
+        :type filter_func: function
+        """
+        self._inbox.remove_filter(filter_func)
 
     def receive(self):
         """
@@ -153,7 +205,7 @@ class Node(ObserverManagerMixin):
         """
         return self._inbox
 
-    def push_to_inbox(self, message: "Message"):
+    def push_to_inbox(self, message: "Message[Node]"):
         """
         Push a message to the inbox of the node.
 
@@ -165,7 +217,7 @@ class Node(ObserverManagerMixin):
         logger.debug("Message delivered to {}", self)
         self.notify_observers(ObservableEvents.message_delivered, message)
 
-    def push_to_outbox(self, message: "Message", destination: "Node"):
+    def push_to_outbox(self, message: "Message[Node]", destination: "Node"):
         """
         Push a message to the outbox of the node.
 

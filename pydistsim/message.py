@@ -4,6 +4,7 @@ This module contains the :class:`Message` class, which is used to represent mess
 
 from copy import copy, deepcopy
 from enum import StrEnum
+from typing import Generic, TypeVar
 
 
 class MetaHeader(StrEnum):
@@ -12,18 +13,21 @@ class MetaHeader(StrEnum):
     ALARM_MESSAGE = "ALARM_MESSAGE"
 
 
-class Message:
+T = TypeVar("T")
+
+
+class Message(Generic[T]):
     """
     The Message class is used to represent messages in the simulation.
 
     :param destination: The destination of the message.
-    :type destination: Any
+    :type destination: T
     :param header: The header of the message.
     :type header: str
     :param data: The data associated with the message.
     :type data: dict
     :param source: The source of the message.
-    :type source: Any
+    :type source: T
     :param meta_header: The meta header of the message.
     :type meta_header: MetaHeader
     :param meta_data: The meta data associated with the message. This is meant to be used by the simulation.
@@ -45,16 +49,16 @@ class Message:
 
     def __init__(
         self,
-        destination=None,
+        destination: T = None,
         header=None,
         data=None,
         **kwargs,
     ):
-        self.destination = destination
+        self.destination: T = destination
         self.header = header or "NO HEADER"
         self.data = data
 
-        self.source = kwargs.get("source", None)
+        self.source: T = kwargs.get("source", None)
         self.meta_header = kwargs.get("meta_header", MetaHeader.NORMAL_MESSAGE)
         self.meta_data = kwargs.get("meta_data", {})
 
