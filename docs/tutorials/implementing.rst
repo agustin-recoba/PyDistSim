@@ -134,8 +134,50 @@ parameters.
 Check the extended interface methods for advanced use of the alarm mechanism.
 
 
+Open and close edges/links
+--------------------------
+
+The :meth:`NodeAlgorithm.close` and :meth:`NodeAlgorithm.open` methods implement the closing and opening of edges,
+respectively. The arguments are the blocking node and the blocked node. From the call of :meth:`NodeAlgorithm.close`
+until the call of :meth:`NodeAlgorithm.open`, the blocking node will not be able to receive any messages from the
+blocked node. The blocked node will not be notified of the blocking. The blocked node can still send
+messages to the blocking node, and once the edge is opened, the blocking node will receive all the messages sent during
+the blocking period. The blocking node can still send messages to the blocked node.
+
+
+
 Helper functions and the extended interface
 ===========================================
+
+
+Block and unblock messages - Keep in queue and receive later
+------------------------------------------------------------
+
+With the help of some functional programming, the :meth:`NodeAlgorithm.block_inbox` and
+:meth:`NodeAlgorithm.unblock_inbox` methods allow a node to block the reception of messages for any given condition.
+The blocked messages are kept in a queue and will be delivered to the node when the blockade is lifted. The condition
+is a function that receives a message and returns a boolean. If the function returns ``False``, the message will be
+blocked.
+
+The usage is this simple:
+    #. Call :meth:`NodeAlgorithm.block_inbox` with the condition function and store the returned object in the node's memory.
+    #. Call :meth:`NodeAlgorithm.unblock_inbox` with the object returned by the :meth:`NodeAlgorithm.block_inbox` method.
+
+
+.. tip::
+    The condition function can be a lambda function, a function defined in the algorithm class or a function defined
+    outside the algorithm class. One such function could look like this:
+
+    .. code-block:: python
+
+        # Normal function
+        def ignore_message(message: Message):
+            return message.header != 'IGNORE_ME'
+
+        # Lambda function
+        ignore_message = lambda message: message.header != 'IGNORE_ME'
+
+
 
 Alarm management
 ----------------

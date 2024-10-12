@@ -118,7 +118,7 @@ class NodeAlgorithm(BaseAlgorithm):
     "Tuple of statuses that nodes should have at the end of the algorithm."
 
     NODE_WRAPPER_MANAGER_TYPE: type[WrapperManager] = WrapperManager
-    "Type of the node access proxy. Default is :class:`NodeAccess`."
+    "Type of the node wrapper manager. Default is :class:`WrapperManager`."
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -344,6 +344,14 @@ class NodeAlgorithm(BaseAlgorithm):
         """
         Close the inbox of the node for a specific neighbor.
 
+        Implementation detail
+        ---------------------
+
+        The inbox is closed by blocking all messages that have the neighbor as the source.
+        This is done by adding a filter to the inbox that blocks all messages that have the neighbor as the source.
+        To be able to unblock the inbox later, the filter is stored in the node's memory, under the key
+        `__closed_edges_filters__`.
+
         :param node: The node for which the inbox is closed.
         :type node: NodeAccess
         :param neighbor: The neighbor for which the inbox is closed.
@@ -373,6 +381,8 @@ class NodeAlgorithm(BaseAlgorithm):
                 filters = node.memory["__closed_edges_filters__"][neighbor]
                 for filter_fn in filters:
                     node.unbox().unblock_inbox(filter_fn)
+
+                node.memory["__closed_edges_filters__"][neighbor] = []
 
     ### Methods for algorithm evaluation ###
 
