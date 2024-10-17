@@ -252,7 +252,7 @@ class WrapperManager:
         assert self.network.is_directed(), "The network must be directed to calculate in-neighbors."
 
         return {
-            node: self.NEIGHBOR_LABEL_TYPE(node, id=i)
+            node: self.NEIGHBOR_LABEL_TYPE(node, self, id=i)
             for i, node in enumerate(self.network.in_neighbors(node_access._node))
         }
 
