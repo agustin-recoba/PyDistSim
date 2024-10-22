@@ -5,7 +5,7 @@ Centralized model
 #################
 
 ************************
-Theorical representation
+Theoretical representation
 ************************
 
 Centralized computing is a model in which all computational tasks, data storage, and resource management are handled by a

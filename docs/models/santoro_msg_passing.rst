@@ -5,7 +5,7 @@ The message passing model
 #########################
 
 ************************
-Theorical representation
+Theoretical representation
 ************************
 
 The book titled "Design and Analysis of Distributed Algorithms" by Nicola Santoro provides an in-depth exploration of
