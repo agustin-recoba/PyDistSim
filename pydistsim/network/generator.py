@@ -6,7 +6,7 @@ from numpy import array, cos, log2, pi, sign, sin, sqrt
 from numpy.random import rand
 
 from pydistsim.logging import logger
-from pydistsim.network.network import BidirectionalNetwork
+from pydistsim.network.network import BidirectionalNetwork, Network
 from pydistsim.network.node import Node
 from pydistsim.network.rangenetwork import BidirectionalRangeNetwork, RangeNetwork
 
@@ -21,6 +21,35 @@ T = TypeVar("T", bound="NetworkType")
 class NetworkGenerator:
     """
     Class for generating networks with specified properties.
+
+    Instance mode
+    -------------
+
+    Usage example:
+
+        >>> net_gen = NetworkGenerator(n_count=45, degree=4, directed=False, enforce_connected=False)
+        >>> net = net_gen.generate_random_network()
+
+    The generated network is returned as a :class:`pydistsim.network.rangenetwork.RangeNetwork`
+    or :class:`pydistsim.network.rangenetwork.BidirectionalRangeNetwork` object.
+
+
+    Class mode
+    ----------
+
+    Here instancing the class will have no effect at all. The only parameters considered are the ones
+    passed to the class methods. The class methods are:
+
+    #. :meth:`generate_complete_network`
+    #. :meth:`generate_ring_network`
+    #. :meth:`generate_star_network`
+    #. :meth:`generate_hypercube_network`
+    #. :meth:`generate_mesh_network`
+
+    Usage example:
+
+        >>> net = NetworkGenerator.generate_complete_network(5)
+
 
 
     :param n_count: int, number of nodes, if None, 100 is used
@@ -41,12 +70,6 @@ class NetworkGenerator:
         - algorithms: tuple
         - commRange: int, overrides `comm_range`
         - sensors: tuple
-
-    Basic usage:
-
-    >>> net_gen = NetworkGenerator()
-    >>> net = net_gen.generate()
-
     """
 
     DIRECTED_NETWORK_T = RangeNetwork
@@ -268,15 +291,38 @@ class NetworkGenerator:
         return nodes
 
     @classmethod
-    def generate_complete_network(cls, n: int, network_type: type[T] = BidirectionalNetwork) -> T:
+    def generate_complete_network(cls, n: int, network_type: type[T] = None, directed_network: bool = None) -> T:
         """
         Generate a complete network with n nodes. The nodes are placed on a circle.
 
-        :param n: The number of nodes in the complete network.
+
+        Examples:
+
+        .. code-block:: python
+
+            >>> net1 = NetworkGenerator.generate_complete_network(5)
+            <BidirectionalNetwork object with 5 nodes and 10 edges>
+            >>> net2 = NetworkGenerator.generate_complete_network(5, directed_network=True)
+            <Network object with 5 nodes and 20 edges>
+            >>> net3 = NetworkGenerator.generate_complete_network(5, network_type=BidirectionalNetwork)
+            <BidirectionalNetwork object with 5 nodes and 10 edges>
+
+        DO NOT instantiate the class, this is a class method.
+
+        :param n: The number of nodes in the network.
         :type n: int
-        :return: The generated complete network.
-        :rtype: BidirectionalNetwork
+        :param network_type: The type of network to generate.
+        :type network_type: type[NetworkType]
+        :param directed_network: Only if True, the network is directed.
+        :type directed_network: bool
+        :return: The generated network.
+        :rtype: NetworkType
         """
+        if directed_network is None:
+            directed_network = False
+
+        if network_type is None:
+            network_type = Network if directed_network else BidirectionalNetwork
 
         net = network_type()
         node_pos_list = cls.__get_ring_pos(n, net.environment)
@@ -289,19 +335,38 @@ class NetworkGenerator:
         return net
 
     @classmethod
-    def generate_ring_network(cls, n: int, network_type: type[T] = BidirectionalNetwork) -> T:
+    def generate_ring_network(cls, n: int, network_type: type[T] = None, directed_network: bool = None) -> T:
         """
         Generate a ring network with n nodes. The nodes are placed on a circle.
         If network_type is a directed type, the links between the nodes are one-way only so the network is fully
         connected.
 
-        :param n: The number of nodes in the ring network.
+
+        Example:
+
+        .. code-block:: python
+
+            >>> net = NetworkGenerator.generate_ring_network(6)
+            <BidirectionalNetwork object with 6 nodes and 6 edges>
+            >>> net = NetworkGenerator.generate_ring_network(6, directed_network=False)
+            <Network object with 6 nodes and 6 edges>
+
+        DO NOT instantiate the class, this is a class method.
+
+        :param n: The number of nodes in the network.
         :type n: int
         :param network_type: The type of network to generate.
-        :type network_type: NetworkType
-        :return: The generated ring network. Same type as the network_type parameter.
+        :type network_type: type[NetworkType]
+        :param directed_network: Only if True, the network is directed.
+        :type directed_network: bool
+        :return: The generated network.
         :rtype: NetworkType
         """
+        if directed_network is None:
+            directed_network = False
+
+        if network_type is None:
+            network_type = Network if directed_network else BidirectionalNetwork
 
         net = network_type()
         node_pos_list = cls.__get_ring_pos(n, net.environment)
@@ -314,21 +379,37 @@ class NetworkGenerator:
         return net
 
     @classmethod
-    def generate_star_network(cls, n: int, network_type: type[T] = BidirectionalNetwork) -> T:
+    def generate_star_network(cls, n: int, network_type: type[T] = None, directed_network: bool = None) -> T:
         """
         Generate a star network with n nodes. The nodes are placed on a circle with one node in the center.
         If network_type is a directed type, the links are only from the center node to the other nodes.
 
-        :param n: The number of TOTAL nodes in the star network.
+
+        Example:
+
+        .. code-block:: python
+
+            >>> net = NetworkGenerator.generate_star_network(5)
+
+        DO NOT instantiate the class, this is a class method.
+
+        :param n: The number of nodes in the network.
         :type n: int
         :param network_type: The type of network to generate.
-        :type network_type: NetworkType
-        :return: The generated star network.
+        :type network_type: type[NetworkType]
+        :param directed_network: Only if True, the network is directed.
+        :type directed_network: bool
+        :return: The generated network.
         :rtype: NetworkType
         """
-
         if n <= 1:
             raise ValueError("Star network requires at least 2 nodes.")
+
+        if directed_network is None:
+            directed_network = False
+
+        if network_type is None:
+            network_type = Network if directed_network else BidirectionalNetwork
 
         net = network_type()
         node_pos_list = cls.__get_ring_pos(n - 1, net.environment)
@@ -351,19 +432,36 @@ class NetworkGenerator:
         n: int | None = None,
         dimension: int | None = None,
         use_binary_labels: bool = True,
-        network_type: type[T] = BidirectionalNetwork,
+        network_type: type[T] = None,
+        directed_network: bool = None,
     ) -> T:
         """
         Generate a hypercube network of the given dimension (or node count). The nodes are placed in a hypercube
         structure.
 
-        :param n: The number of nodes in the hypercube. If None, the dimension parameter must be set.
+
+        Examples:
+
+        .. code-block:: python
+
+            >>> net = NetworkGenerator.generate_hypercube_network(dimension=3)
+            <BidirectionalNetwork object with 8 nodes and 12 edges>
+            >>> net2 = NetworkGenerator.generate_hypercube_network(dimension=3, directed_network=True)
+            <Network object with 8 nodes and 24 edges>
+            >>> net3 = NetworkGenerator.generate_complete_network(n=8)
+            <BidirectionalNetwork object with 8 nodes and 12 edges>
+
+        DO NOT instantiate the class, this is a class method.
+
+        :param n: The number of nodes in the network. If None, the dimension parameter must be set.
         :type n: int
         :param dimension: The dimension of the hypercube. If None, the n parameter must be set.
         :type dimension: int
         :param network_type: The type of network to generate.
-        :type network_type: NetworkType
-        :return: The generated hypercube network.
+        :type network_type: type[NetworkType]
+        :param directed_network: Only if True, the network is directed.
+        :type directed_network: bool
+        :return: The generated network.
         :rtype: NetworkType
         """
         if n is None and dimension is None:
@@ -374,6 +472,12 @@ class NetworkGenerator:
             dimension = int(log2(n))
             if 2**dimension != n:
                 raise ValueError("The number of nodes must be a power of 2.")
+
+        if directed_network is None:
+            directed_network = False
+
+        if network_type is None:
+            network_type = Network if directed_network else BidirectionalNetwork
 
         LABEL_KEY = "HYPERCUBE_LABEL"
 
@@ -476,12 +580,22 @@ class NetworkGenerator:
         a: int = None,
         b: int = None,
         torus: bool = False,
-        network_type: type[T] = BidirectionalNetwork,
+        network_type: type[T] = None,
+        directed_network: bool = None,
     ) -> T:
         """
         Generate a mesh (or torus) network with n nodes (or a x b nodes).
         If network_type is a directed type, the links are only north and east. Only with torus, this gives a fully
         connected network nonetheless.
+
+
+        Example:
+
+        .. code-block:: python
+
+            >>> net = NetworkGenerator.generate_mesh_network(a=4, b=7)
+
+        DO NOT instantiate the class, this is a class method.
 
         :param n: The number of nodes in the mesh/torus network. Optional.
         :type n: int
@@ -492,10 +606,17 @@ class NetworkGenerator:
         :param torus: Whether or not to add "returning" edges.
         :type torus: bool
         :param network_type: The type of network to generate.
-        :type network_type: NetworkType
-        :return: The generated mesh/torus network.
+        :type network_type: type[NetworkType]
+        :param directed_network: Only if True, the network is directed.
+        :type directed_network: bool
+        :return: The generated network.
         :rtype: NetworkType
         """
+        if directed_network is None:
+            directed_network = False
+
+        if network_type is None:
+            network_type = Network if directed_network else BidirectionalNetwork
 
         if a is None or b is None:
             if n is None:
