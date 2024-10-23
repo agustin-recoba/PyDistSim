@@ -133,6 +133,9 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.__dict__})"
 
+    def __hash__(self) -> int:
+        return id(self)
+
     def __deepcopy__(self, memo):
         if id(self) in memo:
             return memo[id(self)]
@@ -154,7 +157,7 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
         raise NotImplementedError
 
     def is_initialized(self):
-        return self.simulation.algorithmState["step"] != 1 and self.simulation.get_current_algorithm() == self
+        return self.simulation.algorithmState["step"] > 1 and self.simulation.get_current_algorithm() == self
 
     def is_halted(self):
         """
@@ -173,7 +176,7 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
                 if not restriction.check(self.network):
                     raise AlgorithmException(
                         f"Restriction {restriction.__name__} not satisfied for this network.\n"
-                        + restriction.get_explanation(self.network)
+                        + restriction.get_help_message(self.network)
                     )
 
     def apply_restrictions(self):
