@@ -138,7 +138,10 @@ class NodeAlgorithm(BaseAlgorithm):
             if check_restrictions:
                 self.check_restrictions()
 
-            if not any(len(node.outbox) + len(node.inbox) > 0 for node in self.network.nodes()):
+            if (
+                not any(len(node.outbox) + len(node.inbox) > 0 for node in self.network.nodes())
+                and len(self._alarms) == 0
+            ):
                 logger.warning("Initializer didn't send any message.")
         else:
             self.network.communicate()
