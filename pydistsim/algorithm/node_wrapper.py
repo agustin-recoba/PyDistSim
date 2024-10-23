@@ -199,7 +199,23 @@ class DMANodeAccess(NodeAccess):
     DMANodeAccess class provides a wrapper for node access with direct memory access.
     This means that the node's memory can be accessed directly without the need to use the `memory` attribute.
 
-    For example, instead of using `node.memory["key"]`, you can use `node.key`. This works for both setting and getting.
+    For example, instead of using `node.memory["key"]`, you can use `node.key`.
+    This works for both setting and getting.
+
+    The simplest way to use this class is as follows:
+
+    .. code-block:: python
+
+        class MyAlgorithm(NodeAlgorithm):
+            class Status(StatusValues):
+                ...
+
+            def _create_wrapper_manager(self):
+                return self.NODE_WRAPPER_MANAGER_TYPE(self.network, DMANodeAccess)
+
+
+    For a more complex example, see the Mega-Merger algorithm implemented at
+    :mod:`pydistsim.demo_algorithms.santoro2007.mega_merger.algorithm`.
     """
 
     def __getattr__(self, item):
