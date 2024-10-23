@@ -219,6 +219,14 @@ class DMANodeAccess(NodeAccess):
         else:
             self._node.memory[name] = value
 
+    @property
+    def id(self):
+        return self._node.memory["id"]
+
+    @id.setter
+    def id(self, value):
+        self._node.memory["id"] = value
+
 
 class SensorNodeAccess(NodeAccess):
     accessible_get = (
