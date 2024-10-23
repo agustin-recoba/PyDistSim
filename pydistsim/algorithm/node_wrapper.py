@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Union
 from pydistsim.logging import logger
 
 if TYPE_CHECKING:
+    from pydistsim.algorithm.node_algorithm import StatusValues
     from pydistsim.network import Node
     from pydistsim.network.network import NetworkType
 
@@ -149,6 +150,26 @@ class NodeAccess(_NodeWrapper):
 
         return self._node.memory["id"]
 
+    @property
+    def status(self) -> "StatusValues":
+        return self._node.status
+
+    @status.setter
+    def status(self, value: "StatusValues"):
+        self._node.status = value
+
+    @property
+    def memory(self):
+        return self._node.memory
+
+    @memory.setter
+    def memory(self, value: dict):
+        self._node.memory = value
+
+    @property
+    def clock(self):
+        return self._node.clock
+
     ###### Private methods ######
 
     @cached_property
@@ -171,6 +192,32 @@ class NodeAccess(_NodeWrapper):
     @cached_property
     def _rand_id(self):
         return randint(0, len(self._node.network))
+
+
+class DMANodeAccess(NodeAccess):
+    """
+    DMANodeAccess class provides a wrapper for node access with direct memory access.
+    This means that the node's memory can be accessed directly without the need to use the `memory` attribute.
+
+    For example, instead of using `node.memory["key"]`, you can use `node.key`. This works for both setting and getting.
+    """
+
+    def __getattr__(self, item):
+        if item in self._configs:
+            return self._configs[item]
+        elif item in self.accessible_get or item in self.accessible_set:
+            return getattr(self._node, item)
+        elif item in super().__getattribute__("_node").memory:
+            return super().__getattribute__("_node").memory[item]
+        raise AttributeError(f"{self.__class__.__name__} object has no attribute {item}")
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name in self.accessible_set:
+            setattr(self._node, name, value)
+        elif name in ("_node", "_manager", "_configs"):
+            super().__setattr__(name, value)
+        else:
+            self._node.memory[name] = value
 
 
 class SensorNodeAccess(NodeAccess):
@@ -217,14 +264,21 @@ class WrapperManager:
                     ↑
     """
 
-    NODE_ACCESS_TYPE = NodeAccess
+    NODE_ACCESS_TYPE: type[NodeAccess]
     "The class that will be used to wrap the nodes' own view."
 
-    NEIGHBOR_LABEL_TYPE = NeighborLabel
+    NEIGHBOR_LABEL_TYPE = type[NeighborLabel]
     "The class that will be used to wrap the neighbors' labels."
 
-    def __init__(self, network: "NetworkType"):
+    def __init__(
+        self,
+        network: "NetworkType",
+        nodeAccessType: type[NodeAccess] = NodeAccess,
+        neighborLabelType: type[NeighborLabel] = NeighborLabel,
+    ):
         self.network = network
+        self.NODE_ACCESS_TYPE = nodeAccessType
+        self.NEIGHBOR_LABEL_TYPE = neighborLabelType
         self.node_access_instances = {}
         self.node_out_neighbor_labels = {}
         self.node_in_neighbor_labels = {}
