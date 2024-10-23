@@ -518,7 +518,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
                     messages_delay.pop(message)
 
         for message in transmission_complete:
-            logger.debug("Communicating message: {}", message)
+            logger.trace("Communicating message: {}", message)
 
             if message.destination is not None:
                 # Destination is neighbor
