@@ -148,6 +148,36 @@ class ExampleParameters:
 
 
 class MegaMergerAlgorithm(NodeAlgorithm):
+    """
+    Mega-Merger
+    ===========
+
+    This algorithm is a distributed algorithm that elects a single node in a network.
+    The way it works is by creating cities (a grouping of nodes) and merging them together, while
+    maintaining a tree structure with a root (the downtown node) that makes the decisions.
+
+    Ultimately, when the cities are merged, the downtown node is elected as the root of the tree.
+
+    The algorithm is based on the descriptions in the book `Design and Analysis of Distributed
+    Algorithms <http://eu.wiley.com/WileyCDA/WileyTitle/productCd-0471719978,descCd-description.html>`_
+    by Nicola Santoro.
+
+    Parameters
+    ----------
+
+    percentage_of_initiators : float
+        The percentage of initiators in the network.
+
+    INF_WEIGHT : T
+        Value representing infinity.
+
+    WEIGHT_LIST : list[T] | Callable[[int], T]
+        Mapping of weights for the links.
+
+    CITY_LIST : list[T] | Callable[[int], T]
+        Mapping of cities in the network.
+    """
+
     default_params: MegaMergerParameters = ExampleParameters.countries_parameters
 
     Status = MMStatus
