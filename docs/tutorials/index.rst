@@ -17,6 +17,7 @@ Full explanation of topics
 
    implementing
    restrictions
+   networkgenerator
 
 
 **************
@@ -78,6 +79,24 @@ This tutorial covers how to implement a observable algorithm and its correspondi
 Access `the notebook here`_.
 
 .. _the notebook here: ../notebooks/custom_observer.ipynb
+
+
+Ultimate example: Mega-Merger implementation and analysis
+=========================================================
+
+Check out `Mega-Merger implementation`_ and the notebooks:
+
+#. `Animation notebooks`_.
+#. `Analysis notebook`_.
+#. `Testing notebook`_.
+
+
+.. _Mega-Merger implementation: ../_modules/pydistsim/demo_algorithms/santoro2007/mega_merger/algorithm.html#MegaMergerAlgorithm
+
+.. _Analysis notebook: ../notebooks/mega_merger/benchmarking.ipynb
+.. _Animation notebooks: ../notebooks/mega_merger/animations.ipynb
+.. _Testing notebook: ../notebooks/mega_merger/tests.ipynb
+
 
 
 Build date: |today|

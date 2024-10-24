@@ -189,7 +189,7 @@ class Node(ObserverManagerMixin):
         if self._inbox and not self._inboxDelay:
             # TODO: implement precedence in message type: Spontaneously > Alarm > Receiving
             message = self._inbox.pop()
-            logger.debug("Node {} received message {}", self._internal_id, message.__repr__())
+            logger.trace("Node {} received message {}", self._internal_id, message.__repr__())
         else:
             message = None
         self._inboxDelay = False
@@ -214,7 +214,7 @@ class Node(ObserverManagerMixin):
         """
         self._inboxDelay = self._inboxDelay or not self._inbox
         self._inbox.insert(0, message)
-        logger.debug("Message delivered to {}", self)
+        logger.trace("Message delivered to {}", self)
         self.notify_observers(ObservableEvents.message_delivered, message)
 
     def push_to_outbox(self, message: "Message[Node]", destination: "Node"):
@@ -228,7 +228,7 @@ class Node(ObserverManagerMixin):
         """
         message.destination = destination
         self.outbox.insert(0, message)
-        logger.debug("Node {} sent message {}.", self._internal_id, message.__repr__())
+        logger.trace("Node {} sent message {}.", self._internal_id, message.__repr__())
         self.notify_observers(ObservableEvents.message_sent, message)
 
     @property

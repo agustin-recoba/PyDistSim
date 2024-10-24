@@ -36,7 +36,7 @@ main_filter = LevelFilter(LogLevels.WARNING)
 
 logger.remove()
 
-logger.add(sys.stdout, filter=main_filter, level=0)
+stdout_handler = logger.add(sys.stdout, filter=main_filter, level=0)
 
 logger.disable("pydistsim")
 

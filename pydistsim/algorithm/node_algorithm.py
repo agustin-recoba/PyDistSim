@@ -126,7 +126,7 @@ class NodeAlgorithm(BaseAlgorithm):
         self._alarms: list[Alarm] = []
         "List of alarms set for the nodes."
 
-        self.nwm = self.NODE_WRAPPER_MANAGER_TYPE(self.network)
+        self.nwm = self._create_wrapper_manager()
         "Node wrapper manager."
 
     ### BaseAlgorithm interface methods ###
@@ -138,7 +138,10 @@ class NodeAlgorithm(BaseAlgorithm):
             if check_restrictions:
                 self.check_restrictions()
 
-            if not any(len(node.outbox) + len(node.inbox) > 0 for node in self.network.nodes()):
+            if (
+                not any(len(node.outbox) + len(node.inbox) > 0 for node in self.network.nodes())
+                and len(self._alarms) == 0
+            ):
                 logger.warning("Initializer didn't send any message.")
         else:
             self.network.communicate()
@@ -462,7 +465,10 @@ class NodeAlgorithm(BaseAlgorithm):
     def reset(self):
         super().reset()
         self._alarms = []
-        self.nwm = self.NODE_WRAPPER_MANAGER_TYPE(self.network)
+        self.nwm = self._create_wrapper_manager()
+
+    def _create_wrapper_manager(self):
+        return self.NODE_WRAPPER_MANAGER_TYPE(self.network)
 
     ### Metaclass methods ###
 
