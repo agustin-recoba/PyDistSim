@@ -34,7 +34,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
     """
     Mixin to extend Graph and DiGraph. The result represents a network in a distributed simulation.
 
-    The Network classes (:class:`Network` and :class:`BidirectionalNetwork`) extend the Graph class and provides additional functionality
+    The Network classes (:class:`DirectedNetwork` and :class:`BidirectionalNetwork`) extend the Graph class and provides additional functionality
     for managing nodes and network properties.
 
     :param environment: The environment in which the network operates. If not provided, a new Environment instance will be created.
@@ -64,7 +64,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
 
     @staticmethod
     def to_directed_class():
-        return Network
+        return DirectedNetwork
 
     @staticmethod
     def to_undirected_class():
@@ -269,14 +269,14 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
         edges: None | Iterable[tuple[Node, Node]] = None,
     ):
         """
-        Returns a Network instance with the specified nodes and edges.
+        Returns a NetworkType instance with the specified nodes and edges.
 
         :param nbunch: A list of nodes to include in the subnetwork.
         :type nbunch: list[Node]
         :param edges: A list of edges to include in the subnetwork. Defaults to None.
         :type edges: Iterable[tuple[Node, Node]], optional
-        :return: A Network instance representing the subnetwork.
-        :rtype: Network
+        :return: A NetworkType instance representing the subnetwork.
+        :rtype: NetworkType
         """
 
         return self.__deepcopy__({}, nodes, edges)
@@ -649,7 +649,7 @@ class NetworkMixin(ObserverManagerMixin, with_typehint(Graph)):
                             assert sensor.probabilityFunction.scale == value
 
 
-class Network(NetworkMixin, DiGraph):
+class DirectedNetwork(NetworkMixin, DiGraph):
     """
     A directed graph representing a network in a distributed simulation.
     """
@@ -661,5 +661,5 @@ class BidirectionalNetwork(NetworkMixin, Graph):
     """
 
 
-NetworkType = Network | BidirectionalNetwork
+NetworkType = DirectedNetwork | BidirectionalNetwork
 "A network in a distributed simulation."

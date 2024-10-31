@@ -11,7 +11,7 @@ PyDistSim uses the library :mod:`networkx` to represent graphs. :mod:`networkx` 
 In order to extend the defined :class:`networkx.Graph` and :class:`networkx.DiGraph` in :mod:`networkx`, PyDistSim uses a mixin class.
 
 This mixin class is called NetworkMixin and is defined in the network module.
-For the development of the framework, we have used this mixin to define :class:`Network` and :class:`BidirectionalNetwork`,
+For the development of the framework, we have used this mixin to define :class:`DirectedNetwork` and :class:`BidirectionalNetwork`,
 which are subclasses of :class:`networkx.Graph` and :class:`networkx.DiGraph` respectively.
 
 In broad terms, these NetworkMixin subclasses are responsible for the following:
@@ -23,5 +23,5 @@ In broad terms, these NetworkMixin subclasses are responsible for the following:
 
 For class and method documentation refer to :class:`NetworkMixin`.
 
-.. inheritance-diagram:: Network BidirectionalNetwork
-   :caption: Inheritance diagram for Network and BidirectionalNetwork
+.. inheritance-diagram:: DirectedNetwork BidirectionalNetwork
+   :caption: Inheritance diagram for DirectedNetwork and BidirectionalNetwork

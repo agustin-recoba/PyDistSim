@@ -31,7 +31,12 @@ from pkgutil import extend_path  # @Reimport
 from pydistsim.algorithm import NodeAlgorithm, StatusValues
 from pydistsim.benchmark import AlgorithmBenchmark
 from pydistsim.logging import disable_logger, enable_logger, logger
-from pydistsim.network import BidirectionalNetwork, Network, NetworkGenerator, Node
+from pydistsim.network import (
+    BidirectionalNetwork,
+    DirectedNetwork,
+    NetworkGenerator,
+    Node,
+)
 from pydistsim.simulation import Simulation
 
 __path__ = extend_path(__path__, __name__)  # @ReservedAssignment

@@ -7,7 +7,7 @@ This module contains classes for representing networks and generating networks.
 from pydistsim.network.generator import NetworkGenerator, NetworkGeneratorException
 from pydistsim.network.network import (
     BidirectionalNetwork,
-    Network,
+    DirectedNetwork,
     NetworkException,
     NetworkType,
 )

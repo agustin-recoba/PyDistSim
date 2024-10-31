@@ -3,7 +3,7 @@
 from pydistsim.message import Message
 from pydistsim.network import NetworkGenerator
 from pydistsim.network.behavior import NetworkBehaviorModel
-from pydistsim.network.network import Network
+from pydistsim.network.network import DirectedNetwork
 from pydistsim.restrictions.communication import (
     BidirectionalLinks,
     MessageOrdering,
@@ -81,7 +81,7 @@ class TestRestrictions(PyDistSimTestCase):
         assert not MessageOrdering.check(net)
 
     def test_ReciprocalCommunication(self):
-        net = Network()  # directed graph
+        net = DirectedNetwork()  # directed graph
         n1, n2, n3 = net.add_node(), net.add_node(), net.add_node()
 
         net.add_edge(n1, n2)
@@ -217,7 +217,7 @@ class TestRestrictions(PyDistSimTestCase):
         net = NetworkGenerator(10, enforce_connected=True).generate_random_network()
         assert Connectivity.check(net)
 
-        net = Network()
+        net = DirectedNetwork()
         net.add_node()
         net.add_node()
         assert not Connectivity.check(net)
@@ -238,7 +238,7 @@ class TestRestrictions(PyDistSimTestCase):
         assert UniqueInitiator.check(net)
 
     def test_CompleteGraph(self):
-        net = Network()
+        net = DirectedNetwork()
 
         nodes = [net.add_node() for _ in range(10)]
         for i, n1 in enumerate(nodes):
@@ -252,7 +252,7 @@ class TestRestrictions(PyDistSimTestCase):
         assert not CompleteGraph.check(net)
 
     def test_CycleGraph(self):
-        net = Network()
+        net = DirectedNetwork()
         LEN = 10
         nodes = [net.add_node() for _ in range(LEN)]
         for i, n1 in enumerate(nodes):
@@ -261,7 +261,7 @@ class TestRestrictions(PyDistSimTestCase):
 
         assert CycleGraph.check(net)
 
-        net = Network()
+        net = DirectedNetwork()
         nodes = [net.add_node() for _ in range(LEN)]
         for i, n1 in enumerate(nodes[:-2]):
             n2 = nodes[(i + 1) % LEN]
@@ -270,7 +270,7 @@ class TestRestrictions(PyDistSimTestCase):
         assert not CycleGraph.check(net)
 
     def test_TreeGraph(self):
-        net = Network()
+        net = DirectedNetwork()
         n1, n2, n3, n4, n5 = net.add_node(), net.add_node(), net.add_node(), net.add_node(), net.add_node()
 
         net.add_edge(n1, n2), net.add_edge(n1, n3), net.add_edge(n2, n4), net.add_edge(n2, n5)
@@ -280,7 +280,7 @@ class TestRestrictions(PyDistSimTestCase):
         assert not TreeGraph.check(net)
 
     def test_StarGraph(self):
-        net = Network()
+        net = DirectedNetwork()
         n1, n2, n3, n4, n5 = net.add_node(), net.add_node(), net.add_node(), net.add_node(), net.add_node()
 
         net.add_edge(n1, n2), net.add_edge(n1, n3), net.add_edge(n1, n4)

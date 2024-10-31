@@ -6,7 +6,7 @@ from numpy import array, cos, log2, pi, sign, sin, sqrt
 from numpy.random import rand
 
 from pydistsim.logging import logger
-from pydistsim.network.network import BidirectionalNetwork, Network
+from pydistsim.network.network import BidirectionalNetwork, DirectedNetwork
 from pydistsim.network.node import Node
 from pydistsim.network.rangenetwork import BidirectionalRangeNetwork, RangeNetwork
 
@@ -303,7 +303,7 @@ class NetworkGenerator:
             >>> net1 = NetworkGenerator.generate_complete_network(5)
             <BidirectionalNetwork object with 5 nodes and 10 edges>
             >>> net2 = NetworkGenerator.generate_complete_network(5, directed_network=True)
-            <Network object with 5 nodes and 20 edges>
+            <DirectedNetwork object with 5 nodes and 20 edges>
             >>> net3 = NetworkGenerator.generate_complete_network(5, network_type=BidirectionalNetwork)
             <BidirectionalNetwork object with 5 nodes and 10 edges>
 
@@ -322,7 +322,7 @@ class NetworkGenerator:
             directed_network = False
 
         if network_type is None:
-            network_type = Network if directed_network else BidirectionalNetwork
+            network_type = DirectedNetwork if directed_network else BidirectionalNetwork
 
         net = network_type()
         node_pos_list = cls.__get_ring_pos(n, net.environment)
@@ -349,7 +349,7 @@ class NetworkGenerator:
             >>> net = NetworkGenerator.generate_ring_network(6)
             <BidirectionalNetwork object with 6 nodes and 6 edges>
             >>> net = NetworkGenerator.generate_ring_network(6, directed_network=False)
-            <Network object with 6 nodes and 6 edges>
+            <DirectedNetwork object with 6 nodes and 6 edges>
 
         DO NOT instantiate the class, this is a class method.
 
@@ -366,7 +366,7 @@ class NetworkGenerator:
             directed_network = False
 
         if network_type is None:
-            network_type = Network if directed_network else BidirectionalNetwork
+            network_type = DirectedNetwork if directed_network else BidirectionalNetwork
 
         net = network_type()
         node_pos_list = cls.__get_ring_pos(n, net.environment)
@@ -409,7 +409,7 @@ class NetworkGenerator:
             directed_network = False
 
         if network_type is None:
-            network_type = Network if directed_network else BidirectionalNetwork
+            network_type = DirectedNetwork if directed_network else BidirectionalNetwork
 
         net = network_type()
         node_pos_list = cls.__get_ring_pos(n - 1, net.environment)
@@ -447,7 +447,7 @@ class NetworkGenerator:
             >>> net = NetworkGenerator.generate_hypercube_network(dimension=3)
             <BidirectionalNetwork object with 8 nodes and 12 edges>
             >>> net2 = NetworkGenerator.generate_hypercube_network(dimension=3, directed_network=True)
-            <Network object with 8 nodes and 24 edges>
+            <DirectedNetwork object with 8 nodes and 24 edges>
             >>> net3 = NetworkGenerator.generate_complete_network(n=8)
             <BidirectionalNetwork object with 8 nodes and 12 edges>
 
@@ -477,7 +477,7 @@ class NetworkGenerator:
             directed_network = False
 
         if network_type is None:
-            network_type = Network if directed_network else BidirectionalNetwork
+            network_type = DirectedNetwork if directed_network else BidirectionalNetwork
 
         LABEL_KEY = "HYPERCUBE_LABEL"
 
@@ -616,7 +616,7 @@ class NetworkGenerator:
             directed_network = False
 
         if network_type is None:
-            network_type = Network if directed_network else BidirectionalNetwork
+            network_type = DirectedNetwork if directed_network else BidirectionalNetwork
 
         if a is None or b is None:
             if n is None:

@@ -366,7 +366,7 @@ def draw_current_state(
     Automatically determines the current algorithm and draws the network accordingly. This includes a mapping of
     node colors to the status of the nodes, as well as the messages in the network.
 
-    :param sim: Simulation or Network object
+    :param sim: Simulation or NetworkType object
     :param axes: matplotlib axes object
     :param clear: boolean to clear the axes before drawing
     :param tree_key: key in nodes memory (dictionary) where tree data is stored

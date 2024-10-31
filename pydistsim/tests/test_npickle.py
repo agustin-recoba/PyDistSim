@@ -2,7 +2,7 @@ import os
 import unittest
 
 from pydistsim.demo_algorithms.broadcast import Flood
-from pydistsim.network import Network, NetworkGenerator, NetworkType
+from pydistsim.network import DirectedNetwork, NetworkGenerator, NetworkType
 from pydistsim.utils.npickle import read_npickle, write_npickle
 
 
@@ -23,7 +23,7 @@ class TestPickle(unittest.TestCase):
 
     def test_write_read(self):
         for i, (size, net) in enumerate(self.nets):
-            net: Network
+            net: DirectedNetwork
             with self.subTest(net=net):
                 try:
                     write_npickle(net, f"net_test_{i}.tar.gz")

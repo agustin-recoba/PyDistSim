@@ -2,7 +2,7 @@ import unittest
 
 import scipy.stats
 
-from pydistsim.network import Network, Node
+from pydistsim.network import DirectedNetwork, Node
 from pydistsim.network.sensor import DistSensor, SensorError
 
 
@@ -10,7 +10,7 @@ class TestSensor(unittest.TestCase):
 
     def test_read(self):
         """Test read compositeSensor"""
-        net = Network()
+        net = DirectedNetwork()
         node = net.add_node()
         node.compositeSensor.read()
 
@@ -21,7 +21,7 @@ class TestSensor(unittest.TestCase):
         node.compositeSensor = ("AoASensor", dist_sensor)
         self.assertRaises(SensorError, node.compositeSensor.read)
 
-        net = Network()
+        net = DirectedNetwork()
         node = net.add_node()
         dist_sensor = DistSensor({"pf": scipy.stats.norm, "scale": 10})
         node.compositeSensor = ("AoASensor", dist_sensor)

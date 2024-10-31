@@ -88,7 +88,7 @@ class BaseAlgorithm(ObserverManagerMixin, metaclass=AlgorithmMeta):
         required_params = ('rp1',)
         default_params = {'dp1': 'dv1',}
 
-    >>> net = Network()
+    >>> net = DirectedNetwork()
     >>> alg = SomeAlgorithm(net, rp1='rv1')
     >>> alg.rp1
     'rv1'
