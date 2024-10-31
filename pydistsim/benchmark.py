@@ -15,13 +15,13 @@ from pydistsim.logging import logger
 from pydistsim.metrics import MetricCollector
 from pydistsim.network.behavior import NetworkBehaviorModel
 from pydistsim.network.generator import NetworkGenerator
-from pydistsim.network.network import BidirectionalNetwork, Network, NetworkType
+from pydistsim.network.network import BidirectionalNetwork, DirectedNetwork, NetworkType
 from pydistsim.simulation import AlgorithmsParam, Simulation
 
 
 def decide_directed_class(directed: bool):
     if directed:
-        return Network
+        return DirectedNetwork
     else:
         return BidirectionalNetwork
 

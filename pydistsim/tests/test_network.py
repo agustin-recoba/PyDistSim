@@ -8,7 +8,7 @@ from pydistsim.network import (
     BidirectionalNetwork,
     BidirectionalRangeNetwork,
     CompleteRangeType,
-    Network,
+    DirectedNetwork,
     NetworkException,
     NetworkType,
     Node,

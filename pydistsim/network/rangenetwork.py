@@ -7,7 +7,7 @@ from numpy.random import random
 
 from pydistsim.logging import logger
 from pydistsim.network.environment import Environment
-from pydistsim.network.network import BidirectionalNetwork, Network
+from pydistsim.network.network import BidirectionalNetwork, DirectedNetwork
 from pydistsim.utils.helpers import with_typehint
 
 if TYPE_CHECKING:
@@ -36,7 +36,7 @@ class RangeType(ABC):
         are within communication range.
 
         :param network: The network in which the nodes are connected.
-        :type network: Network
+        :type network: RangeNetworkType
         :param node1: The first node.
         :type node1: Node
         :param node2: The second node.
@@ -65,7 +65,7 @@ class UdgRangeType(RangeType):
         positioned so that their distance is smaller than the communication range.
 
         :param network: The network in which the nodes are connected.
-        :type network: Network
+        :type network: RangeNetworkType
         :param node1: The first node.
         :type node1: Node
         :param node2: The second node.
@@ -99,7 +99,7 @@ class CompleteRangeType(RangeType):
         communication range.
 
         :param network: The network in which the nodes are connected.
-        :type network: Network
+        :type network: RangeNetworkType
         :param node1: The first node.
         :type node1: Node
         :param node2: The second node.
@@ -129,7 +129,7 @@ class SquareDiscRangeType(RangeType):
         probability of connection.
 
         :param network: The network in which the nodes are connected.
-        :type network: Network
+        :type network: RangeNetworkType
         :param node1: The first node.
         :type node1: Node
         :param node2: The second node.
@@ -147,7 +147,7 @@ class SquareDiscRangeType(RangeType):
         return False
 
 
-class RangeNetworkMixin(with_typehint(Network)):
+class RangeNetworkMixin(with_typehint(DirectedNetwork)):
     """
     Mixin to define a type of network that decides which nodes are connected based on their
     communication range.
@@ -295,7 +295,7 @@ class RangeNetworkMixin(with_typehint(Network)):
         logger.trace("Modified degree to {}", self.avg_degree())
 
 
-class RangeNetwork(RangeNetworkMixin, Network):
+class RangeNetwork(RangeNetworkMixin, DirectedNetwork):
     """
     Type of network that decides which nodes are connected based on their communication range.
 

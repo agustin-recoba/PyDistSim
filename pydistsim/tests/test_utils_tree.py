@@ -1,6 +1,6 @@
 import unittest
 
-from pydistsim.network import CompleteRangeType, Network
+from pydistsim.network import CompleteRangeType, DirectedNetwork
 from pydistsim.network.environment import Environment2D
 from pydistsim.utils import tree, visualization
 
@@ -10,7 +10,7 @@ class TestNetwork(unittest.TestCase):
 
     def setUp(self):
         env = Environment2D()
-        self.net = Network(rangeType=CompleteRangeType(env))
+        self.net = DirectedNetwork(rangeType=CompleteRangeType(env))
         self.net.environment.image[22, 22] = 0
         self.node1 = self.net.add_node(pos=[22.8, 21.8])
         self.node2 = self.net.add_node(pos=[21.9, 22.9])
@@ -34,7 +34,7 @@ class TestNetwork(unittest.TestCase):
 
     def test_not_tree_network(self):
         env = Environment2D()
-        net = Network(rangeType=CompleteRangeType(env))
+        net = DirectedNetwork(rangeType=CompleteRangeType(env))
 
         with self.assertRaises(tree.TreeNetworkException):
             tree.check_tree_key(net, self.tree_key)
@@ -64,7 +64,7 @@ class TestNetwork(unittest.TestCase):
         visualization.show_mst(self.net, self.tree_key)
 
         env = Environment2D()
-        net = Network(rangeType=CompleteRangeType(env))
+        net = DirectedNetwork(rangeType=CompleteRangeType(env))
         node1 = net.add_node(pos=[22.8, 21.8])
 
         node1.memory[self.tree_key] = {

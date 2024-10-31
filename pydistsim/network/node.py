@@ -49,7 +49,7 @@ class Node(ObserverManagerMixin):
     Represents a node in a network.
 
     :param network: Optional network object to which the node belongs.
-    :type network: Network, optional
+    :type network: NetworkType, optional
     :param commRange: Communication range of the node.
     :type commRange: int, optional
     :param sensors: Tuple of sensor types or names.
