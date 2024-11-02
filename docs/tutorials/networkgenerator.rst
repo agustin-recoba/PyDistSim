@@ -29,7 +29,7 @@ its class methods:
 #. :meth:`NetworkGenerator.generate_mesh_network`
 
 These class methods receive a minimal configuration of parameters (in general only the number of nodes and if the
-network should be addressed or not).
+network should be directed or not).
 
 Static generation is used for quick network generation without any additional conditions. It is appropriately
 exemplified in `the network generation notebook`_.
