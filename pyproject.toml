@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "PyDistSim"
-version = "2.1.1" # Should match version at pydistsim/docs/conf.py
+version = "2.1.2" # Should match version at pydistsim/docs/conf.py
 authors = [
   { name="Agustin Recoba", email="agustin.recoba@outlook.com" }, # Fork author
   { name="Damir Arbula", email="damir.arbula@gmail.com" }, # Original author

@@ -103,7 +103,7 @@ class Simulation(ObserverManagerMixin):
             algorithm.add_observers(*self.observers)
             self._run_algorithm(algorithm)
             self.notify_observers(ObservableEvents.sim_state_changed, self)
-            if self.stepsLeft <= 0:
+            if self.stepsLeft <= 0 and steps != 0:
                 break
 
     def run_step(self):

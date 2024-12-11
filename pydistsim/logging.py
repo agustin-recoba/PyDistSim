@@ -21,6 +21,7 @@ class LogLevels(StrEnum):
     WARNING = "WARNING"
     ERROR = "ERROR"
     CRITICAL = "CRITICAL"
+    TRACE = "TRACE"
 
 
 class LevelFilter:
