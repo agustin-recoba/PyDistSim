@@ -484,6 +484,7 @@ def create_animation(
     dpi: int = 100,
     milliseconds_per_frame: int = 300,
     frame_limit: int = 2000,
+    reset_on_start: bool = True,
     **kwargs,
 ) -> animation.FuncAnimation:
     """
@@ -516,6 +517,7 @@ def create_animation(
     :param dpi: dots per inch
     :param milliseconds_per_frame: milliseconds per frame
     :param frame_limit: limit of frames, default is 2000
+    :param reset_on_start: control if the simulation will restart on animation start
     :param kwargs: additional keyword arguments to pass to the :func:`draw_current_state` function
     :return: animation object
     """
@@ -530,7 +532,7 @@ def create_animation(
             if exception_occurred:
                 return
 
-            if frame_index == 0:
+            if frame_index == 0 and reset_on_start:
                 sim.reset()
 
             draw_current_state(sim, ax, dpi=dpi, **kwargs)
@@ -554,7 +556,7 @@ def create_animation(
                     logger.warning("Frame limit reached.")
                     return False
 
-                if not sim.is_halted():
+                if not (sim.is_halted() and sim.get_current_algorithm() is None):
                     logger.debug(f"Frame {frame_index}, simulation still running.")
                     return True
 
