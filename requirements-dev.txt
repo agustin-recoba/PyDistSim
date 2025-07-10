@@ -1,7 +1,7 @@
 pytest==8.2.0
 pytest-cov==5.0.0
 pytest-sugar==1.0.0
-virtualenv==20.26.3
+virtualenv==20.26.6
 coverage==7.6.1
 pre-commit==3.8.0
 pytest-xdist==3.6.1
